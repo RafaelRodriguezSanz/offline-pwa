@@ -12,13 +12,13 @@ import { getAllItems, markSynced } from "./db.js";
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 // Replace with your own values from Google Cloud Console.
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
-const DRIVE_SCOPE      = "https://www.googleapis.com/auth/drive.file";
-const BACKUP_FILENAME  = "app-backup.json";
+const GOOGLE_CLIENT_ID = "991288139958-285on6us2hs8sca5kna47n65dtplep6r.apps.googleusercontent.com";
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+const BACKUP_FILENAME = "app-backup.json";
 
 // ─── Module state ─────────────────────────────────────────────────────────────
-let tokenClient   = null; // GIS TokenClient instance
-let accessToken   = null; // Current OAuth access token
+let tokenClient = null; // GIS TokenClient instance
+let accessToken = null; // Current OAuth access token
 
 // ─── Initialisation ───────────────────────────────────────────────────────────
 
@@ -34,9 +34,9 @@ export function initGoogleAuth() {
 
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
-    scope:     DRIVE_SCOPE,
+    scope: DRIVE_SCOPE,
     // Token arrives here after the user grants permission
-    callback: () => {}, // overridden per-call below
+    callback: () => { }, // overridden per-call below
   });
 }
 
@@ -60,7 +60,7 @@ export async function syncToDrive(onStatus) {
     await requestToken();
 
     onStatus("Reading local data…");
-    const items   = await getAllItems();
+    const items = await getAllItems();
     const payload = JSON.stringify({ lastUpdated: Date.now(), items }, null, 2);
 
     onStatus("Uploading to Google Drive…");
@@ -122,8 +122,8 @@ function requestToken() {
  * @returns {Promise<string|null>} File ID if found, null otherwise.
  */
 async function findFile() {
-  const query  = encodeURIComponent(`name='${BACKUP_FILENAME}' and trashed=false`);
-  const url    = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&spaces=drive`;
+  const query = encodeURIComponent(`name='${BACKUP_FILENAME}' and trashed=false`);
+  const url = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&spaces=drive`;
 
   const res = await driveRequest(url, { method: "GET" });
 
@@ -146,9 +146,9 @@ async function findOrCreateFile() {
     const res = await driveRequest(
       "https://www.googleapis.com/drive/v3/files?fields=id",
       {
-        method:  "POST",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(metadata),
+        body: JSON.stringify(metadata),
       }
     );
 
@@ -185,7 +185,7 @@ async function uploadFile(fileId, content) {
   const url = `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart&fields=id`;
 
   const res = await driveRequest(url, {
-    method:  "PATCH",
+    method: "PATCH",
     headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
     body,
   });
