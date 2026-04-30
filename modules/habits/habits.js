@@ -1,23 +1,36 @@
 /**
- * water.js — Water tracking logic and UI
+ * modules/habits/habits.js
  */
 
-import { addWaterIntake, getWaterIntakeForToday, removeLastWaterIntake } from "../../db.js";
+import { addWaterIntake, getWaterIntakeForToday, removeLastWaterIntake } from "./db.js";
+import { markUnsyncedChanges } from "../../db.js";
 
-const waterCountEl = document.getElementById("water-count");
-const waterFillEl = document.getElementById("water-fill");
-const btnAddWater = document.getElementById("btn-add-water");
-const btnRemoveWater = document.getElementById("btn-remove-water");
-const waterGoal = 12;
+export async function initHabits(container, preloadedHtml) {
+  if (preloadedHtml) {
+    container.innerHTML = preloadedHtml;
+  } else {
+    const response = await fetch("./modules/habits/habits.html");
+    container.innerHTML = await response.text();
+  }
 
-export async function initWaterTracker() {
-  await updateWaterUI();
+  const waterCountEl = container.querySelector("#water-count");
+  const waterFillEl = container.querySelector("#water-fill");
+  const btnAddWater = container.querySelector("#btn-add-water");
+  const btnRemoveWater = container.querySelector("#btn-remove-water");
+  const waterGoal = 12;
+
+  const updateUI = async () => {
+    const count = await getWaterIntakeForToday();
+    waterCountEl.textContent = `${count} / ${waterGoal}`;
+    const percentage = Math.min((count / waterGoal) * 100, 100);
+    waterFillEl.style.height = `${percentage}%`;
+    waterCountEl.classList.toggle("goal-reached", count >= waterGoal);
+  };
 
   btnAddWater.addEventListener("click", async () => {
     await addWaterIntake();
-    await updateWaterUI();
-    
-    // Add a little splash animation if we want to be premium
+    await markUnsyncedChanges();
+    await updateUI();
     btnAddWater.classList.add("splash");
     setTimeout(() => btnAddWater.classList.remove("splash"), 500);
   });
@@ -25,70 +38,10 @@ export async function initWaterTracker() {
   btnRemoveWater.addEventListener("click", async () => {
     const removed = await removeLastWaterIntake();
     if (removed) {
-      await updateWaterUI();
+      await markUnsyncedChanges();
+      await updateUI();
     }
   });
 
-  // Start notification timer
-  setupWaterNotifications();
-}
-
-async function updateWaterUI() {
-  const count = await getWaterIntakeForToday();
-  waterCountEl.textContent = `${count} / ${waterGoal}`;
-  
-  const percentage = Math.min((count / waterGoal) * 100, 100);
-  waterFillEl.style.height = `${percentage}%`;
-  
-  if (count >= waterGoal) {
-    waterCountEl.classList.add("goal-reached");
-  } else {
-    waterCountEl.classList.remove("goal-reached");
-  }
-}
-
-function setupWaterNotifications() {
-  // Check every minute if we should send a notification
-  setInterval(checkAndNotify, 60000);
-  checkAndNotify(); // Initial check
-}
-
-async function checkAndNotify() {
-  const now = new Date();
-  const hour = now.getHours();
-  const minutes = now.getMinutes();
-
-  // Between 9:00 and 21:00 (9 AM to 9 PM)
-  if (hour >= 9 && hour <= 21) {
-    // We only want to notify once per hour, ideally around the top of the hour
-    // Or if the user hasn't been notified for this hour yet.
-    const lastNotifHour = localStorage.getItem("lastWaterNotifHour");
-    
-    if (lastNotifHour != hour) {
-      // It's a new hour!
-      await sendWaterNotification(hour);
-      localStorage.setItem("lastWaterNotifHour", hour);
-    }
-  }
-}
-
-async function sendWaterNotification(hour) {
-  if (!("Notification" in window)) return;
-  
-  if (Notification.permission === "granted") {
-    const reg = await navigator.serviceWorker.ready;
-    const count = await getWaterIntakeForToday();
-    
-    let body = `¡Es hora de un vaso de agua! Llevas ${count} de ${waterGoal}.`;
-    if (count >= waterGoal) {
-      body = `¡Meta cumplida! Has tomado ${count} vasos de agua hoy. ¡Sigue así!`;
-    }
-
-    reg.showNotification("Hidratación", {
-      body: body,
-      icon: "./icons/icon-192.png",
-      tag: "water-reminder",
-      renotify: true
-    });
-  }
+  await updateUI();
 }

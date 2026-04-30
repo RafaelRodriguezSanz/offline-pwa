@@ -1,0 +1,19 @@
+<section id="books-app" class="app-section">
+  <div class="books-container">
+    <form class="book-form-card" id="book-form">
+      <h2>Nuevo Libro</h2>
+      <input type="text" id="book-title" placeholder="Título del libro" required>
+      <input type="text" id="book-author" placeholder="Autor" required>
+      <input type="url" id="book-cover" placeholder="URL de la portada (JPG/PNG)">
+      <input type="number" id="book-pages" placeholder="Total de páginas" required>
+      <button type="button" id="btn-add-book-submit" class="btn-primary">Añadir a la Biblioteca</button>
+    </form>
+
+    <div class="items-section">
+      <h2>Mi Biblioteca</h2>
+      <ul id="books-list">
+        <li class="empty-state">Cargando biblioteca...</li>
+      </ul>
+    </div>
+  </div>
+</section>
