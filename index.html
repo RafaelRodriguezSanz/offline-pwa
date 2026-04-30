@@ -5,31 +5,39 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0f0f0f" />
-  <meta name="description" content="Offline-first notes app with daily Google Drive backup." />
+  <meta name="description" content="Multi-App PWA: Notes, Habits and Tasks." />
 
   <!-- PWA meta -->
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="LocalSync" />
+  <meta name="apple-mobile-web-app-title" content="MultiPWA" />
   <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
-  <title>LocalSync</title>
+  <title>MultiPWA</title>
 
   <!-- Manifest -->
   <link rel="manifest" href="./manifest.json" />
 
-  <!-- Apple touch icon (fallback to 512 png) -->
+  <!-- Apple touch icon -->
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
 
-  <!-- Google fonts: DM Mono + DM Sans -->
+  <!-- Google fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;600&display=swap"
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
+  <!-- Global & Module Styles -->
   <link rel="stylesheet" href="./styles.css" />
   <link rel="stylesheet" href="./modules/notes/notes.css" />
   <link rel="stylesheet" href="./modules/habits/habits.css" />
+
+  <script>
+    if (window.location.protocol === 'file:') {
+      alert("¡Atención! No puedes abrir esta App haciendo doble clic en el archivo. \n\nPor favor, usa la dirección: http://localhost:8000");
+      document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:20%'>Usa <a href='http://localhost:8000' style='color:lime'>http://localhost:8000</a> para abrir la App</h1>";
+    }
+  </script>
 </head>
 
 <body>
@@ -37,6 +45,11 @@
 
     <!-- ── Header ─────────────────────────────────────────────────── -->
     <header>
+      <button id="menu-toggle" class="btn-icon" aria-label="Open menu">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
       <div class="logo">multi<span>pwa</span></div>
       <div id="sync-status" role="status" aria-live="polite"></div>
     </header>
@@ -64,6 +77,12 @@
     </nav>
     <div id="nav-overlay" class="nav-overlay"></div>
 
+    <!-- ── Status Bar (Meta) ──────────────────────────────────────── -->
+    <div class="meta-bar">
+      <div id="last-sync-text">Loading sync status…</div>
+      <div class="offline-badge">Offline</div>
+    </div>
+
     <!-- ── Notification permission banner ─────────────────────────── -->
     <div id="notif-banner" hidden role="alert">
       <p>Enable notifications for sync reminders and hydration alerts.</p>
@@ -73,92 +92,76 @@
       </div>
     </div>
 
-    <!-- ── Notes App ──────────────────────────────────────────────── -->
-    <div id="notes-app" class="app-section">
-      <!-- ── Input ──────────────────────────────────────────────────── -->
-      <section class="input-section" aria-label="Add a new note">
-        <textarea id="note-input" placeholder="Write a note… (Ctrl+Enter to save)" aria-label="Note text"></textarea>
-
+    <!-- ── MODULE: Notes ──────────────────────────────────────────── -->
+    <section id="notes-app" class="app-section">
+      <div class="input-section">
+        <textarea id="note-input" placeholder="Escribe una nota rápida..."></textarea>
         <div class="btn-row">
-          <button id="btn-save" class="btn-primary">Save</button>
-          <button id="btn-sync" class="btn-secondary">Sync now →</button>
+          <button id="btn-save" class="btn-primary">Guardar Nota</button>
+          <button id="btn-sync" class="btn-secondary">Sync Drive</button>
         </div>
-      </section>
-
-      <!-- ── Meta bar: last sync + offline indicator ─────────────────── -->
-      <div class="meta-bar">
-        <span id="last-sync-text">Checking…</span>
-        <span class="offline-badge" aria-live="polite">offline</span>
       </div>
 
-      <!-- ── Notes list ─────────────────────────────────────────────── -->
-      <section class="items-section" aria-label="Saved notes">
-        <h2>Notes</h2>
-        <ul id="items-list" aria-live="polite"></ul>
-      </section>
-    </div>
+      <div class="items-section">
+        <h2>Tus Notas</h2>
+        <ul id="items-list">
+          <li class="empty-state">No hay notas guardadas localmente.</li>
+        </ul>
+      </div>
+    </section>
 
-    <!-- ── Water Tracker App ──────────────────────────────────────── -->
-    <div id="water-app" class="app-section" hidden>
-      <section class="water-container">
+    <!-- ── MODULE: Water Tracker ───────────────────────────────────── -->
+    <section id="water-app" class="app-section" hidden>
+      <div class="water-container">
         <div class="water-card">
-          <h2>Hydration Tracker</h2>
-          <div class="water-stats">
+          <div class="glass-visual">
+            <div class="glass-container">
+              <div id="water-fill" class="water-fill">
+                <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+                  <defs>
+                    <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
+                  </defs>
+                  <g class="parallax">
+                    <use href="#gentle-wave" x="48" y="0" fill="rgba(56, 189, 248, 0.7)" />
+                    <use href="#gentle-wave" x="48" y="3" fill="rgba(56, 189, 248, 0.5)" />
+                    <use href="#gentle-wave" x="48" y="5" fill="rgba(56, 189, 248, 0.3)" />
+                    <use href="#gentle-wave" x="48" y="7" fill="#38bdf8" />
+                  </g>
+                </svg>
+              </div>
+            </div>
             <div id="water-count" class="count-display">0 / 12</div>
-            <p>Target: 12 glasses / day</p>
-          </div>
-          
-          <div class="progress-container">
-            <div id="water-progress-fill" class="progress-fill"></div>
           </div>
 
-          <button id="btn-add-water" class="btn-water-add">
-            <span class="plus">+</span>
-            <span class="label">Drink Glass</span>
-          </button>
+          <div class="water-actions">
+            <button id="btn-remove-water" class="btn-water-action secondary" title="Remove glass">
+              <span>−</span>
+            </button>
+            <button id="btn-add-water" class="btn-water-add">
+              <span class="plus">+</span>
+              <span class="label">Drink Glass</span>
+            </button>
+          </div>
           
-          <p class="notif-hint">Notifications: 9 AM - 9 PM hourly</p>
+          <p class="notif-hint">Daily Goal: 12 Glasses</p>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
 
-    <!-- ── Tasks App ────────────────────────────────────────────── -->
-    <div id="tasks-app" class="app-section" hidden>
-      <section class="tasks-container">
-        <div class="water-card">
-          <h2>Tasks</h2>
-          <p class="muted">Task management coming soon...</p>
-        </div>
-      </section>
-    </div>
-
-    <!-- ── Navigation ────────────────────────────────────────────── -->
-    <nav class="bottom-nav">
-      <button class="nav-item active" data-target="notes-app">
-        <span class="icon">📝</span>
-        <span class="label">Notes</span>
-      </button>
-      <button class="nav-item" data-target="water-app">
-        <span class="icon">💧</span>
-        <span class="label">Water</span>
-      </button>
-      <button class="nav-item" data-target="tasks-app">
-        <span class="icon">✅</span>
-        <span class="label">Tasks</span>
-      </button>
-    </nav>
+    <!-- ── MODULE: Tasks ───────────────────────────────────────────── -->
+    <section id="tasks-app" class="app-section" hidden>
+      <div class="empty-state">
+        <p>Próximamente: Gestor de Tareas</p>
+      </div>
+    </section>
 
   </main>
 
-  <!--
-    Google Identity Services script.
-    "onload" calls window.onGISLoad() which is defined in app.js
-    after the module has booted — this avoids a race condition.
-  -->
-  <script src="https://accounts.google.com/gsi/client" async onload="window.onGISLoad?.()"></script>
-
   <!-- ES module entry point -->
   <script type="module" src="./app.js"></script>
+
+  <!-- Google GSI Client -->
+  <script src="https://accounts.google.com/gsi/client" async onload="window.onGISLoad?.()"></script>
 </body>
 
 </html>

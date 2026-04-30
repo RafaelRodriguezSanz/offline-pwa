@@ -16,12 +16,13 @@ const ASSETS_TO_CACHE = [
   "./sync.js",
   "./styles.css",
   "./manifest.json",
-  "./modules/notes.js",
-  "./modules/habits.js",
-  "./modules/tasks.js",
+  "./modules/notes/notes.js",
+  "./modules/notes/notes.css",
+  "./modules/habits/habits.js",
+  "./modules/habits/habits.css",
+  "./modules/tasks/tasks.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "https://accounts.google.com/gsi/client",
 ];
 
 // ─── Install ──────────────────────────────────────────────────────────────────
@@ -108,7 +109,7 @@ self.addEventListener("fetch", (event) => {
 // ─── Push / Notification (optional) ──────────────────────────────────────────
 
 self.addEventListener("push", (event) => {
-  const title = "LocalSync";
+  const title = "MultiPWA";
   const options = {
     body: "Open the app to sync your data.",
     icon: "./icons/icon-192.png",

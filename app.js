@@ -4,8 +4,8 @@
 
 import { getSyncState } from "./db.js";
 import { initGoogleAuth, syncToDrive } from "./sync.js";
-import { initNotes, refreshItems } from "./modules/notes.js";
-import { initWaterTracker } from "./modules/habits.js";
+import { initNotes, refreshItems } from "./modules/notes/notes.js";
+import { initWaterTracker } from "./modules/habits/habits.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -21,12 +21,28 @@ const notifDismiss  = document.getElementById("btn-dismiss-notif");
 const syncBtn       = document.getElementById("btn-sync");
 
 // Navigation
-const navItems = document.querySelectorAll(".nav-item");
+const navItems    = document.querySelectorAll(".nav-item");
 const appSections = document.querySelectorAll(".app-section");
+const sideNav     = document.getElementById("side-nav");
+const menuToggle  = document.getElementById("menu-toggle");
+const menuClose   = document.getElementById("menu-close");
+const navOverlay  = document.getElementById("nav-overlay");
 
 // ─── Navigation Logic ─────────────────────────────────────────────────────────
 
+function toggleMenu(show) {
+  sideNav.classList.toggle("open", show);
+  navOverlay.classList.toggle("show", show);
+}
+
 function setupNavigation() {
+  if (!menuToggle) return;
+
+  // Toggle buttons
+  menuToggle.addEventListener("click", () => toggleMenu(true));
+  menuClose.addEventListener("click", () => toggleMenu(false));
+  navOverlay.addEventListener("click", () => toggleMenu(false));
+
   navItems.forEach(item => {
     item.addEventListener("click", () => {
       const targetId = item.getAttribute("data-target");
@@ -39,6 +55,9 @@ function setupNavigation() {
       appSections.forEach(section => {
         section.hidden = (section.id !== targetId);
       });
+
+      // Close menu
+      toggleMenu(false);
     });
   });
 }
@@ -139,6 +158,11 @@ function updateOnlineStatus() {
 // ─── Event wiring ─────────────────────────────────────────────────────────────
 
 syncBtn.addEventListener("click", async () => {
+  if (!window.google) {
+    setStatus("Sync unavailable (Google script blocked).", "error");
+    return;
+  }
+
   syncBtn.disabled = true;
   setStatus("Starting sync…", "active");
 
@@ -160,6 +184,9 @@ window.addEventListener("offline", updateOnlineStatus);
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 
 async function init() {
+  // Setup navigation first for immediate interactivity
+  setupNavigation();
+
   await registerServiceWorker();
   updateOnlineStatus();
 
@@ -172,7 +199,6 @@ async function init() {
   await updateLastSyncDisplay();
   showNotifBanner();
   await maybeAutoSync();
-  setupNavigation();
 
   console.log("[App] MultiPWA Ready.");
 }
