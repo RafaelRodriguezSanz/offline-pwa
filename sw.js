@@ -5,7 +5,7 @@
  * loads instantly and works fully offline after the first visit.
  */
 
-const CACHE_NAME = "localsync-v1";
+const CACHE_NAME = "localsync-v2";
 
 // All assets that must be available offline
 const ASSETS_TO_CACHE = [
@@ -17,6 +17,7 @@ const ASSETS_TO_CACHE = [
   "./modules/ui.js",
   "./styles.css",
   "./manifest.json",
+  "./static/body.svg",
   "./modules/notes/notes.js",
   "./modules/notes/notes.css",
   "./modules/notes/notes.html",
