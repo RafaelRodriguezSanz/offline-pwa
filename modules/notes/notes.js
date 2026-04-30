@@ -8,7 +8,7 @@ import {
   deleteItem,
   markUnsyncedChanges,
   getSyncState,
-} from "../db.js";
+} from "../../db.js";
 
 // DOM references
 const textarea  = document.getElementById("note-input");

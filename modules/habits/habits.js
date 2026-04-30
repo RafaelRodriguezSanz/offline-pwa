@@ -2,11 +2,12 @@
  * water.js — Water tracking logic and UI
  */
 
-import { addWaterIntake, getWaterIntakeForToday } from "../db.js";
+import { addWaterIntake, getWaterIntakeForToday, removeLastWaterIntake } from "../../db.js";
 
 const waterCountEl = document.getElementById("water-count");
-const waterProgressEl = document.getElementById("water-progress-fill");
+const waterFillEl = document.getElementById("water-fill");
 const btnAddWater = document.getElementById("btn-add-water");
+const btnRemoveWater = document.getElementById("btn-remove-water");
 const waterGoal = 12;
 
 export async function initWaterTracker() {
@@ -21,6 +22,13 @@ export async function initWaterTracker() {
     setTimeout(() => btnAddWater.classList.remove("splash"), 500);
   });
 
+  btnRemoveWater.addEventListener("click", async () => {
+    const removed = await removeLastWaterIntake();
+    if (removed) {
+      await updateWaterUI();
+    }
+  });
+
   // Start notification timer
   setupWaterNotifications();
 }
@@ -30,7 +38,7 @@ async function updateWaterUI() {
   waterCountEl.textContent = `${count} / ${waterGoal}`;
   
   const percentage = Math.min((count / waterGoal) * 100, 100);
-  waterProgressEl.style.width = `${percentage}%`;
+  waterFillEl.style.height = `${percentage}%`;
   
   if (count >= waterGoal) {
     waterCountEl.classList.add("goal-reached");

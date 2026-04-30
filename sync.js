@@ -27,17 +27,20 @@ let accessToken = null; // Current OAuth access token
  * Must be called after the GIS script has loaded.
  */
 export function initGoogleAuth() {
-  if (!window.google?.accounts?.oauth2) {
-    console.warn("Google Identity Services not loaded.");
-    return;
-  }
+  try {
+    if (!window.google?.accounts?.oauth2) {
+      console.warn("Google Identity Services not loaded.");
+      return;
+    }
 
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: DRIVE_SCOPE,
-    // Token arrives here after the user grants permission
-    callback: () => { }, // overridden per-call below
-  });
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: () => { }, 
+    });
+  } catch (err) {
+    console.error("Error initializing Google Auth:", err);
+  }
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
