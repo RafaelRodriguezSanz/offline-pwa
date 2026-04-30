@@ -16,13 +16,12 @@ const ASSETS_TO_CACHE = [
   "./sync.js",
   "./styles.css",
   "./manifest.json",
-  "./modules/notes/notes.js",
-  "./modules/notes/notes.css",
-  "./modules/habits/habits.js",
-  "./modules/habits/habits.css",
-  "./modules/tasks/tasks.js",
+  "./modules/notes.js",
+  "./modules/habits.js",
+  "./modules/tasks.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
+  "https://accounts.google.com/gsi/client",
 ];
 
 // ─── Install ──────────────────────────────────────────────────────────────────

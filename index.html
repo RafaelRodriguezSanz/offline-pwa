@@ -37,11 +37,6 @@
 
     <!-- ── Header ─────────────────────────────────────────────────── -->
     <header>
-      <button id="menu-toggle" class="btn-icon" aria-label="Open menu">
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-      </button>
       <div class="logo">multi<span>pwa</span></div>
       <div id="sync-status" role="status" aria-live="polite"></div>
     </header>
@@ -107,38 +102,22 @@
     <div id="water-app" class="app-section" hidden>
       <section class="water-container">
         <div class="water-card">
-          <h2>Hydration</h2>
-          
-          <div class="glass-visual">
-            <div class="glass-container">
-              <div id="water-fill" class="water-fill">
-                <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
-                  <defs>
-                    <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
-                  </defs>
-                  <g class="parallax">
-                    <use href="#gentle-wave" x="48" y="0" fill="rgba(56, 189, 248, 0.7)" />
-                    <use href="#gentle-wave" x="48" y="3" fill="rgba(56, 189, 248, 0.5)" />
-                    <use href="#gentle-wave" x="48" y="5" fill="rgba(56, 189, 248, 0.3)" />
-                    <use href="#gentle-wave" x="48" y="7" fill="#38bdf8" />
-                  </g>
-                </svg>
-              </div>
-            </div>
+          <h2>Hydration Tracker</h2>
+          <div class="water-stats">
             <div id="water-count" class="count-display">0 / 12</div>
+            <p>Target: 12 glasses / day</p>
+          </div>
+          
+          <div class="progress-container">
+            <div id="water-progress-fill" class="progress-fill"></div>
           </div>
 
-          <div class="water-actions">
-            <button id="btn-remove-water" class="btn-water-action secondary" title="Remove glass">
-              <span>−</span>
-            </button>
-            <button id="btn-add-water" class="btn-water-add">
-              <span class="plus">+</span>
-              <span class="label">Drink Glass</span>
-            </button>
-          </div>
+          <button id="btn-add-water" class="btn-water-add">
+            <span class="plus">+</span>
+            <span class="label">Drink Glass</span>
+          </button>
           
-          <p class="notif-hint">Daily Goal: 12 Glasses</p>
+          <p class="notif-hint">Notifications: 9 AM - 9 PM hourly</p>
         </div>
       </section>
     </div>
@@ -152,6 +131,22 @@
         </div>
       </section>
     </div>
+
+    <!-- ── Navigation ────────────────────────────────────────────── -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-target="notes-app">
+        <span class="icon">📝</span>
+        <span class="label">Notes</span>
+      </button>
+      <button class="nav-item" data-target="water-app">
+        <span class="icon">💧</span>
+        <span class="label">Water</span>
+      </button>
+      <button class="nav-item" data-target="tasks-app">
+        <span class="icon">✅</span>
+        <span class="label">Tasks</span>
+      </button>
+    </nav>
 
   </main>
 
