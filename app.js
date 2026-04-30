@@ -97,6 +97,11 @@ function toggleMenu(show) {
   navOverlay.classList.toggle("show", show);
 }
 
+function toggleMenu(show) {
+  sideNav.classList.toggle("open", show);
+  navOverlay.classList.toggle("show", show);
+}
+
 function setupNavigation() {
   if (!menuToggle) return;
 
