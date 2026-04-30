@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="LocalSync" />
-  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
   <title>LocalSync</title>
 
   <!-- Manifest -->
@@ -35,40 +35,93 @@
 
     <!-- ── Header ─────────────────────────────────────────────────── -->
     <header>
-      <div class="logo">local<span>sync</span></div>
+      <div class="logo">multi<span>pwa</span></div>
       <div id="sync-status" role="status" aria-live="polite"></div>
     </header>
 
     <!-- ── Notification permission banner ─────────────────────────── -->
     <div id="notif-banner" hidden role="alert">
-      <p>Enable notifications to be reminded when you have unsynced data.</p>
+      <p>Enable notifications for sync reminders and hydration alerts.</p>
       <div class="btn-row">
         <button id="btn-allow-notif" class="btn-primary">Allow</button>
         <button id="btn-dismiss-notif" class="btn-secondary">Not now</button>
       </div>
     </div>
 
-    <!-- ── Input ──────────────────────────────────────────────────── -->
-    <section class="input-section" aria-label="Add a new note">
-      <textarea id="note-input" placeholder="Write a note… (Ctrl+Enter to save)" aria-label="Note text"></textarea>
+    <!-- ── Notes App ──────────────────────────────────────────────── -->
+    <div id="notes-app" class="app-section">
+      <!-- ── Input ──────────────────────────────────────────────────── -->
+      <section class="input-section" aria-label="Add a new note">
+        <textarea id="note-input" placeholder="Write a note… (Ctrl+Enter to save)" aria-label="Note text"></textarea>
 
-      <div class="btn-row">
-        <button id="btn-save" class="btn-primary">Save</button>
-        <button id="btn-sync" class="btn-secondary">Sync now →</button>
+        <div class="btn-row">
+          <button id="btn-save" class="btn-primary">Save</button>
+          <button id="btn-sync" class="btn-secondary">Sync now →</button>
+        </div>
+      </section>
+
+      <!-- ── Meta bar: last sync + offline indicator ─────────────────── -->
+      <div class="meta-bar">
+        <span id="last-sync-text">Checking…</span>
+        <span class="offline-badge" aria-live="polite">offline</span>
       </div>
-    </section>
 
-    <!-- ── Meta bar: last sync + offline indicator ─────────────────── -->
-    <div class="meta-bar">
-      <span id="last-sync-text">Checking…</span>
-      <span class="offline-badge" aria-live="polite">offline</span>
+      <!-- ── Notes list ─────────────────────────────────────────────── -->
+      <section class="items-section" aria-label="Saved notes">
+        <h2>Notes</h2>
+        <ul id="items-list" aria-live="polite"></ul>
+      </section>
     </div>
 
-    <!-- ── Notes list ─────────────────────────────────────────────── -->
-    <section class="items-section" aria-label="Saved notes">
-      <h2>Notes</h2>
-      <ul id="items-list" aria-live="polite"></ul>
-    </section>
+    <!-- ── Water Tracker App ──────────────────────────────────────── -->
+    <div id="water-app" class="app-section" hidden>
+      <section class="water-container">
+        <div class="water-card">
+          <h2>Hydration Tracker</h2>
+          <div class="water-stats">
+            <div id="water-count" class="count-display">0 / 12</div>
+            <p>Target: 12 glasses / day</p>
+          </div>
+          
+          <div class="progress-container">
+            <div id="water-progress-fill" class="progress-fill"></div>
+          </div>
+
+          <button id="btn-add-water" class="btn-water-add">
+            <span class="plus">+</span>
+            <span class="label">Drink Glass</span>
+          </button>
+          
+          <p class="notif-hint">Notifications: 9 AM - 9 PM hourly</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── Tasks App ────────────────────────────────────────────── -->
+    <div id="tasks-app" class="app-section" hidden>
+      <section class="tasks-container">
+        <div class="water-card">
+          <h2>Tasks</h2>
+          <p class="muted">Task management coming soon...</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── Navigation ────────────────────────────────────────────── -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-target="notes-app">
+        <span class="icon">📝</span>
+        <span class="label">Notes</span>
+      </button>
+      <button class="nav-item" data-target="water-app">
+        <span class="icon">💧</span>
+        <span class="label">Water</span>
+      </button>
+      <button class="nav-item" data-target="tasks-app">
+        <span class="icon">✅</span>
+        <span class="label">Tasks</span>
+      </button>
+    </nav>
 
   </main>
 

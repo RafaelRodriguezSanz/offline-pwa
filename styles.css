@@ -270,3 +270,176 @@ body.offline .offline-badge { display: flex; }
   header { flex-direction: column; align-items: flex-start; }
   #sync-status { text-align: left; max-width: 100%; }
 }
+
+/* ─── Navigation ────────────────────────────────────────────────────────── */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(70px + var(--safe-bottom, 0px));
+  background: rgba(15, 15, 15, 0.85);
+  backdrop-filter: blur(20px);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: var(--safe-bottom, 0px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 1000;
+}
+
+.nav-item {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #888;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 8px;
+}
+
+.nav-item .icon {
+  font-size: 1.4rem;
+  transition: transform 0.3s ease;
+}
+
+.nav-item .label {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.nav-item.active {
+  color: #fff;
+}
+
+.nav-item.active .icon {
+  transform: translateY(-4px) scale(1.2);
+}
+
+/* ─── Water App Styles ─────────────────────────────────────────────────── */
+
+#water-app {
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+}
+
+.water-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.water-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 2rem;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.water-stats {
+  margin: 1.5rem 0;
+}
+
+.count-display {
+  font-size: 4rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: #38bdf8;
+  margin-bottom: 0.5rem;
+  transition: all 0.5s ease;
+}
+
+.count-display.goal-reached {
+  color: #4ade80;
+  text-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+}
+
+.progress-container {
+  width: 100%;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  margin-bottom: 2.5rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+  border-radius: 6px;
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+.btn-water-add {
+  background: linear-gradient(135deg, #38bdf8 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  padding: 1.1rem 2rem;
+  border-radius: 100px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  box-shadow: 0 10px 20px rgba(56, 189, 248, 0.2);
+  transition: all 0.3s ease;
+  font-family: var(--font-mono);
+}
+
+.btn-water-add:active {
+  transform: scale(0.95);
+  filter: brightness(1.1);
+}
+
+.btn-water-add.splash {
+  animation: splash 0.5s ease-out;
+}
+
+@keyframes splash {
+  0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.6); }
+  100% { box-shadow: 0 0 0 30px rgba(56, 189, 248, 0); }
+}
+
+.notif-hint {
+  margin-top: 1.5rem;
+  font-size: 0.75rem;
+  color: #666;
+  font-style: italic;
+}
+
+/* ─── App Switching ────────────────────────────────────────────────────── */
+
+.app-section {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+[hidden] {
+  display: none !important;
+}
+
+:root {
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.app-shell {
+  padding-bottom: 100px;
+}
+

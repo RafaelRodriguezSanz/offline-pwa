@@ -16,10 +16,11 @@ const ASSETS_TO_CACHE = [
   "./sync.js",
   "./styles.css",
   "./manifest.json",
+  "./modules/notes.js",
+  "./modules/habits.js",
+  "./modules/tasks.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  // Google Identity Services — cached so auth UI loads offline
-  // (actual token requests still require network)
   "https://accounts.google.com/gsi/client",
 ];
 
