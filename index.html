@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0f0f0f" />
-  <meta name="description" content="Multi-App PWA: Notes, Habits and Tasks." />
+  <meta name="description" content="Multi-App PWA: Notes, Habits and Books." />
 
   <!-- PWA meta -->
   <meta name="mobile-web-app-capable" content="yes" />
@@ -31,6 +31,7 @@
   <link rel="stylesheet" href="./styles.css" />
   <link rel="stylesheet" href="./modules/notes/notes.css" />
   <link rel="stylesheet" href="./modules/habits/habits.css" />
+  <link rel="stylesheet" href="./modules/books/books.css" />
 
   <script>
     if (window.location.protocol === 'file:') {
@@ -40,7 +41,18 @@
   </script>
 </head>
 
-<body>
+<body class="offline-ready">
+  <!-- Splash Screen -->
+  <div id="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo">multi<span>pwa</span></div>
+      <div class="splash-loader">
+        <div class="loader-bar"></div>
+      </div>
+      <p class="splash-status">Iniciando sistema...</p>
+    </div>
+  </div>
+
   <main class="app-shell">
 
     <!-- ── Header ─────────────────────────────────────────────────── -->
@@ -51,7 +63,12 @@
         <span class="bar"></span>
       </button>
       <div class="logo">multi<span>pwa</span></div>
-      <div id="sync-status" role="status" aria-live="polite"></div>
+      <div class="header-actions">
+        <div id="sync-status" role="status" aria-live="polite"></div>
+        <button id="btn-sync-global" class="btn-icon" title="Sincronizar todo">
+          <span class="icon">☁️</span>
+        </button>
+      </div>
     </header>
 
     <!-- ── Side Navigation ────────────────────────────────────────── -->
@@ -67,23 +84,26 @@
         <li class="nav-item" data-target="water-app">
           <span class="icon">💧</span> Water Tracker
         </li>
+        <li class="nav-item" data-target="books-app">
+          <span class="icon">📚</span> Mis Libros
+        </li>
         <li class="nav-item" data-target="tasks-app">
           <span class="icon">✅</span> Tasks
         </li>
       </ul>
       <div class="nav-footer">
-        <p>v2.0 Modular</p>
+        <p>v3.0 Component-Based</p>
       </div>
     </nav>
     <div id="nav-overlay" class="nav-overlay"></div>
 
-    <!-- ── Status Bar (Meta) ──────────────────────────────────────── -->
+    <!-- ── Status Bar ── -->
     <div class="meta-bar">
       <div id="last-sync-text">Loading sync status…</div>
       <div class="offline-badge">Offline</div>
     </div>
 
-    <!-- ── Notification permission banner ─────────────────────────── -->
+    <!-- ── Notification banner ── -->
     <div id="notif-banner" hidden role="alert">
       <p>Enable notifications for sync reminders and hydration alerts.</p>
       <div class="btn-row">
@@ -92,75 +112,27 @@
       </div>
     </div>
 
-    <!-- ── MODULE: Notes ──────────────────────────────────────────── -->
-    <section id="notes-app" class="app-section">
-      <div class="input-section">
-        <textarea id="note-input" placeholder="Escribe una nota rápida..."></textarea>
-        <div class="btn-row">
-          <button id="btn-save" class="btn-primary">Guardar Nota</button>
-          <button id="btn-sync" class="btn-secondary">Sync Drive</button>
-        </div>
-      </div>
-
-      <div class="items-section">
-        <h2>Tus Notas</h2>
-        <ul id="items-list">
-          <li class="empty-state">No hay notas guardadas localmente.</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- ── MODULE: Water Tracker ───────────────────────────────────── -->
-    <section id="water-app" class="app-section" hidden>
-      <div class="water-container">
-        <div class="water-card">
-          <div class="glass-visual">
-            <div class="glass-container">
-              <div id="water-fill" class="water-fill">
-                <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
-                  <defs>
-                    <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
-                  </defs>
-                  <g class="parallax">
-                    <use href="#gentle-wave" x="48" y="0" fill="rgba(56, 189, 248, 0.7)" />
-                    <use href="#gentle-wave" x="48" y="3" fill="rgba(56, 189, 248, 0.5)" />
-                    <use href="#gentle-wave" x="48" y="5" fill="rgba(56, 189, 248, 0.3)" />
-                    <use href="#gentle-wave" x="48" y="7" fill="#38bdf8" />
-                  </g>
-                </svg>
-              </div>
-            </div>
-            <div id="water-count" class="count-display">0 / 12</div>
-          </div>
-
-          <div class="water-actions">
-            <button id="btn-remove-water" class="btn-water-action secondary" title="Remove glass">
-              <span>−</span>
-            </button>
-            <button id="btn-add-water" class="btn-water-add">
-              <span class="plus">+</span>
-              <span class="label">Drink Glass</span>
-            </button>
-          </div>
-          
-          <p class="notif-hint">Daily Goal: 12 Glasses</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── MODULE: Tasks ───────────────────────────────────────────── -->
-    <section id="tasks-app" class="app-section" hidden>
-      <div class="empty-state">
-        <p>Próximamente: Gestor de Tareas</p>
-      </div>
-    </section>
+    <!-- ── DINAMIC CONTENT CONTAINER ── -->
+    <div id="app-container">
+      <!-- Módulos inyectarán su HTML aquí -->
+      <div class="loader">Cargando...</div>
+    </div>
 
   </main>
 
-  <!-- ES module entry point -->
-  <script type="module" src="./app.js"></script>
+  <!-- Modal Global -->
+  <div id="modal-container" class="modal-overlay" hidden>
+    <div class="modal-content">
+      <h3 id="modal-title">Título</h3>
+      <p id="modal-message">Mensaje de confirmación</p>
+      <div class="modal-actions">
+        <button id="modal-btn-cancel" class="btn-secondary">Cancelar</button>
+        <button id="modal-btn-confirm" class="btn-primary">Confirmar</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Google GSI Client -->
+  <script type="module" src="./app.js"></script>
   <script src="https://accounts.google.com/gsi/client" async onload="window.onGISLoad?.()"></script>
 </body>
 

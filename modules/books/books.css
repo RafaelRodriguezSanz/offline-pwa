@@ -1,0 +1,161 @@
+/* ─── Books Module Styles ────────────────────────────────────────────── */
+
+.books-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ─── Form ─── */
+.book-form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.book-form-card input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+.book-form-card input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ─── List ─── */
+#books-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.book-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  padding: 1rem;
+  gap: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.book-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(200, 240, 96, 0.3);
+}
+
+.book-cover-container {
+  flex-shrink: 0;
+  width: 100px;
+  height: 150px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+}
+
+.book-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.book-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.book-title-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.book-author-text {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+/* ─── Progress ─── */
+.progress-container {
+  margin-bottom: 1rem;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 100px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 100px;
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.progress-text {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--accent);
+}
+
+/* ─── Actions ─── */
+.book-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.progress-input {
+  width: 60px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.btn-update-progress {
+  flex: 1;
+  padding: 6px 12px !important;
+  font-size: 0.7rem !important;
+  background: rgba(200, 240, 96, 0.1) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(200, 240, 96, 0.2) !important;
+}
+
+.btn-update-progress:hover {
+  background: var(--accent) !important;
+  color: #000 !important;
+}
+
+.btn-delete-book {
+  background: none !important;
+  padding: 0 !important;
+  font-size: 1.1rem !important;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+}
+
+.btn-delete-book:hover {
+  opacity: 1;
+}

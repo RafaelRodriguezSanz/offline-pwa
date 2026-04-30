@@ -33,6 +33,10 @@ textarea:focus        { border-color: var(--accent); }
 }
 
 /* ─── Items list ───────────────────────────────────────────────────────────── */
+.items-section {
+  margin-top: 2.5rem;
+}
+
 .items-section h2 {
   font-family:   var(--font-mono);
   font-size:     0.72rem;

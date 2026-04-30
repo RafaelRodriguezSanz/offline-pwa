@@ -8,7 +8,7 @@
  * The backup file is always named "app-backup.json" in Drive.
  */
 
-import { getAllItems, markSynced } from "./db.js";
+import { getAllDataForSync, markSynced } from "./db.js";
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 // Replace with your own values from Google Cloud Console.
@@ -63,8 +63,8 @@ export async function syncToDrive(onStatus) {
     await requestToken();
 
     onStatus("Reading local data…");
-    const items = await getAllItems();
-    const payload = JSON.stringify({ lastUpdated: Date.now(), items }, null, 2);
+    const data = await getAllDataForSync();
+    const payload = JSON.stringify({ lastUpdated: Date.now(), data }, null, 2);
 
     onStatus("Uploading to Google Drive…");
     const fileId = await findOrCreateFile();
@@ -92,6 +92,11 @@ export async function syncToDrive(onStatus) {
  */
 function requestToken() {
   return new Promise((resolve, reject) => {
+    if (!tokenClient) {
+      // Intentamos inicializar sobre la marcha si el script de Google ya está cargado
+      initGoogleAuth();
+    }
+    
     if (!tokenClient) {
       return reject(new Error("Google Auth not initialised. Check your Client ID."));
     }

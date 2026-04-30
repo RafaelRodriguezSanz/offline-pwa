@@ -84,15 +84,17 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
-  font-size: 2.2rem;
+  font-size: 1.6rem; /* Slightly smaller to fit width */
   font-weight: 700;
   color: #fff;
   text-shadow: 0 4px 15px rgba(0,0,0,0.6);
   font-family: var(--font-mono);
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.4rem 0.8rem;
   border-radius: 12px;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(8px);
+  white-space: nowrap; /* Prevent breaking into multiple lines */
+  pointer-events: none; /* Don't interfere with clicks on the glass if any */
 }
 
 .notif-hint {
