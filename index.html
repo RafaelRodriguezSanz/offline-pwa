@@ -28,6 +28,8 @@
     rel="stylesheet" />
 
   <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./modules/notes/notes.css" />
+  <link rel="stylesheet" href="./modules/habits/habits.css" />
 </head>
 
 <body>
@@ -38,6 +40,29 @@
       <div class="logo">multi<span>pwa</span></div>
       <div id="sync-status" role="status" aria-live="polite"></div>
     </header>
+
+    <!-- ── Side Navigation ────────────────────────────────────────── -->
+    <nav id="side-nav" class="side-nav">
+      <div class="nav-header">
+        <div class="logo">multi<span>pwa</span></div>
+        <button id="menu-close" class="btn-icon">✕</button>
+      </div>
+      <ul class="nav-list">
+        <li class="nav-item active" data-target="notes-app">
+          <span class="icon">📝</span> Notes
+        </li>
+        <li class="nav-item" data-target="water-app">
+          <span class="icon">💧</span> Water Tracker
+        </li>
+        <li class="nav-item" data-target="tasks-app">
+          <span class="icon">✅</span> Tasks
+        </li>
+      </ul>
+      <div class="nav-footer">
+        <p>v2.0 Modular</p>
+      </div>
+    </nav>
+    <div id="nav-overlay" class="nav-overlay"></div>
 
     <!-- ── Notification permission banner ─────────────────────────── -->
     <div id="notif-banner" hidden role="alert">
