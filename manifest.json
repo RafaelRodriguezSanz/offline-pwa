@@ -1,7 +1,7 @@
 {
-  "name": "LocalSync — Offline Notes",
-  "short_name": "LocalSync",
-  "description": "Offline-first notes app with Google Drive backup",
+  "name": "MultiApp PWA",
+  "short_name": "MultiApp",
+  "description": "Modular PWA with Notes, Habits, and Tasks",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f0f0f",

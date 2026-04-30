@@ -1,24 +1,11 @@
 /**
- * app.js — UI layer and orchestration
- *
- * Responsibilities:
- *  - Register the service worker
- *  - Boot Google Auth
- *  - Request notification permission
- *  - Render the item list
- *  - Wire up "Save" and "Sync now" buttons
- *  - Run auto-sync on load if conditions are met
+ * app.js — Main orchestrator
  */
 
-import {
-  addItem,
-  getAllItems,
-  deleteItem,
-  markUnsyncedChanges,
-  getSyncState,
-} from "./db.js";
-
+import { getSyncState } from "./db.js";
 import { initGoogleAuth, syncToDrive } from "./sync.js";
+import { initNotes, refreshItems } from "./modules/notes.js";
+import { initWaterTracker } from "./modules/habits.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -26,15 +13,35 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 // ─── DOM references ───────────────────────────────────────────────────────────
 
-const textarea      = document.getElementById("note-input");
-const saveBtn       = document.getElementById("btn-save");
-const syncBtn       = document.getElementById("btn-sync");
-const itemsList     = document.getElementById("items-list");
 const syncStatus    = document.getElementById("sync-status");
 const lastSyncEl    = document.getElementById("last-sync-text");
 const notifBanner   = document.getElementById("notif-banner");
 const notifAllowBtn = document.getElementById("btn-allow-notif");
 const notifDismiss  = document.getElementById("btn-dismiss-notif");
+const syncBtn       = document.getElementById("btn-sync");
+
+// Navigation
+const navItems = document.querySelectorAll(".nav-item");
+const appSections = document.querySelectorAll(".app-section");
+
+// ─── Navigation Logic ─────────────────────────────────────────────────────────
+
+function setupNavigation() {
+  navItems.forEach(item => {
+    item.addEventListener("click", () => {
+      const targetId = item.getAttribute("data-target");
+      
+      // Update active nav item
+      navItems.forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+      
+      // Show/hide sections
+      appSections.forEach(section => {
+        section.hidden = (section.id !== targetId);
+      });
+    });
+  });
+}
 
 // ─── Service Worker ───────────────────────────────────────────────────────────
 
@@ -52,11 +59,7 @@ async function registerServiceWorker() {
 // ─── Notification helpers ─────────────────────────────────────────────────────
 
 function showNotifBanner() {
-  // Only show if notifications are supported and not yet decided
-  if (
-    "Notification" in window &&
-    Notification.permission === "default"
-  ) {
+  if ("Notification" in window && Notification.permission === "default") {
     notifBanner.hidden = false;
   }
 }
@@ -66,11 +69,10 @@ async function requestNotificationPermission() {
   notifBanner.hidden = true;
 
   if (permission === "granted") {
-    // Show a test notification so the user sees it works
     if ("serviceWorker" in navigator) {
       const reg = await navigator.serviceWorker.ready;
-      reg.showNotification("LocalSync", {
-        body: "You'll be reminded to sync when data is pending.",
+      reg.showNotification("MultiPWA", {
+        body: "Notifications enabled for hydration and sync reminders.",
         icon: "./icons/icon-192.png",
         tag:  "welcome",
       });
@@ -105,59 +107,8 @@ async function updateLastSyncDisplay() {
     `Last sync: ${formatted}` + (hasUnsyncedChanges ? " · unsaved changes" : "");
 }
 
-// ─── Item rendering ───────────────────────────────────────────────────────────
-
-function formatTime(ts) {
-  return new Date(ts).toLocaleString(undefined, {
-    month:  "short",
-    day:    "numeric",
-    hour:   "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function renderItems(items) {
-  itemsList.innerHTML = "";
-
-  if (items.length === 0) {
-    itemsList.innerHTML = `<li class="empty-state">No notes yet. Start typing above.</li>`;
-    return;
-  }
-
-  for (const item of items) {
-    const li = document.createElement("li");
-    li.className  = "item-card";
-    li.dataset.id = item.id;
-
-    li.innerHTML = `
-      <span class="item-value">${escapeHTML(item.value)}</span>
-      <span class="item-time">${formatTime(item.createdAt)}</span>
-      <button class="btn-delete" title="Delete note" aria-label="Delete note">✕</button>
-    `;
-
-    // Delete handler
-    li.querySelector(".btn-delete").addEventListener("click", async () => {
-      await deleteItem(item.id);
-      await markUnsyncedChanges();
-      await refreshItems();
-      await updateLastSyncDisplay();
-    });
-
-    itemsList.appendChild(li);
-  }
-}
-
-async function refreshItems() {
-  const items = await getAllItems();
-  renderItems(items);
-}
-
 // ─── Auto-sync logic ──────────────────────────────────────────────────────────
 
-/**
- * Check whether an automatic sync should run on app load.
- * Conditions: hasUnsyncedChanges=true AND >24 h since last sync.
- */
 async function maybeAutoSync() {
   if (!navigator.onLine) return;
 
@@ -169,7 +120,10 @@ async function maybeAutoSync() {
   if (timeSinceSync > ONE_DAY_MS) {
     setStatus("Auto-syncing…", "active");
     const ok = await syncToDrive(setStatus);
-    if (ok) await updateLastSyncDisplay();
+    if (ok) {
+        await updateLastSyncDisplay();
+        await refreshItems(); // Refresh notes list after sync
+    }
   } else {
     const hoursLeft = Math.ceil((ONE_DAY_MS - timeSinceSync) / 3_600_000);
     setStatus(`Sync in ~${hoursLeft}h`, "");
@@ -182,51 +136,18 @@ function updateOnlineStatus() {
   document.body.classList.toggle("offline", !navigator.onLine);
 }
 
-// ─── Utility ──────────────────────────────────────────────────────────────────
-
-function escapeHTML(str) {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 // ─── Event wiring ─────────────────────────────────────────────────────────────
-
-saveBtn.addEventListener("click", async () => {
-  const value = textarea.value.trim();
-  if (!value) return;
-
-  saveBtn.disabled = true;
-
-  await addItem(value);
-  await markUnsyncedChanges();
-
-  textarea.value = "";
-  await refreshItems();
-  await updateLastSyncDisplay();
-  setStatus("Saved locally ✓");
-
-  saveBtn.disabled = false;
-  textarea.focus();
-});
-
-// Allow Ctrl+Enter / Cmd+Enter to save
-textarea.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-    saveBtn.click();
-  }
-});
 
 syncBtn.addEventListener("click", async () => {
   syncBtn.disabled = true;
   setStatus("Starting sync…", "active");
 
   const ok = await syncToDrive(setStatus);
-  if (ok) await updateLastSyncDisplay();
+  if (ok) {
+      await updateLastSyncDisplay();
+      await refreshItems();
+  }
 
-  // Re-enable after a short pause so the user can read the status
   setTimeout(() => { syncBtn.disabled = false; }, 2000);
 });
 
@@ -239,30 +160,21 @@ window.addEventListener("offline", updateOnlineStatus);
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 
 async function init() {
-  // 1. Service worker
   await registerServiceWorker();
-
-  // 2. Online / offline indicator
   updateOnlineStatus();
 
-  // 3. Load GIS token client once the script is ready
-  //    (the script tag uses onload="onGISLoad()" to call this)
   window.onGISLoad = () => initGoogleAuth();
 
-  // 4. Render stored items
-  await refreshItems();
+  // Initialize Modules
+  await initNotes(updateLastSyncDisplay);
+  await initWaterTracker();
 
-  // 5. Show last-sync info
   await updateLastSyncDisplay();
-
-  // 6. Notification permission prompt
   showNotifBanner();
-
-  // 7. Auto-sync if conditions are met
   await maybeAutoSync();
+  setupNavigation();
 
-  console.log("[App] Ready.");
+  console.log("[App] MultiPWA Ready.");
 }
 
-// Kick off
 init();

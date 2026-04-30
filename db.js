@@ -7,7 +7,7 @@
  */
 
 const DB_NAME    = "appDB";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 /** Open (or upgrade) the database. Returns a Promise<IDBDatabase>. */
 function openDB() {
@@ -30,6 +30,15 @@ function openDB() {
       // Metadata store — simple key/value pairs
       if (!db.objectStoreNames.contains("metadata")) {
         db.createObjectStore("metadata", { keyPath: "key" });
+      }
+
+      // Water store — tracking daily intake
+      if (!db.objectStoreNames.contains("water")) {
+        const waterStore = db.createObjectStore("water", {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+        waterStore.createIndex("date", "date", { unique: false });
       }
     };
 
@@ -154,11 +163,79 @@ export async function getSyncState() {
 }
 
 /**
- * Convenience: mark a successful sync.
+ * mark a successful sync.
  */
 export async function markSynced() {
   await Promise.all([
     setMeta("lastSyncAt", Date.now()),
     setMeta("hasUnsyncedChanges", false),
   ]);
+}
+
+// ─── Water ────────────────────────────────────────────────────────────────────
+
+/**
+ * Add a water glass entry.
+ * @returns {Promise<number>}
+ */
+export async function addWaterIntake() {
+  const db = await openDB();
+  const entry = {
+    timestamp: Date.now(),
+    date: new Date().toISOString().split("T")[0],
+  };
+
+  return new Promise((resolve, reject) => {
+    const tx    = db.transaction("water", "readwrite");
+    const store = tx.objectStore("water");
+    const req   = store.add(entry);
+
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+/**
+ * Get the number of glasses for today.
+ * @returns {Promise<number>}
+ */
+export async function getWaterIntakeForToday() {
+  const db = await openDB();
+  const today = new Date().toISOString().split("T")[0];
+
+  return new Promise((resolve, reject) => {
+    const tx    = db.transaction("water", "readonly");
+    const store = tx.objectStore("water");
+    const index = store.index("date");
+    const req   = index.count(IDBKeyRange.only(today));
+
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+/**
+ * Reset water intake for testing or manual reset (optional).
+ */
+export async function clearWaterIntakeToday() {
+  const db = await openDB();
+  const today = new Date().toISOString().split("T")[0];
+
+  return new Promise((resolve, reject) => {
+    const tx    = db.transaction("water", "readwrite");
+    const store = tx.objectStore("water");
+    const index = store.index("date");
+    const req   = index.openKeyCursor(IDBKeyRange.only(today));
+
+    req.onsuccess = (event) => {
+      const cursor = event.target.result;
+      if (cursor) {
+        store.delete(cursor.primaryKey);
+        cursor.continue();
+      } else {
+        resolve();
+      }
+    };
+    req.onerror = () => reject(req.error);
+  });
 }
