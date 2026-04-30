@@ -10,6 +10,11 @@ export function openDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
+    // Timeout safety for DB open
+    const timeout = setTimeout(() => {
+      reject(new Error("IndexedDB opening timed out after 3s"));
+    }, 3000);
+
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
 
@@ -48,8 +53,14 @@ export function openDB() {
       }
     };
 
-    request.onsuccess = () => resolve(request.result);
-    request.onerror   = () => reject(request.error);
+    request.onsuccess = () => {
+      clearTimeout(timeout);
+      resolve(request.result);
+    };
+    request.onerror   = () => {
+      clearTimeout(timeout);
+      reject(request.error);
+    };
   });
 }
 
@@ -127,28 +138,3 @@ export async function getAllDataForSync() {
   });
 }
 
-/**
- * Remove the most recent water glass entry for today.
- */
-export async function removeLastWaterIntake() {
-  const db = await openDB();
-  const today = new Date().toISOString().split("T")[0];
-
-  return new Promise((resolve, reject) => {
-    const tx    = db.transaction("water", "readwrite");
-    const store = tx.objectStore("water");
-    const index = store.index("date");
-    const req   = index.openCursor(IDBKeyRange.only(today), "prev");
-
-    req.onsuccess = (event) => {
-      const cursor = event.target.result;
-      if (cursor) {
-        store.delete(cursor.primaryKey);
-        resolve(true);
-      } else {
-        resolve(false); // Nothing to delete
-      }
-    };
-    req.onerror = () => reject(req.error);
-  });
-}

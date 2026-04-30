@@ -97,11 +97,6 @@ function toggleMenu(show) {
   navOverlay.classList.toggle("show", show);
 }
 
-function toggleMenu(show) {
-  sideNav.classList.toggle("open", show);
-  navOverlay.classList.toggle("show", show);
-}
-
 function setupNavigation() {
   if (!menuToggle) return;
 
@@ -202,28 +197,55 @@ window.addEventListener("offline", () => document.body.classList.add("offline"))
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 
 async function init() {
-  setupNavigation();
-  registerServiceWorker();
-
-  // 1. Prefetch all templates immediately
-  const prefetchPromise = prefetchTemplates();
-
-  if ("Notification" in window && Notification.permission === "default") {
-    notifBanner.hidden = false;
-  }
-
-  // 2. Wait for the default template to be ready before first render
-  await prefetchPromise;
-  await navigate("notes-app");
+  console.log("[App] Starting initialization...");
   
-  updateLastSyncDisplay();
-  
-  // 3. Hide splash screen with a slight delay for smoothness
-  setTimeout(() => {
+  // Safety net: ensure splash is hidden after 5 seconds no matter what
+  const safetyTimeout = setTimeout(() => {
+    const splash = document.getElementById("splash-screen");
+    if (splash && !splash.classList.contains("hidden")) {
+      console.warn("[App] Safety timeout reached. Forcing splash hide.");
+      splash.classList.add("hidden");
+    }
+  }, 5000);
+
+  try {
+    setupNavigation();
+    registerServiceWorker();
+
+    console.log("[App] Prefetching templates...");
+    const prefetchPromise = prefetchTemplates();
+
+    if ("Notification" in window && Notification.permission === "default") {
+      notifBanner.hidden = false;
+    }
+
+    // 2. Wait for the default template to be ready before first render
+    await prefetchPromise;
+    console.log("[App] Templates ready. Navigating to default module...");
+    
+    await navigate("notes-app");
+    console.log("[App] Default module loaded.");
+    
+    updateLastSyncDisplay();
+    
+    // 3. Hide splash screen with a slight delay for smoothness
+    setTimeout(() => {
+      document.getElementById("splash-screen").classList.add("hidden");
+      clearTimeout(safetyTimeout);
+      console.log("[App] MultiPWA Ready.");
+    }, 500);
+
+  } catch (err) {
+    console.error("[App] Critical error during init:", err);
+    // If it fails, at least hide the splash so the user sees the error state
     document.getElementById("splash-screen").classList.add("hidden");
-  }, 500);
-
-  console.log("[App] MultiPWA Ready (Prefetched).");
+    clearTimeout(safetyTimeout);
+    appContainer.innerHTML = `<div class="error-state">
+      <h3>Error al iniciar</h3>
+      <p>${err.message}</p>
+      <button onclick="location.reload()">Reintentar</button>
+    </div>`;
+  }
 }
 
 init();
