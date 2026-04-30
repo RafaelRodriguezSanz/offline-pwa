@@ -138,28 +138,3 @@ export async function getAllDataForSync() {
   });
 }
 
-/**
- * Remove the most recent water glass entry for today.
- */
-export async function removeLastWaterIntake() {
-  const db = await openDB();
-  const today = new Date().toISOString().split("T")[0];
-
-  return new Promise((resolve, reject) => {
-    const tx    = db.transaction("water", "readwrite");
-    const store = tx.objectStore("water");
-    const index = store.index("date");
-    const req   = index.openCursor(IDBKeyRange.only(today), "prev");
-
-    req.onsuccess = (event) => {
-      const cursor = event.target.result;
-      if (cursor) {
-        store.delete(cursor.primaryKey);
-        resolve(true);
-      } else {
-        resolve(false); // Nothing to delete
-      }
-    };
-    req.onerror = () => reject(req.error);
-  });
-}
