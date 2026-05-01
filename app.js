@@ -7,6 +7,7 @@ import { initGoogleAuth, syncToDrive } from "./sync.js";
 import { initNotes, refreshItems } from "./modules/notes/notes.js";
 import { initHabits } from "./modules/habits/habits.js";
 import { initBooks } from "./modules/books/books.js";
+import { initSettings } from "./modules/settings/settings.js";
 import { runAIAnalysis } from "./modules/ai/ai.js";
 
 // Ensure Google Auth is initialized as soon as the script loads
@@ -36,14 +37,16 @@ const navOverlay  = document.getElementById("nav-overlay");
 const templateCache = {
   "notes-app": null,
   "water-app": null,
-  "books-app": null
+  "books-app": null,
+  "settings-app": null
 };
 
 async function prefetchTemplates() {
   const paths = {
     "notes-app": "./modules/notes/notes.html",
     "water-app": "./modules/habits/habits.html",
-    "books-app": "./modules/books/books.html"
+    "books-app": "./modules/books/books.html",
+    "settings-app": "./modules/settings/settings.html"
   };
 
   // Fetch all in parallel
@@ -80,6 +83,9 @@ async function navigate(target) {
         break;
       case "books-app":
         await initBooks(appContainer, html);
+        break;
+      case "settings-app":
+        await initSettings(appContainer, html);
         break;
       case "tasks-app":
         appContainer.innerHTML = '<div class="empty-state"><p>Próximamente: Gestor de Tareas</p></div>';
@@ -139,10 +145,26 @@ async function registerServiceWorker() {
       });
     });
 
+    // ─── Periodic Sync ────────────────────────────────────────────────────────
+    if ("periodicSync" in reg) {
+      try {
+        const status = await navigator.permissions.query({ name: "periodic-background-sync" });
+        if (status.state === "granted") {
+          await reg.periodicSync.register("ai-check", {
+            minInterval: 6 * 60 * 60 * 1000 // 6 hours (browser limit)
+          });
+          console.log("[App] Periodic AI sync registered.");
+        }
+      } catch (e) {
+        console.warn("[App] Periodic Sync failed:", e);
+      }
+    }
+
   } catch (err) {
     console.warn("[App] SW registration failed:", err);
   }
 }
+
 
 // Listen for the controlling service worker changing (e.g. skipWaiting was called)
 navigator.serviceWorker.addEventListener("controllerchange", () => {
