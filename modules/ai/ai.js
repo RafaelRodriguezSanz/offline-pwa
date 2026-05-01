@@ -1,4 +1,4 @@
-import { getAllDataForSync } from "../../db.js";
+import { getAllDataForSync, getMeta } from "../../db.js";
 import { getAccessToken, getUserProfile } from "../../sync.js";
 
 const GEMINI_MODEL = "gemini-1.5-flash";
@@ -6,6 +6,20 @@ const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMIN
 
 export async function runAIAnalysis() {
   try {
+    // 0. Time Check
+    const start = await getMeta("ai_notif_start") || "09:00";
+    const end   = await getMeta("ai_notif_end")   || "21:00";
+    
+    const now = new Date();
+    const currentTime = now.getHours() * 100 + now.getMinutes();
+    const startTime   = parseInt(start.replace(":", ""));
+    const endTime     = parseInt(end.replace(":", ""));
+
+    if (currentTime < startTime || currentTime > endTime) {
+      console.log("[AI] Outside allowed hours. Skipping.");
+      return;
+    }
+
     console.log("[AI] Starting analysis...");
     
     // 1. Get Data & User Profile

@@ -1,0 +1,31 @@
+<section id="settings-module" class="app-section">
+  <header class="section-header">
+    <h2>Configuración</h2>
+    <p>Personaliza tu experiencia y la IA</p>
+  </header>
+
+  <div class="settings-card">
+    <h3>🤖 Asistente Gemini</h3>
+    <p class="settings-desc">Configura cuándo quieres recibir notificaciones motivadoras de la IA.</p>
+    
+    <div class="settings-group">
+      <label for="notif-start">Hora de inicio</label>
+      <input type="time" id="notif-start" value="09:00">
+    </div>
+
+    <div class="settings-group">
+      <label for="notif-end">Hora de fin</label>
+      <input type="time" id="notif-end" value="21:00">
+    </div>
+
+    <div class="settings-actions">
+      <button id="btn-save-settings" class="btn-primary">Guardar Cambios</button>
+    </div>
+  </div>
+
+  <div class="settings-card danger-zone">
+    <h3>Zona de Peligro</h3>
+    <p class="settings-desc">Acciones irreversibles sobre tus datos locales.</p>
+    <button id="btn-clear-data" class="btn-secondary">Borrar Todo (Local)</button>
+  </div>
+</section>

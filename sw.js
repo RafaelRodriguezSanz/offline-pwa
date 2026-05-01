@@ -5,7 +5,19 @@
  * loads instantly and works fully offline after the first visit.
  */
 
-const CACHE_NAME = "localsync-v3";
+const CACHE_NAME = "localsync-v4";
+
+// ... (assets stay the same) ...
+
+// ─── Periodic Sync ────────────────────────────────────────────────────────────
+
+self.addEventListener("periodicsync", (event) => {
+  if (event.tag === "ai-check") {
+    // Note: Background AI requires a valid token in IndexedDB or similar.
+    // For now, we log it. Real implementation would fetch token and data.
+    console.log("[SW] Periodic AI check triggered.");
+  }
+});
 
 // All assets that must be available offline
 const ASSETS_TO_CACHE = [
