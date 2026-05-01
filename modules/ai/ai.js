@@ -6,17 +6,10 @@ const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMIN
 
 export async function runAIAnalysis() {
   try {
-    // 0. Requirements Check
-    const apiKey = await getMeta("gemini_api_key");
-    if (!apiKey) {
-      console.log("[AI] No API Key found in settings. Skipping.");
-      return;
-    }
-
     const start = await getMeta("ai_notif_start") || "09:00";
     const end   = await getMeta("ai_notif_end")   || "21:00";
     
-    // Time Check (current implementation)
+    // Time Check
     const now = new Date();
     const currentTime = now.getHours() * 100 + now.getMinutes();
     const startTime   = parseInt(start.replace(":", ""));
@@ -26,25 +19,31 @@ export async function runAIAnalysis() {
 
     console.log("[AI] Starting analysis...");
     
-    // 1. Get Data & User Profile (profile might fail if not logged in, it's ok)
-    const data = await getAllDataForSync();
-    let userName = "Usuario";
-    try {
-      const profile = await getUserProfile();
-      userName = profile.given_name || profile.name || "Usuario";
-    } catch (e) { /* ignore profile if not logged in */ }
+    // 1. Get Data & User Info
+    const [data, profile, token] = await Promise.all([
+      getAllDataForSync(),
+      getUserProfile(),
+      getAccessToken()
+    ]);
+    
+    if (!token) return;
+    const userName = profile.given_name || profile.name || "Usuario";
     
     // 2. Prepare Prompt
     const prompt = `Hola Gemini. Actúa como un asistente de salud y productividad para ${userName}. 
     Analiza estos datos de mi PWA: ${JSON.stringify(data)}. 
     Dame un consejo de INCENTIVO o motivación personalizado. Máximo 20 palabras.`;
 
-    // 3. Call Gemini using API KEY
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+    // 3. Call Gemini using OAuth Token
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
     
     const response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+        "x-goog-user-project": "991288139958" // Tu número de proyecto
+      },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }]
       })

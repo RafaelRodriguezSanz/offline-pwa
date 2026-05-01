@@ -14,6 +14,9 @@ import { getAllDataForSync, markSynced } from "./db.js";
 // Replace with your own values from Google Cloud Console.
 const GOOGLE_CLIENT_ID = "991288139958-285on6us2hs8sca5kna47n65dtplep6r.apps.googleusercontent.com";
 const DRIVE_SCOPE   = "https://www.googleapis.com/auth/drive.file";
+const CLOUD_SCOPE   = "https://www.googleapis.com/auth/cloud-platform";
+const PROFILE_SCOPE = "https://www.googleapis.com/auth/userinfo.profile";
+const SCOPES        = `${DRIVE_SCOPE} ${CLOUD_SCOPE} ${PROFILE_SCOPE}`;
 const BACKUP_FILENAME = "app-backup.json";
 
 // ─── Module state ─────────────────────────────────────────────────────────────
@@ -35,7 +38,7 @@ export function initGoogleAuth() {
 
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
-      scope: DRIVE_SCOPE,
+      scope: SCOPES,
       callback: () => { }, 
     });
   } catch (err) {
