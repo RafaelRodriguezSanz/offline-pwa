@@ -426,3 +426,64 @@ button:disabled {
   50% { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
 }
+
+/* ─── Update Prompt & Errors ────────────────────────────────────────────── */
+
+.update-prompt {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 480px;
+  background: rgba(200, 240, 96, 0.95);
+  color: #0f0f0f;
+  padding: 16px 20px;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(10px);
+  animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.update-prompt p {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+#btn-update-now {
+  background: #0f0f0f;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.error-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(255, 77, 77, 0.05);
+  border: 1px dashed var(--danger);
+  border-radius: 24px;
+  margin-top: 2rem;
+}
+
+.error-state h3 {
+  color: var(--danger);
+  margin-bottom: 8px;
+}
+
+.error-state p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+@keyframes slideUp {
+  from { transform: translate(-50%, 100px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
