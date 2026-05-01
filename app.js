@@ -8,7 +8,7 @@ import { initNotes, refreshItems } from "./modules/notes/notes.js";
 import { initHabits } from "./modules/habits/habits.js";
 import { initBooks } from "./modules/books/books.js";
 import { initSettings } from "./modules/settings/settings.js";
-import { runAIAnalysis } from "./modules/ai/ai.js";
+import { runAssistant } from "./modules/assistant/assistant.js";
 
 // Ensure Google Auth is initialized as soon as the script loads
 window.onGISLoad = () => {
@@ -300,10 +300,10 @@ async function init() {
       console.log("[App] MultiPWA Ready.");
     }, 500);
 
-    // ─── AI Schedule ──────────────────────────────────────────────────────────
-    // Run once after 10s, then every 5 minutes
-    setTimeout(runAIAnalysis, 10000);
-    setInterval(runAIAnalysis, 5 * 60 * 1000);
+    // ─── Assistant Schedule ──────────────────────────────────────────────────
+    // Run once after 5s, then every 5 minutes
+    setTimeout(runAssistant, 5000);
+    setInterval(runAssistant, 5 * 60 * 1000);
 
   } catch (err) {
     console.error("[App] Critical error during init:", err);

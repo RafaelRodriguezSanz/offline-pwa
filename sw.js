@@ -5,17 +5,16 @@
  * loads instantly and works fully offline after the first visit.
  */
 
-const CACHE_NAME = "localsync-v4";
+const CACHE_NAME = "localsync-v5";
 
-// ... (assets stay the same) ...
+// ... (existing comments) ...
 
 // ─── Periodic Sync ────────────────────────────────────────────────────────────
 
 self.addEventListener("periodicsync", (event) => {
   if (event.tag === "ai-check") {
-    // Note: Background AI requires a valid token in IndexedDB or similar.
-    // For now, we log it. Real implementation would fetch token and data.
-    console.log("[SW] Periodic AI check triggered.");
+    // Background assistant check
+    console.log("[SW] Periodic assistant check triggered.");
   }
 });
 
@@ -27,7 +26,8 @@ const ASSETS_TO_CACHE = [
   "./db.js",
   "./sync.js",
   "./modules/ui.js",
-  "./modules/ai/ai.js",
+  "./modules/assistant/assistant.js",
+  "./static/tips.jsonl",
   "./styles.css",
   "./manifest.json",
   "./static/body.svg",

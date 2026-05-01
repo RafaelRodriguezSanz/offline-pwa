@@ -3,6 +3,7 @@
  */
 import { getMeta, setMeta } from "../../db.js";
 import { confirmModal } from "../ui.js";
+import { runAssistant } from "../assistant/assistant.js";
 
 export async function initSettings(container, preloadedHtml) {
   container.innerHTML = preloadedHtml || "<h2>Cargando...</h2>";
@@ -10,6 +11,7 @@ export async function initSettings(container, preloadedHtml) {
   const startInput = container.querySelector("#notif-start");
   const endInput   = container.querySelector("#notif-end");
   const saveBtn    = container.querySelector("#btn-save-settings");
+  const testBtn    = container.querySelector("#btn-test-ai");
   const clearBtn   = container.querySelector("#btn-clear-data");
 
   // Load current values
@@ -31,6 +33,14 @@ export async function initSettings(container, preloadedHtml) {
       saveBtn.textContent = "Guardar Cambios";
       alert("Configuración guardada ✓");
     }, 500);
+  });
+
+  testBtn.addEventListener("click", async () => {
+    testBtn.disabled = true;
+    testBtn.textContent = "Probando...";
+    await runAssistant();
+    testBtn.disabled = false;
+    testBtn.textContent = "Probar Asistente 🤖";
   });
 
   clearBtn.addEventListener("click", async () => {

@@ -15,9 +15,7 @@ export async function runAIAnalysis() {
     const startTime   = parseInt(start.replace(":", ""));
     const endTime     = parseInt(end.replace(":", ""));
 
-    if (currentTime < startTime || currentTime > endTime) return;
-
-    console.log("[AI] Starting analysis...");
+    console.log("[AI] Starting analysis cycle...");
     
     // 1. Get Data & User Info
     const [data, profile, token] = await Promise.all([
@@ -34,31 +32,44 @@ export async function runAIAnalysis() {
     Analiza estos datos de mi PWA: ${JSON.stringify(data)}. 
     Dame un consejo de INCENTIVO o motivación personalizado. Máximo 20 palabras.`;
 
-    // 3. Call Gemini using OAuth Token
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+    // 3. Call Vertex AI (The OAuth-friendly version of Gemini)
+    // URL format: https://{REGION}-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/{REGION}/publishers/google/models/{MODEL_ID}:streamGenerateContent
+    const projectId = "991288139958";
+    const region = "us-central1"; 
+    const url = `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/publishers/google/models/gemini-1.5-flash:streamGenerateContent`;
     
+    console.log("[AI] Calling Vertex AI API...");
     const response = await fetch(url, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-        "x-goog-user-project": "991288139958" // Tu número de proyecto
+        "Authorization": `Bearer ${token}`
       },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }]
       })
     });
 
-    if (!response.ok) throw new Error(`Gemini error: ${response.status}`);
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`[AI] Vertex AI Error (${response.status}):`, errText);
+      return;
+    }
 
+    // Vertex AI Stream returns an array of objects
     const result = await response.json();
-    const aiText = result.candidates[0].content.parts[0].text;
+    // In streamGenerateContent, we get an array of chunks. We take the first one's text for simplicity.
+    const aiText = result[0]?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    // 5. Show Notification with Emoji
-    showAINotification(aiText);
+    if (aiText) {
+      console.log("[AI] Insight received:", aiText);
+      showAINotification(aiText);
+    } else {
+      console.warn("[AI] No response content from Gemini.");
+    }
 
   } catch (err) {
-    console.error("[AI] Error:", err);
+    console.error("[AI] Critical error:", err);
   }
 }
 
