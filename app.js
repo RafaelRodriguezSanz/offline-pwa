@@ -135,7 +135,12 @@ async function registerServiceWorker() {
   try {
     const reg = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
 
-    // Detect if a new service worker is waiting
+    // 1. If there's already a worker waiting, show the prompt immediately
+    if (reg.waiting) {
+      showUpdatePrompt();
+    }
+
+    // 2. Detect if a new service worker is found and installed
     reg.addEventListener("updatefound", () => {
       const newWorker = reg.installing;
       newWorker.addEventListener("statechange", () => {
@@ -144,6 +149,9 @@ async function registerServiceWorker() {
         }
       });
     });
+
+    // 3. Force a check for updates every time the app is opened
+    reg.update();
 
     // ─── Periodic Sync ────────────────────────────────────────────────────────
     if ("periodicSync" in reg) {
