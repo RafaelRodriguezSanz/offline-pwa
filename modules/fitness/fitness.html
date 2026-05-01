@@ -1,0 +1,60 @@
+<section id="fitness-app" class="app-section">
+  <div class="section-header">
+    <h2>Registro de Ejercicio</h2>
+    <p>Selecciona los músculos trabajados</p>
+  </div>
+
+  <div class="fitness-layout">
+    <!-- Body Visualization -->
+    <div class="body-viz-container">
+      <div id="svg-container">
+        <!-- SVG will be loaded here -->
+      </div>
+      <div class="viz-controls">
+        <button id="btn-toggle-view" class="btn-secondary">Girar Cuerpo</button>
+      </div>
+    </div>
+
+    <!-- Exercise Form -->
+    <div class="exercise-form card">
+      <div class="form-group">
+        <label for="exercise-name">Ejercicio</label>
+        <input type="text" id="exercise-name" placeholder="Ej: Press de Banca" list="common-exercises">
+        <datalist id="common-exercises">
+          <option value="Press de Banca">
+          <option value="Sentadillas">
+          <option value="Peso Muerto">
+          <option value="Dominadas">
+          <option value="Press Militar">
+        </datalist>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="sets">Series</label>
+          <input type="number" id="sets" value="3" min="1">
+        </div>
+        <div class="form-group">
+          <label for="reps">Reps</label>
+          <input type="number" id="reps" value="12" min="1">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Músculos Seleccionados</label>
+        <div id="selected-muscles-tags" class="tags-container">
+          <span class="empty-msg">Toca el cuerpo para marcar músculos</span>
+        </div>
+      </div>
+
+      <button id="btn-save-exercise" class="btn-primary w-100">Guardar Entrenamiento</button>
+    </div>
+  </div>
+
+  <div class="history-section">
+    <h3>Últimos Entrenamientos</h3>
+    <ul id="exercise-list" class="item-list">
+      <!-- Exercises will be rendered here -->
+    </ul>
+  </div>
+</section>

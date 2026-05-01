@@ -7,6 +7,7 @@ import { initGoogleAuth, syncToDrive } from "./sync.js";
 import { initNotes, refreshItems } from "./modules/notes/notes.js";
 import { initHabits } from "./modules/habits/habits.js";
 import { initBooks } from "./modules/books/books.js";
+import { runAIAnalysis } from "./modules/ai/ai.js";
 
 // Ensure Google Auth is initialized as soon as the script loads
 window.onGISLoad = () => {
@@ -120,13 +121,55 @@ function setupNavigation() {
 
 // ─── Service Worker ───────────────────────────────────────────────────────────
 
+let refreshing = false;
+
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
+
   try {
-    await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+    const reg = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+
+    // Detect if a new service worker is waiting
+    reg.addEventListener("updatefound", () => {
+      const newWorker = reg.installing;
+      newWorker.addEventListener("statechange", () => {
+        if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+          showUpdatePrompt();
+        }
+      });
+    });
+
   } catch (err) {
-    console.warn("[App] SW registration failed.");
+    console.warn("[App] SW registration failed:", err);
   }
+}
+
+// Listen for the controlling service worker changing (e.g. skipWaiting was called)
+navigator.serviceWorker.addEventListener("controllerchange", () => {
+  if (refreshing) return;
+  refreshing = true;
+  // We can reload automatically or let the prompt handle it
+  // For now, let's just reload if skipWaiting was triggered
+  window.location.reload();
+});
+
+function showUpdatePrompt() {
+  // Simple prompt. In a real app, this would be a nice Toast.
+  const updateBanner = document.createElement("div");
+  updateBanner.className = "update-prompt";
+  updateBanner.innerHTML = `
+    <div class="update-content">
+      <p>✨ Nueva versión disponible</p>
+      <button id="btn-update-now">Actualizar ahora</button>
+    </div>
+  `;
+  document.body.appendChild(updateBanner);
+
+  document.getElementById("btn-update-now").addEventListener("click", () => {
+    // The skipWaiting() in sw.js will trigger 'controllerchange'
+    // but we can also force a reload here if needed.
+    window.location.reload();
+  });
 }
 
 // ─── Status display ───────────────────────────────────────────────────────────
@@ -234,6 +277,11 @@ async function init() {
       clearTimeout(safetyTimeout);
       console.log("[App] MultiPWA Ready.");
     }, 500);
+
+    // ─── AI Schedule ──────────────────────────────────────────────────────────
+    // Run once after 10s, then every 5 minutes
+    setTimeout(runAIAnalysis, 10000);
+    setInterval(runAIAnalysis, 5 * 60 * 1000);
 
   } catch (err) {
     console.error("[App] Critical error during init:", err);

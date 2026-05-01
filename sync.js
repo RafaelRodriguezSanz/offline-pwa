@@ -13,7 +13,10 @@ import { getAllDataForSync, markSynced } from "./db.js";
 // ─── Configuration ────────────────────────────────────────────────────────────
 // Replace with your own values from Google Cloud Console.
 const GOOGLE_CLIENT_ID = "991288139958-285on6us2hs8sca5kna47n65dtplep6r.apps.googleusercontent.com";
-const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+const DRIVE_SCOPE   = "https://www.googleapis.com/auth/drive.file";
+const AI_SCOPE      = "https://www.googleapis.com/auth/generativelanguage";
+const PROFILE_SCOPE = "https://www.googleapis.com/auth/userinfo.profile";
+const SCOPES        = `${DRIVE_SCOPE} ${AI_SCOPE} ${PROFILE_SCOPE}`;
 const BACKUP_FILENAME = "app-backup.json";
 
 // ─── Module state ─────────────────────────────────────────────────────────────
@@ -35,7 +38,7 @@ export function initGoogleAuth() {
 
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
-      scope: DRIVE_SCOPE,
+      scope: SCOPES,
       callback: () => { }, 
     });
   } catch (err) {
@@ -121,6 +124,28 @@ function requestToken() {
     // Prompt = "none" tries silent sign-in first; falls back to popup
     tokenClient.requestAccessToken({ prompt: "" });
   });
+}
+
+/**
+ * Return the current access token (useful for other modules like AI).
+ */
+export async function getAccessToken() {
+  if (!accessToken) {
+    await requestToken();
+  }
+  return accessToken;
+}
+
+/**
+ * Fetch basic user profile (name) from Google.
+ */
+export async function getUserProfile() {
+  const token = await getAccessToken();
+  const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) return { name: "Usuario" };
+  return res.json();
 }
 
 // ─── Drive REST helpers ───────────────────────────────────────────────────────
