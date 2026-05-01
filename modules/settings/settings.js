@@ -7,20 +7,17 @@ import { confirmModal } from "../ui.js";
 export async function initSettings(container, preloadedHtml) {
   container.innerHTML = preloadedHtml || "<h2>Cargando...</h2>";
 
-  const startInput  = container.querySelector("#notif-start");
-  const endInput    = container.querySelector("#notif-end");
-  const apiKeyInput = container.querySelector("#gemini-api-key");
-  const saveBtn     = container.querySelector("#btn-save-settings");
-  const clearBtn    = container.querySelector("#btn-clear-data");
+  const startInput = container.querySelector("#notif-start");
+  const endInput   = container.querySelector("#notif-end");
+  const saveBtn    = container.querySelector("#btn-save-settings");
+  const clearBtn   = container.querySelector("#btn-clear-data");
 
   // Load current values
-  const start  = await getMeta("ai_notif_start") || "09:00";
-  const end    = await getMeta("ai_notif_end")   || "21:00";
-  const apiKey = await getMeta("gemini_api_key") || "";
+  const start = await getMeta("ai_notif_start") || "09:00";
+  const end   = await getMeta("ai_notif_end")   || "21:00";
   
-  startInput.value  = start;
-  endInput.value    = end;
-  apiKeyInput.value = apiKey;
+  startInput.value = start;
+  endInput.value   = end;
 
   saveBtn.addEventListener("click", async () => {
     saveBtn.disabled = true;
@@ -28,7 +25,6 @@ export async function initSettings(container, preloadedHtml) {
     
     await setMeta("ai_notif_start", startInput.value);
     await setMeta("ai_notif_end", endInput.value);
-    await setMeta("gemini_api_key", apiKeyInput.value);
     
     setTimeout(() => {
       saveBtn.disabled = false;
