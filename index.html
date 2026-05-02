@@ -32,6 +32,8 @@
   <link rel="stylesheet" href="./modules/notes/notes.css" />
   <link rel="stylesheet" href="./modules/habits/habits.css" />
   <link rel="stylesheet" href="./modules/books/books.css" />
+  <link rel="stylesheet" href="./modules/fitness/fitness.css" />
+  <link rel="stylesheet" href="./modules/tasks/tasks.css" />
 
   <script>
     if (window.location.protocol === 'file:') {
@@ -87,6 +89,9 @@
         <li class="nav-item" data-target="books-app">
           <span class="icon">📚</span> Mis Libros
         </li>
+        <li class="nav-item" data-target="fitness-app">
+          <span class="icon">💪</span> Fitness
+        </li>
         <li class="nav-item" data-target="settings-app">
           <span class="icon">⚙️</span> Configuración
         </li>
@@ -124,6 +129,27 @@
   </main>
 
   <!-- Modal Global -->
+  <div id="update-prompt" class="update-prompt" hidden>
+    <div class="update-content">
+      <div class="update-text">
+        <strong>Actualización disponible</strong>
+        <p>Hay una nueva versión con mejoras.</p>
+      </div>
+      <button id="update-btn" class="btn-update">Actualizar</button>
+    </div>
+  </div>
+
+  <!-- Force Login Overlay -->
+  <div id="login-overlay" class="login-overlay" hidden>
+    <div class="login-card">
+      <div class="login-logo">🚀</div>
+      <h1>¡Bienvenido!</h1>
+      <p>Para proteger tus datos y sincronizar con la nube, por favor inicia sesión con Google.</p>
+      <button id="btn-force-login" class="btn-primary">Iniciar Sesión con Google</button>
+      <div id="login-status" class="login-status"></div>
+    </div>
+  </div>
+
   <div id="modal-container" class="modal-overlay" hidden>
     <div class="modal-content">
       <h3 id="modal-title">Título</h3>

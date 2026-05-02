@@ -2,13 +2,15 @@
  * app.js — Component Router & Orchestrator (with Pre-fetching)
  */
 
-import { getSyncState } from "./db.js";
-import { initGoogleAuth, syncToDrive } from "./sync.js";
+import { getSyncState, getMeta, setMeta, importAllData } from "./db.js";
+import { initGoogleAuth, syncToDrive, requestToken, downloadFromDrive } from "./sync.js";
 import { initNotes, refreshItems } from "./modules/notes/notes.js";
 import { initHabits } from "./modules/habits/habits.js";
 import { initBooks } from "./modules/books/books.js";
 import { initSettings } from "./modules/settings/settings.js";
-import { runAIAnalysis } from "./modules/ai/ai.js";
+import { initFitness } from "./modules/fitness/fitness.js";
+import { initTasks }   from "./modules/tasks/tasks.js";
+import { runAssistant } from "./modules/assistant/assistant.js";
 
 // Ensure Google Auth is initialized as soon as the script loads
 window.onGISLoad = () => {
@@ -35,18 +37,22 @@ const navOverlay  = document.getElementById("nav-overlay");
 // ─── Template Cache ───────────────────────────────────────────────────────────
 
 const templateCache = {
-  "notes-app": null,
-  "water-app": null,
-  "books-app": null,
-  "settings-app": null
+  "notes-app":    null,
+  "water-app":    null,
+  "books-app":    null,
+  "fitness-app":  null,
+  "settings-app": null,
+  "tasks-app":    null,
 };
 
 async function prefetchTemplates() {
   const paths = {
-    "notes-app": "./modules/notes/notes.html",
-    "water-app": "./modules/habits/habits.html",
-    "books-app": "./modules/books/books.html",
-    "settings-app": "./modules/settings/settings.html"
+    "notes-app":    "./modules/notes/notes.html",
+    "water-app":    "./modules/habits/habits.html",
+    "books-app":    "./modules/books/books.html",
+    "fitness-app":  "./modules/fitness/fitness.html",
+    "settings-app": "./modules/settings/settings.html",
+    "tasks-app":    "./modules/tasks/tasks.html",
   };
 
   // Fetch all in parallel
@@ -83,6 +89,12 @@ async function navigate(target) {
         break;
       case "books-app":
         await initBooks(appContainer, html);
+        break;
+      case "fitness-app":
+        await initFitness(appContainer, html);
+        break;
+      case "tasks-app":
+        await initTasks(appContainer, html);
         break;
       case "settings-app":
         await initSettings(appContainer, html);
@@ -135,7 +147,12 @@ async function registerServiceWorker() {
   try {
     const reg = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
 
-    // Detect if a new service worker is waiting
+    // 1. If there's already a worker waiting, show the prompt immediately
+    if (reg.waiting) {
+      showUpdatePrompt();
+    }
+
+    // 2. Detect if a new service worker is found and installed
     reg.addEventListener("updatefound", () => {
       const newWorker = reg.installing;
       newWorker.addEventListener("statechange", () => {
@@ -144,6 +161,9 @@ async function registerServiceWorker() {
         }
       });
     });
+
+    // 3. Force a check for updates every time the app is opened
+    reg.update();
 
     // ─── Periodic Sync ────────────────────────────────────────────────────────
     if ("periodicSync" in reg) {
@@ -293,17 +313,62 @@ async function init() {
     
     updateLastSyncDisplay();
     
-    // 3. Hide splash screen with a slight delay for smoothness
+    // 3. First-time Login & Data Recovery Check
+    const lastLogin = await getMeta("last_login");
+    if (!lastLogin) {
+      console.log("[App] First time use detected. Forcing login for data recovery.");
+      const overlay = document.getElementById("login-overlay");
+      const btnForceLogin = document.getElementById("btn-force-login");
+      const loginStatus = document.getElementById("login-status");
+      
+      overlay.hidden = false;
+      document.getElementById("splash-screen").classList.add("hidden");
+      clearTimeout(safetyTimeout);
+
+      btnForceLogin.addEventListener("click", async () => {
+        try {
+          btnForceLogin.disabled = true;
+          loginStatus.textContent = "Conectando con Google...";
+          
+          await requestToken();
+          
+          loginStatus.textContent = "Buscando copia de seguridad en la nube...";
+          const data = await downloadFromDrive();
+          
+          if (data) {
+            loginStatus.textContent = "¡Copia encontrada! Restaurando datos locales...";
+            await importAllData(data);
+          } else {
+            loginStatus.textContent = "No se encontró copia previa. Iniciando desde cero...";
+          }
+          
+          await setMeta("last_login", Date.now());
+          
+          loginStatus.textContent = "¡Todo listo! Recargando app...";
+          setTimeout(() => location.reload(), 1500);
+
+        } catch (err) {
+          console.error("Login/Recovery failed:", err);
+          loginStatus.textContent = "Error: " + err.message;
+          btnForceLogin.disabled = false;
+        }
+      });
+      
+      // Stop further initialization until login completes
+      return; 
+    }
+
+    // 4. Hide splash screen with a slight delay for smoothness
     setTimeout(() => {
       document.getElementById("splash-screen").classList.add("hidden");
       clearTimeout(safetyTimeout);
       console.log("[App] MultiPWA Ready.");
     }, 500);
 
-    // ─── AI Schedule ──────────────────────────────────────────────────────────
-    // Run once after 10s, then every 5 minutes
-    setTimeout(runAIAnalysis, 10000);
-    setInterval(runAIAnalysis, 5 * 60 * 1000);
+    // ─── Assistant Schedule ──────────────────────────────────────────────────
+    // Run once after 5s, then every 5 minutes
+    setTimeout(runAssistant, 5000);
+    setInterval(runAssistant, 5 * 60 * 1000);
 
   } catch (err) {
     console.error("[App] Critical error during init:", err);

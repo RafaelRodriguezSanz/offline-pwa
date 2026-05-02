@@ -14,9 +14,6 @@ import { getAllDataForSync, markSynced } from "./db.js";
 // Replace with your own values from Google Cloud Console.
 const GOOGLE_CLIENT_ID = "991288139958-285on6us2hs8sca5kna47n65dtplep6r.apps.googleusercontent.com";
 const DRIVE_SCOPE   = "https://www.googleapis.com/auth/drive.file";
-const CLOUD_SCOPE   = "https://www.googleapis.com/auth/cloud-platform";
-const PROFILE_SCOPE = "https://www.googleapis.com/auth/userinfo.profile";
-const SCOPES        = `${DRIVE_SCOPE} ${CLOUD_SCOPE} ${PROFILE_SCOPE}`;
 const BACKUP_FILENAME = "app-backup.json";
 
 // ─── Module state ─────────────────────────────────────────────────────────────
@@ -38,7 +35,7 @@ export function initGoogleAuth() {
 
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
-      scope: SCOPES,
+      scope: DRIVE_SCOPE,
       callback: () => { }, 
     });
   } catch (err) {
@@ -93,7 +90,7 @@ export async function syncToDrive(onStatus) {
  * Request (or reuse) an OAuth access token.
  * Opens the Google consent popup if needed.
  */
-function requestToken() {
+export function requestToken() {
   return new Promise((resolve, reject) => {
     if (!tokenClient) {
       // Intentamos inicializar sobre la marcha si el script de Google ya está cargado
@@ -226,6 +223,29 @@ async function uploadFile(fileId, content) {
   if (!res.ok) {
     const err = await res.text();
     throw new Error(`Drive upload failed (${res.status}): ${err}`);
+  }
+}
+
+/**
+ * Download the backup from Google Drive.
+ * @returns {Promise<object|null>} The data object or null if not found.
+ */
+export async function downloadFromDrive() {
+  try {
+    await requestToken();
+    const fileId = await findFile();
+    if (!fileId) return null;
+
+    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const res = await driveRequest(url, { method: "GET" });
+
+    if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+
+    const backup = await res.json();
+    return backup.data; // Return the inner 'data' object
+  } catch (err) {
+    console.error("Error downloading from Drive:", err);
+    throw err;
   }
 }
 

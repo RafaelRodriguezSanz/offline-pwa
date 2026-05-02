@@ -5,17 +5,16 @@
  * loads instantly and works fully offline after the first visit.
  */
 
-const CACHE_NAME = "localsync-v4";
+const CACHE_NAME = "localsync-v14";
 
-// ... (assets stay the same) ...
+// ... (existing comments) ...
 
 // ─── Periodic Sync ────────────────────────────────────────────────────────────
 
 self.addEventListener("periodicsync", (event) => {
   if (event.tag === "ai-check") {
-    // Note: Background AI requires a valid token in IndexedDB or similar.
-    // For now, we log it. Real implementation would fetch token and data.
-    console.log("[SW] Periodic AI check triggered.");
+    // Background assistant check
+    console.log("[SW] Periodic assistant check triggered.");
   }
 });
 
@@ -27,7 +26,9 @@ const ASSETS_TO_CACHE = [
   "./db.js",
   "./sync.js",
   "./modules/ui.js",
-  "./modules/ai/ai.js",
+  "./modules/assistant/assistant.js",
+  "./static/tips.jsonl",
+  "./static/exercises.jsonl",
   "./styles.css",
   "./manifest.json",
   "./static/body.svg",
@@ -40,7 +41,14 @@ const ASSETS_TO_CACHE = [
   "./modules/books/books.js",
   "./modules/books/books.css",
   "./modules/books/books.html",
+  "./modules/settings/settings.js",
+  "./modules/settings/settings.html",
+  "./modules/fitness/fitness.js",
+  "./modules/fitness/fitness.css",
+  "./modules/fitness/fitness.html",
   "./modules/tasks/tasks.js",
+  "./modules/tasks/tasks.css",
+  "./modules/tasks/tasks.html",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
 ];
@@ -54,14 +62,17 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => {
-        // Cache each asset individually so a single failure doesn't
-        // abort the whole install.
+        // Cache each asset individually and bypass HTTP cache
         return Promise.allSettled(
-          ASSETS_TO_CACHE.map((url) =>
-            cache.add(url).catch((err) => {
+          ASSETS_TO_CACHE.map((url) => {
+            const req = new Request(`${url}?v=${CACHE_NAME}`, { cache: "reload" });
+            return fetch(req).then(res => {
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              return cache.put(url, res);
+            }).catch((err) => {
               console.warn(`[SW] Failed to cache: ${url}`, err);
-            })
-          )
+            });
+          })
         );
       })
       .then(() => self.skipWaiting()) // Activate immediately
