@@ -90,7 +90,7 @@ export async function syncToDrive(onStatus) {
  * Request (or reuse) an OAuth access token.
  * Opens the Google consent popup if needed.
  */
-function requestToken() {
+export function requestToken() {
   return new Promise((resolve, reject) => {
     if (!tokenClient) {
       // Intentamos inicializar sobre la marcha si el script de Google ya está cargado
@@ -223,6 +223,29 @@ async function uploadFile(fileId, content) {
   if (!res.ok) {
     const err = await res.text();
     throw new Error(`Drive upload failed (${res.status}): ${err}`);
+  }
+}
+
+/**
+ * Download the backup from Google Drive.
+ * @returns {Promise<object|null>} The data object or null if not found.
+ */
+export async function downloadFromDrive() {
+  try {
+    await requestToken();
+    const fileId = await findFile();
+    if (!fileId) return null;
+
+    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const res = await driveRequest(url, { method: "GET" });
+
+    if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+
+    const backup = await res.json();
+    return backup.data; // Return the inner 'data' object
+  } catch (err) {
+    console.error("Error downloading from Drive:", err);
+    throw err;
   }
 }
 

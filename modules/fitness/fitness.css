@@ -1,0 +1,127 @@
+/* modules/fitness/fitness.css */
+
+.fitness-container {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.days-filter {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.day-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.day-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.exercises-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Card layout ── */
+.exercise-card {
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  min-height: 90px;
+}
+
+.exercise-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.exercise-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+  transform: translateY(-2px);
+}
+
+.exercise-info {
+  flex: 1;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+}
+
+.exercise-name {
+  font-weight: bold;
+  font-size: 1.05rem;
+}
+
+.exercise-details {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+/* ── Body map thumbnails ── */
+.exercise-body-maps {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+}
+
+.exercise-body-map {
+  width: 52px;
+  background: var(--background, rgba(255,255,255,0.03));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 3px;
+  overflow: hidden;
+}
+
+.exercise-body-map + .exercise-body-map {
+  border-left: 1px solid var(--border);
+}
+
+.exercise-body-map svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Muscle highlight: dim all, glow active ── */
+.exercise-body-map svg path {
+  transition: opacity 0.2s, filter 0.2s;
+}
+
+/* On hover OR active card: dim everything */
+.exercise-card:hover .exercise-body-map svg path,
+.exercise-card.active .exercise-body-map svg path {
+  opacity: 0.15;
+}
+
+/* Then light up only the marked muscles */
+.exercise-card:hover .exercise-body-map svg path.muscle-active,
+.exercise-card.active .exercise-body-map svg path.muscle-active {
+  opacity: 1;
+  filter: brightness(1.8) drop-shadow(0 0 4px currentColor);
+}

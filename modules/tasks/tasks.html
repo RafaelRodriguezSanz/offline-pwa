@@ -1,0 +1,83 @@
+<!-- modules/tasks/tasks.html -->
+<div class="tasks-container">
+
+  <div class="tasks-header">
+    <h2>Kanban <span>Board</span></h2>
+    <button class="btn-add-task" id="btn-add-task">
+      <span class="plus">+</span> Nueva tarea
+    </button>
+  </div>
+
+  <div class="kanban-board" id="kanban-board">
+
+    <div class="kanban-col" data-col="todo">
+      <div class="col-header">
+        <span class="col-dot dot-todo"></span>
+        <span class="col-title">Por hacer</span>
+        <span class="col-count" id="count-todo">0</span>
+      </div>
+      <div class="col-cards" id="col-todo" data-col="todo"></div>
+      <button class="btn-col-add" data-col="todo">+ Agregar tarea</button>
+    </div>
+
+    <div class="kanban-col" data-col="doing">
+      <div class="col-header">
+        <span class="col-dot dot-doing"></span>
+        <span class="col-title">En progreso</span>
+        <span class="col-count" id="count-doing">0</span>
+      </div>
+      <div class="col-cards" id="col-doing" data-col="doing"></div>
+      <button class="btn-col-add" data-col="doing">+ Agregar tarea</button>
+    </div>
+
+    <div class="kanban-col" data-col="done">
+      <div class="col-header">
+        <span class="col-dot dot-done"></span>
+        <span class="col-title">Hecho</span>
+        <span class="col-count" id="count-done">0</span>
+      </div>
+      <div class="col-cards" id="col-done" data-col="done"></div>
+      <button class="btn-col-add" data-col="done">+ Agregar tarea</button>
+    </div>
+
+  </div>
+
+  <!-- Task Modal -->
+  <div class="task-modal-overlay" id="task-modal-overlay" hidden>
+    <div class="task-modal" id="task-modal">
+      <div class="modal-top">
+        <h3 id="modal-task-title">Nueva tarea</h3>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label">Título <span class="required">*</span></label>
+        <input type="text" id="task-input-title" class="task-input" placeholder="¿Qué hay que hacer?" maxlength="120" />
+
+        <label class="field-label">Descripción</label>
+        <textarea id="task-input-desc" class="task-textarea" placeholder="Detalles opcionales..." rows="3" maxlength="500"></textarea>
+
+        <label class="field-label">Prioridad</label>
+        <div class="priority-row">
+          <button class="priority-btn" data-priority="low">🟢 Baja</button>
+          <button class="priority-btn active" data-priority="medium">🟡 Media</button>
+          <button class="priority-btn" data-priority="high">🔴 Alta</button>
+        </div>
+
+        <label class="field-label">Columna</label>
+        <select id="task-input-col" class="task-select">
+          <option value="todo">Por hacer</option>
+          <option value="doing">En progreso</option>
+          <option value="done">Hecho</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-delete" id="btn-modal-delete" hidden>🗑 Eliminar</button>
+        <div class="modal-actions">
+          <button class="btn-modal-cancel" id="btn-modal-cancel">Cancelar</button>
+          <button class="btn-modal-save" id="btn-modal-save">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -2,7 +2,7 @@
  * modules/settings/settings.js
  */
 import { getMeta, setMeta } from "../../db.js";
-import { confirmModal } from "../ui.js";
+import { confirmModal, alertModal } from "../ui.js";
 import { runAssistant } from "../assistant/assistant.js";
 
 export async function initSettings(container, preloadedHtml) {
@@ -28,19 +28,21 @@ export async function initSettings(container, preloadedHtml) {
     await setMeta("ai_notif_start", startInput.value);
     await setMeta("ai_notif_end", endInput.value);
     
-    setTimeout(() => {
+    setTimeout(async () => {
       saveBtn.disabled = false;
       saveBtn.textContent = "Guardar Cambios";
-      alert("Configuración guardada ✓");
+      await alertModal("Configuración", "Los cambios han sido guardados correctamente ✓");
     }, 500);
   });
 
   testBtn.addEventListener("click", async () => {
     testBtn.disabled = true;
-    testBtn.textContent = "Probando...";
+    testBtn.textContent = "Enviando...";
     await runAssistant();
-    testBtn.disabled = false;
-    testBtn.textContent = "Probar Asistente 🤖";
+    setTimeout(() => {
+      testBtn.disabled = false;
+      testBtn.textContent = "Probar Notificación 🔔";
+    }, 1000);
   });
 
   clearBtn.addEventListener("click", async () => {

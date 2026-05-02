@@ -5,7 +5,7 @@
  * loads instantly and works fully offline after the first visit.
  */
 
-const CACHE_NAME = "localsync-v6";
+const CACHE_NAME = "localsync-v14";
 
 // ... (existing comments) ...
 
@@ -28,6 +28,7 @@ const ASSETS_TO_CACHE = [
   "./modules/ui.js",
   "./modules/assistant/assistant.js",
   "./static/tips.jsonl",
+  "./static/exercises.jsonl",
   "./styles.css",
   "./manifest.json",
   "./static/body.svg",
@@ -40,7 +41,14 @@ const ASSETS_TO_CACHE = [
   "./modules/books/books.js",
   "./modules/books/books.css",
   "./modules/books/books.html",
+  "./modules/settings/settings.js",
+  "./modules/settings/settings.html",
+  "./modules/fitness/fitness.js",
+  "./modules/fitness/fitness.css",
+  "./modules/fitness/fitness.html",
   "./modules/tasks/tasks.js",
+  "./modules/tasks/tasks.css",
+  "./modules/tasks/tasks.html",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
 ];
@@ -54,14 +62,17 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => {
-        // Cache each asset individually so a single failure doesn't
-        // abort the whole install.
+        // Cache each asset individually and bypass HTTP cache
         return Promise.allSettled(
-          ASSETS_TO_CACHE.map((url) =>
-            cache.add(url).catch((err) => {
+          ASSETS_TO_CACHE.map((url) => {
+            const req = new Request(`${url}?v=${CACHE_NAME}`, { cache: "reload" });
+            return fetch(req).then(res => {
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              return cache.put(url, res);
+            }).catch((err) => {
               console.warn(`[SW] Failed to cache: ${url}`, err);
-            })
-          )
+            });
+          })
         );
       })
       .then(() => self.skipWaiting()) // Activate immediately
