@@ -15,8 +15,8 @@ export async function initFitness(container, preloadedHtml) {
   // Load both SVG views once
   try {
     const [frontRes, backRes] = await Promise.all([
-      fetch("../../static/body_front.svg"),
-      fetch("../../static/body_back.svg"),
+      fetch("./static/body_front.svg"),
+      fetch("./static/body_back.svg"),
     ]);
     svgFront = await frontRes.text();
     svgBack = await backRes.text();
