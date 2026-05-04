@@ -133,6 +133,10 @@ export async function getAccessToken() {
   return accessToken;
 }
 
+export function hasValidToken() {
+  return !!accessToken;
+}
+
 /**
  * Fetch basic user profile (name) from Google.
  */

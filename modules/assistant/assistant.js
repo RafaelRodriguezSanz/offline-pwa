@@ -45,12 +45,19 @@ export async function runAssistant() {
   }
 }
 
-function showNotification(title, body) {
+async function showNotification(title, body) {
   if (!("Notification" in window)) return;
   if (Notification.permission === "granted") {
-    new Notification(title, {
-      body: body,
-      icon: "./icons/icon-192.png"
-    });
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      reg.showNotification(title, {
+        body: body,
+        icon: "./icons/icon-192.png",
+        vibrate: [200, 100, 200]
+      });
+    } catch (e) {
+      // Fallback for environments without service workers
+      new Notification(title, { body: body, icon: "./icons/icon-192.png" });
+    }
   }
 }

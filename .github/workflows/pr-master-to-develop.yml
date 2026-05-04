@@ -1,0 +1,47 @@
+name: Auto Backport Master to Develop
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Check if PR already exists
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          prs=$(gh pr list --base develop --head master --state open --json number)
+          if [ "$prs" == "[]" ]; then
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Create Pull Request
+        if: steps.check_pr.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_URL=$(gh pr create \
+            --base develop \
+            --head master \
+            --title "🔄 Auto Backport: master -> develop" \
+            --body "Auto-generated PR to backport changes (like hotfixes or merges) from \`master\` back into \`develop\`.")
+          
+          echo "Created PR: $PR_URL"
+          
+          # Fusionar automáticamente el PR
+          # Nota: Si esto falla, asegúrate de tener activada la opción 
+          # "Allow auto-merge" en los Settings generales del repositorio de GitHub.
+          gh pr merge "$PR_URL" --merge --auto

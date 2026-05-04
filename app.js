@@ -3,7 +3,7 @@
  */
 
 import { getSyncState, getMeta, setMeta, importAllData } from "./db.js";
-import { initGoogleAuth, syncToDrive, requestToken, downloadFromDrive } from "./sync.js";
+import { initGoogleAuth, syncToDrive, requestToken, downloadFromDrive, hasValidToken } from "./sync.js";
 import { initNotes, refreshItems } from "./modules/notes/notes.js";
 import { initHabits } from "./modules/habits/habits.js";
 import { initBooks } from "./modules/books/books.js";
@@ -224,6 +224,17 @@ function setStatus(message, type = "") {
 async function updateLastSyncDisplay() {
   try {
     const { lastSyncAt, hasUnsyncedChanges } = await getSyncState();
+    const loginIndicator = document.getElementById("login-indicator");
+    if (loginIndicator) {
+      if (hasValidToken()) {
+        loginIndicator.classList.add("logged-in");
+        loginIndicator.title = "Conectado a Google Drive";
+      } else {
+        loginIndicator.classList.remove("logged-in");
+        loginIndicator.title = "No conectado a Google Drive";
+      }
+    }
+
     if (!lastSyncAt) {
       lastSyncEl.textContent = "Never synced";
       return;
@@ -338,6 +349,8 @@ async function init() {
           if (data) {
             loginStatus.textContent = "¡Copia encontrada! Restaurando datos locales...";
             await importAllData(data);
+            await setMeta("lastSyncAt", Date.now());
+            await setMeta("hasUnsyncedChanges", false);
           } else {
             loginStatus.textContent = "No se encontró copia previa. Iniciando desde cero...";
           }

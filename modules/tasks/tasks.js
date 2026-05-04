@@ -199,8 +199,8 @@ async function onDrop(e) {
 
   if (!dragSrcId || !newCol) return;
 
-  const task = tasks.find(t => t.id === dragSrcId);
-  if (!task || task.col === newCol) return;
+  const task = tasks.find(t => String(t.id) === String(dragSrcId));
+  if (!task || String(task.col) === String(newCol)) return;
 
   task.col = newCol;
   await saveTask(task);
