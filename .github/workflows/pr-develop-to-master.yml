@@ -1,0 +1,49 @@
+name: Auto PR Develop to Master
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'Auto Backport')"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Check if PR already exists
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          prs=$(gh pr list --base master --head develop --state open --json number)
+          if [ "$prs" == "[]" ]; then
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Create Pull Request
+        if: steps.check_pr.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_URL=$(gh pr create \
+            --base master \
+            --head develop \
+            --title "🚀 Auto Release: develop -> master" \
+            --body "Auto-generated PR for releasing changes from \`develop\` into \`master\`.")
+          
+          echo "Created PR: $PR_URL"
+          
+          # Pequeña pausa para que GitHub calcule si hay conflictos de merge
+          sleep 3
+          
+          # Fusionar inmediatamente
+          gh pr merge "$PR_URL" --merge
