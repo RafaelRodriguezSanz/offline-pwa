@@ -42,7 +42,8 @@ jobs:
           
           echo "Created PR: $PR_URL"
           
-          # Fusionar automáticamente el PR
-          # Nota: Si esto falla, asegúrate de tener activada la opción 
-          # "Allow auto-merge" en los Settings generales del repositorio de GitHub.
-          gh pr merge "$PR_URL" --merge --auto
+          # Pequeña pausa para que GitHub calcule si hay conflictos de merge
+          sleep 3
+          
+          # Fusionar inmediatamente
+          gh pr merge "$PR_URL" --merge
