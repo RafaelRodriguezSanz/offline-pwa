@@ -1,7 +1,7 @@
 /**
  * modules/notes/db.js
  */
-import { openDB } from "../../db.js";
+import { openDB } from "../../db-base.js";
 
 export async function addItem(value) {
   const db   = await openDB();

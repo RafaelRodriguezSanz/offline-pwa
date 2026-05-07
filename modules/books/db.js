@@ -1,7 +1,7 @@
 /**
  * modules/books/db.js
  */
-import { openDB } from "../../db.js";
+import { openDB } from "../../db-base.js";
 
 export async function addBook(book) {
   const db = await openDB();

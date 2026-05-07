@@ -5,7 +5,7 @@
  * loads instantly and works fully offline after the first visit.
  */
 
-const CACHE_NAME = "localsync-v15";
+const CACHE_NAME = "localsync-v21";
 
 // ... (existing comments) ...
 
@@ -31,22 +31,34 @@ const ASSETS_TO_CACHE = [
   "./static/exercises.jsonl",
   "./styles.css",
   "./manifest.json",
-  "./static/body.svg",
+  "./static/body_front.svg",
+  "./static/body_back.svg",
+  "./app.js",
+  "./sync.js",
+  "./db.js",
+  "./db-base.js",
+  "./modules/ui.js",
   "./modules/notes/notes.js",
+  "./modules/notes/db.js",
   "./modules/notes/notes.css",
   "./modules/notes/notes.html",
   "./modules/habits/habits.js",
+  "./modules/habits/db.js",
   "./modules/habits/habits.css",
   "./modules/habits/habits.html",
   "./modules/books/books.js",
+  "./modules/books/db.js",
   "./modules/books/books.css",
   "./modules/books/books.html",
   "./modules/settings/settings.js",
+  "./modules/settings/db.js",
   "./modules/settings/settings.html",
   "./modules/fitness/fitness.js",
+  "./modules/fitness/db.js",
   "./modules/fitness/fitness.css",
   "./modules/fitness/fitness.html",
   "./modules/tasks/tasks.js",
+  "./modules/tasks/db.js",
   "./modules/tasks/tasks.css",
   "./modules/tasks/tasks.html",
   "./icons/icon-192.png",

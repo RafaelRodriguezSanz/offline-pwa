@@ -8,45 +8,9 @@
  *  - Add / Edit / Delete tasks
  */
 
-import { openDB, markUnsyncedChanges } from "../../db.js";
-
-// ─── IndexedDB helpers ────────────────────────────────────────────────────────
-
-const STORE = "tasks";
-
-async function getDB() {
-  return openDB(); // reuse the shared db.js opener
-}
-
-async function getAllTasks() {
-  const db = await getDB();
-  return new Promise((resolve, reject) => {
-    const tx  = db.transaction(STORE, "readonly");
-    const req = tx.objectStore(STORE).getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror   = () => reject(req.error);
-  });
-}
-
-async function saveTask(task) {
-  const db = await getDB();
-  return new Promise((resolve, reject) => {
-    const tx  = db.transaction(STORE, "readwrite");
-    const req = tx.objectStore(STORE).put(task);
-    req.onsuccess = () => resolve(req.result); // returns id
-    req.onerror   = () => reject(req.error);
-  });
-}
-
-async function deleteTask(id) {
-  const db = await getDB();
-  return new Promise((resolve, reject) => {
-    const tx  = db.transaction(STORE, "readwrite");
-    const req = tx.objectStore(STORE).delete(id);
-    req.onsuccess = () => resolve();
-    req.onerror   = () => reject(req.error);
-  });
-}
+import { markUnsyncedChanges } from "../../db.js";
+import { confirmModal } from "../ui.js";
+import { getAllTasks, saveTask, deleteTask } from "./db.js";
 
 // ─── Module state ─────────────────────────────────────────────────────────────
 
@@ -66,6 +30,7 @@ export async function initTasks(rootContainer, preloadedHtml) {
 
   renderBoard();
   bindUI();
+  setupDropZones();
 }
 
 // ─── Render ───────────────────────────────────────────────────────────────────
@@ -91,8 +56,6 @@ function renderBoard() {
     const badge = container.querySelector(`#count-${col}`);
     if (badge) badge.textContent = sorted.length;
   }
-
-  setupDropZones();
 }
 
 function buildCard(task) {
@@ -111,17 +74,13 @@ function buildCard(task) {
     <div class="card-footer">
       <span class="card-date">${date}</span>
       <div class="card-actions">
-        <button class="btn-card-edit" data-id="${task.id}" title="Editar">✏️</button>
-        <button class="btn-card-del"  data-id="${task.id}" title="Eliminar">🗑</button>
+        <button class="btn-card-edit" data-id="${task.id}" title="Editar" draggable="false">✏️</button>
+        <button class="btn-card-del"  data-id="${task.id}" title="Eliminar" draggable="false">🗑</button>
       </div>
     </div>
   `;
 
-  // Drag events
-  card.addEventListener("dragstart", onDragStart);
-  card.addEventListener("dragend",   onDragEnd);
-
-  // Edit / delete buttons
+  // Edit / delete buttons (stop propagation so card click doesn't fire)
   card.querySelector(".btn-card-edit").addEventListener("click", (e) => {
     e.stopPropagation();
     openModal(task.id);
@@ -140,72 +99,99 @@ function buildCard(task) {
 // ─── Drag & Drop ──────────────────────────────────────────────────────────────
 
 function onDragStart(e) {
-  dragSrcId = parseInt(e.currentTarget.dataset.id);
-  e.currentTarget.classList.add("dragging");
+  const card = e.target.closest(".task-card");
+  if (!card) return;
+  dragSrcId = card.dataset.id;
+  // Use a slight delay so the "dragging" class is captured in the ghost image
+  setTimeout(() => card.classList.add("dragging"), 0);
   e.dataTransfer.effectAllowed = "move";
   e.dataTransfer.setData("text/plain", dragSrcId);
 }
 
 function onDragEnd(e) {
-  e.currentTarget.classList.remove("dragging");
+  const card = e.target.closest(".task-card");
+  if (card) card.classList.remove("dragging");
   removePlaceholder();
   container.querySelectorAll(".kanban-col").forEach(c => c.classList.remove("drag-over"));
   dragSrcId = null;
 }
 
+/** Attach drag & drop listeners once on the board — survives re-renders */
 function setupDropZones() {
-  container.querySelectorAll(".col-cards").forEach(zone => {
-    zone.addEventListener("dragover",  onDragOver);
-    zone.addEventListener("dragleave", onDragLeave);
-    zone.addEventListener("drop",      onDrop);
+  const board = container.querySelector("#kanban-board");
+  if (!board || board._dndReady) return;
+  board._dndReady = true;
+
+  board.addEventListener("dragstart", onDragStart);
+  board.addEventListener("dragend",   onDragEnd);
+
+  board.addEventListener("dragenter", (e) => {
+    const col = e.target.closest(".kanban-col");
+    if (col) e.preventDefault();
   });
-}
 
-function onDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = "move";
+  board.addEventListener("dragover", (e) => {
+    const col = e.target.closest(".kanban-col");
+    if (!col) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
 
-  const zone = e.currentTarget;
-  zone.closest(".kanban-col").classList.add("drag-over");
+    // Highlight current column
+    container.querySelectorAll(".kanban-col").forEach(c => c.classList.remove("drag-over"));
+    col.classList.add("drag-over");
 
-  // Move placeholder to correct position
-  removePlaceholder();
-  placeholder = document.createElement("div");
-  placeholder.className = "drop-placeholder";
+    // Placeholder inside the col-cards area
+    const zone = col.querySelector(".col-cards");
+    if (!zone) return;
 
-  const afterEl = getDragAfterElement(zone, e.clientY);
-  if (afterEl) {
-    zone.insertBefore(placeholder, afterEl);
-  } else {
-    zone.appendChild(placeholder);
-  }
-}
+    const afterEl = getDragAfterElement(zone, e.clientY);
+    
+    // Only move/create placeholder if needed to avoid flickering
+    if (!placeholder) {
+      placeholder = document.createElement("div");
+      placeholder.className = "drop-placeholder";
+    }
 
-function onDragLeave(e) {
-  // Only clear if leaving the zone entirely (not entering a child)
-  if (!e.currentTarget.contains(e.relatedTarget)) {
-    e.currentTarget.closest(".kanban-col").classList.remove("drag-over");
-  }
-}
+    if (afterEl) {
+      if (placeholder.nextSibling !== afterEl) {
+        zone.insertBefore(placeholder, afterEl);
+      }
+    } else {
+      if (placeholder.parentElement !== zone || placeholder.nextSibling !== null) {
+        zone.appendChild(placeholder);
+      }
+    }
+  });
 
-async function onDrop(e) {
-  e.preventDefault();
-  removePlaceholder();
+  board.addEventListener("dragleave", (e) => {
+    if (!board.contains(e.relatedTarget)) {
+      container.querySelectorAll(".kanban-col").forEach(c => c.classList.remove("drag-over"));
+      removePlaceholder();
+    }
+  });
 
-  const zone    = e.currentTarget;
-  const newCol  = zone.dataset.col;
-  const col     = zone.closest(".kanban-col");
-  col.classList.remove("drag-over");
+  board.addEventListener("drop", async (e) => {
+    const col = e.target.closest(".kanban-col");
+    if (!col) return;
+    e.preventDefault();
+    
+    const newCol = col.dataset.col;
+    const droppedId = e.dataTransfer.getData("text/plain") || dragSrcId;
+    
+    removePlaceholder();
+    container.querySelectorAll(".kanban-col").forEach(c => c.classList.remove("drag-over"));
 
-  if (!dragSrcId || !newCol) return;
+    if (!droppedId || !newCol) return;
 
-  const task = tasks.find(t => String(t.id) === String(dragSrcId));
-  if (!task || String(task.col) === String(newCol)) return;
+    // Use string comparison for IDs to be safe
+    const task = tasks.find(t => String(t.id) === String(droppedId));
+    if (!task || task.col === newCol) return;
 
-  task.col = newCol;
-  await saveTask(task);
-  await markUnsyncedChanges();
-  renderBoard();
+    task.col = newCol;
+    await saveTask(task);
+    await markUnsyncedChanges();
+    renderBoard();
+  });
 }
 
 function getDragAfterElement(container, y) {
@@ -320,7 +306,9 @@ async function saveFromModal() {
 }
 
 async function confirmDelete(id) {
-  if (!confirm("¿Eliminar esta tarea?")) return;
+  const confirmed = await confirmModal("Eliminar tarea", "¿Estás seguro de que quieres eliminar esta tarea? Esta acción no se puede deshacer.");
+  if (!confirmed) return;
+  
   await deleteTask(id);
   await markUnsyncedChanges();
   tasks = tasks.filter(t => t.id !== id);

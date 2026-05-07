@@ -1,8 +1,10 @@
 /**
  * modules/fitness/fitness.js
  */
+import { getAllLoggedExercises, logExercise } from "./db.js";
 
 let allExercises = [];
+let bodySvg = "";
 
 export async function initFitness(container, preloadedHtml) {
   container.innerHTML = preloadedHtml || "<h2>Cargando Fitness...</h2>";
@@ -13,9 +15,9 @@ export async function initFitness(container, preloadedHtml) {
 
   // Load SVG
   try {
-    const svgRes = await fetch("./static/body.svg");
-    const svgText = await svgRes.text();
-    mapWrapper.innerHTML = svgText;
+    const svgRes = await fetch("./static/body_front.svg");
+    bodySvg = await svgRes.text();
+    if (mapWrapper) mapWrapper.innerHTML = bodySvg;
   } catch (err) {
     console.error("Failed to load body map SVG:", err);
   }
@@ -46,33 +48,51 @@ export async function initFitness(container, preloadedHtml) {
 
 function renderExercises(day, listContainer, mapWrapper) {
   listContainer.innerHTML = "";
-  clearHighlights(mapWrapper);
+  if (mapWrapper) clearHighlights(mapWrapper);
 
   const dayExercises = allExercises.filter(ex => ex.days.includes(day));
+
+  // Update count badge
+  const countEl = listContainer.closest(".fitness-container")?.querySelector("#exercise-count");
+  if (countEl) countEl.textContent = `${dayExercises.length} ejercicio${dayExercises.length !== 1 ? "s" : ""}`;
+
+  if (dayExercises.length === 0) {
+    listContainer.innerHTML = `<div class="exercise-empty">No hay ejercicios para este día.</div>`;
+    return;
+  }
 
   dayExercises.forEach(ex => {
     const card = document.createElement("div");
     card.className = "exercise-card";
-    
-    const details = ex.reps ? ex.reps : ex.time;
-    
+
+    const details = ex.reps || ex.time || "";
+
     card.innerHTML = `
-      <div class="exercise-name">${ex.name}</div>
-      <div class="exercise-details"><span>${details}</span></div>
+      <div class="exercise-info">
+        <div class="exercise-name">${ex.name}</div>
+        <div class="exercise-details">${details}</div>
+      </div>
+      <div class="exercise-arrow">›</div>
     `;
 
-    // Highlight on hover/click
-    card.addEventListener("mouseenter", () => highlightMuscles(ex.muscles, mapWrapper));
-    card.addEventListener("mouseleave", () => clearHighlights(mapWrapper));
+    // Highlight on global body map on hover/click
+    card.addEventListener("mouseenter", () => {
+      if (mapWrapper) highlightMuscles(ex.muscles, mapWrapper);
+    });
+    card.addEventListener("mouseleave", () => {
+      if (mapWrapper) clearHighlights(mapWrapper);
+    });
     card.addEventListener("click", () => {
-      // Toggle active class on card
       document.querySelectorAll(".exercise-card").forEach(c => c.classList.remove("active"));
       card.classList.add("active");
-      highlightMuscles(ex.muscles, mapWrapper, true);
+      if (mapWrapper) highlightMuscles(ex.muscles, mapWrapper, true);
     });
 
     listContainer.appendChild(card);
   });
+
+  // Scroll list to top when switching days
+  listContainer.scrollTop = 0;
 }
 
 let activeMuscles = [];

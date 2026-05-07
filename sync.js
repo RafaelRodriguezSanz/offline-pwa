@@ -18,7 +18,7 @@ const BACKUP_FILENAME = "app-backup.json";
 
 // ─── Module state ─────────────────────────────────────────────────────────────
 let tokenClient = null; // GIS TokenClient instance
-let accessToken = null; // Current OAuth access token
+let accessToken = sessionStorage.getItem("drive_access_token") || null; // Restore from session if possible
 
 // ─── Initialisation ───────────────────────────────────────────────────────────
 
@@ -115,6 +115,7 @@ export function requestToken() {
         ));
       }
       accessToken = response.access_token;
+      sessionStorage.setItem("drive_access_token", accessToken);
       resolve(accessToken);
     };
 
