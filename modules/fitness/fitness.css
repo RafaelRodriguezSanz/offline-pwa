@@ -4,124 +4,205 @@
   padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+  height: calc(100dvh - 180px);  /* fill available viewport */
+  min-height: 0;                 /* allow flex children to shrink */
 }
 
+.header-section h2 {
+  font-size: 1.3rem;
+  margin: 0 0 4px;
+}
+
+.header-section p {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+/* ── Day Buttons ── */
 .days-filter {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
-  padding-bottom: 10px;
+  padding-bottom: 4px;
+  flex-shrink: 0;
 }
 
 .day-btn {
-  padding: 8px 16px;
+  padding: 7px 16px;
   border-radius: 20px;
   background: var(--surface);
   border: 1px solid var(--border);
-  color: var(--text);
+  color: var(--muted);
   cursor: pointer;
   white-space: nowrap;
+  font-size: 0.82rem;
+  font-weight: 600;
   transition: all 0.2s;
 }
 
 .day-btn.active {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
+  background: var(--accent);
+  color: #0f0f0f;
+  border-color: var(--accent);
+}
+
+/* ── Global Body Map — centered ── */
+.global-body-map {
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  overflow: hidden;
+  max-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  flex-shrink: 0;
+  margin: 0 auto;        /* center horizontally */
+  width: 100%;
+  max-width: 480px;       /* prevent stretching on wide screens */
+}
+
+.global-body-map svg {
+  max-height: 240px;
+  width: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Default muscle color in body map */
+.global-body-map svg path {
+  transition: fill 0.2s, opacity 0.2s;
+}
+
+/* Highlighted muscle */
+.global-body-map svg path.muscle-active {
+  fill: var(--accent) !important;
+  opacity: 1;
+  filter: drop-shadow(0 0 4px var(--accent));
+}
+
+/* ── Exercises List — scrollable ── */
+.exercises-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;  /* critical for flex shrink / scroll */
+  flex: 1;
+}
+
+.exercises-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.exercises-section-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+}
+
+.exercise-count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 20px;
 }
 
 .exercises-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
-/* ── Card layout ── */
+.exercises-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.exercises-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.exercises-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+/* ── Exercise Card ── */
 .exercise-card {
   background: var(--surface);
-  border-radius: 16px;
+  border-radius: 14px;
   border: 1px solid var(--border);
   cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, transform 0.15s, box-shadow 0.15s;
   display: flex;
-  align-items: stretch;
-  overflow: hidden;
-  min-height: 90px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .exercise-card:hover {
   border-color: var(--accent);
   transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 }
 
 .exercise-card.active {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent);
-  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .exercise-info {
   flex: 1;
-  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .exercise-name {
-  font-weight: bold;
-  font-size: 1.05rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
 }
 
 .exercise-details {
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.exercise-arrow {
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 1.4rem;
+  line-height: 1;
+  transition: color 0.2s;
 }
 
-/* ── Body map thumbnails ── */
-.exercise-body-maps {
-  display: flex;
-  gap: 0;
-  flex-shrink: 0;
-  border-left: 1px solid var(--border);
+.exercise-card:hover .exercise-arrow,
+.exercise-card.active .exercise-arrow {
+  color: var(--accent);
 }
 
-.exercise-body-map {
-  width: 52px;
-  background: var(--background, rgba(255,255,255,0.03));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 3px;
-  overflow: hidden;
-}
-
-.exercise-body-map + .exercise-body-map {
-  border-left: 1px solid var(--border);
-}
-
-.exercise-body-map svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* ── Muscle highlight: dim all, glow active ── */
-.exercise-body-map svg path {
-  transition: opacity 0.2s, filter 0.2s;
-}
-
-/* On hover OR active card: dim everything */
-.exercise-card:hover .exercise-body-map svg path,
-.exercise-card.active .exercise-body-map svg path {
-  opacity: 0.15;
-}
-
-/* Then light up only the marked muscles */
-.exercise-card:hover .exercise-body-map svg path.muscle-active,
-.exercise-card.active .exercise-body-map svg path.muscle-active {
-  opacity: 1;
-  filter: brightness(1.8) drop-shadow(0 0 4px currentColor);
+.exercise-empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 30px;
+  font-size: 0.9rem;
 }

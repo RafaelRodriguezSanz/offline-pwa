@@ -25,7 +25,7 @@
 }
 
 .tasks-header h2 span {
-  color: var(--accent, #a78bfa);
+  color: var(--accent, #c8f060);
 }
 
 .btn-add-task {
@@ -43,8 +43,15 @@
   transition: opacity 0.2s, transform 0.15s;
 }
 
-.btn-add-task:hover { opacity: 0.85; transform: translateY(-1px); }
-.btn-add-task .plus { font-size: 1.2rem; line-height: 1; }
+.btn-add-task:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.btn-add-task .plus {
+  font-size: 1.2rem;
+  line-height: 1;
+}
 
 /* ── Kanban Board ────────────────────────────────────────────── */
 
@@ -76,8 +83,8 @@
 }
 
 .kanban-col.drag-over {
-  border-color: var(--accent, #a78bfa);
-  background: color-mix(in srgb, var(--accent, #a78bfa) 6%, var(--surface, #1a1a1a));
+  border-color: var(--accent, #c8f060);
+  background: color-mix(in srgb, var(--accent, #c8f060) 6%, var(--surface, #1a1a1a));
 }
 
 .col-header {
@@ -95,9 +102,17 @@
   flex-shrink: 0;
 }
 
-.dot-todo  { background: #94a3b8; }
-.dot-doing { background: #f59e0b; }
-.dot-done  { background: #22c55e; }
+.dot-todo {
+  background: #94a3b8;
+}
+
+.dot-doing {
+  background: #f59e0b;
+}
+
+.dot-done {
+  background: #22c55e;
+}
 
 .col-title {
   font-weight: 600;
@@ -132,6 +147,7 @@
   border: 1px dashed var(--border, #2a2a2a);
   background: transparent;
   color: var(--muted, #94a3b8);
+  color: var(--muted);
   font-size: 0.82rem;
   cursor: pointer;
   transition: border-color 0.2s, color 0.2s;
@@ -139,8 +155,8 @@
 }
 
 .btn-col-add:hover {
-  border-color: var(--accent, #a78bfa);
-  color: var(--accent, #a78bfa);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* ── Task Card ────────────────────────────────────────────────── */
@@ -157,9 +173,9 @@
 }
 
 .task-card:hover {
-  border-color: var(--accent, #a78bfa);
+  border-color: var(--accent, #c8f060);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
 
 .task-card.dragging {
@@ -169,8 +185,8 @@
 }
 
 .task-card.drag-ghost {
-  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
-  border-color: var(--accent, #a78bfa);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  border-color: var(--accent, #c8f060);
   opacity: 1;
   transform: rotate(1.5deg) scale(1.03);
 }
@@ -179,14 +195,24 @@
 .task-card::before {
   content: '';
   position: absolute;
-  left: 0; top: 12px; bottom: 12px;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
   width: 3px;
   border-radius: 0 2px 2px 0;
 }
 
-.task-card.priority-low::before    { background: #22c55e; }
-.task-card.priority-medium::before { background: #f59e0b; }
-.task-card.priority-high::before   { background: #ef4444; }
+.task-card.priority-low::before {
+  background: #22c55e;
+}
+
+.task-card.priority-medium::before {
+  background: #f59e0b;
+}
+
+.task-card.priority-high::before {
+  background: #ef4444;
+}
 
 .card-title {
   font-weight: 600;
@@ -228,7 +254,9 @@
   transition: opacity 0.15s;
 }
 
-.task-card:hover .card-actions { opacity: 1; }
+.task-card:hover .card-actions {
+  opacity: 1;
+}
 
 .btn-card-edit,
 .btn-card-del {
@@ -242,15 +270,22 @@
   transition: background 0.15s, color 0.15s;
 }
 
-.btn-card-edit:hover { color: var(--accent, #a78bfa); border-color: var(--accent, #a78bfa); }
-.btn-card-del:hover  { color: #ef4444; border-color: #ef4444; }
+.btn-card-edit:hover {
+  color: var(--accent, #c8f060);
+  border-color: var(--accent, #c8f060);
+}
+
+.btn-card-del:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+}
 
 /* Placeholder while dragging */
 .drop-placeholder {
-  border: 2px dashed var(--accent, #a78bfa);
+  border: 2px dashed var(--accent, #c8f060);
   border-radius: 12px;
   height: 64px;
-  background: color-mix(in srgb, var(--accent, #a78bfa) 8%, transparent);
+  background: color-mix(in srgb, var(--accent, #c8f060) 8%, transparent);
   flex-shrink: 0;
 }
 
@@ -259,7 +294,7 @@
 .task-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
   z-index: 1000;
   display: flex;
@@ -269,11 +304,18 @@
   animation: fadeIn 0.15s ease;
 }
 
-.task-modal-overlay[hidden] { display: none; }
+.task-modal-overlay[hidden] {
+  display: none;
+}
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .task-modal {
@@ -290,8 +332,15 @@
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .modal-top {
@@ -320,7 +369,10 @@
   transition: background 0.15s;
 }
 
-.modal-close:hover { background: var(--border, #2a2a2a); color: var(--text, #e2e8f0); }
+.modal-close:hover {
+  background: var(--border, #2a2a2a);
+  color: var(--text, #e2e8f0);
+}
 
 .modal-body {
   padding: 16px 20px;
@@ -338,7 +390,9 @@
   letter-spacing: 0.04em;
 }
 
-.field-label .required { color: #ef4444; }
+.field-label .required {
+  color: #ef4444;
+}
 
 .task-input,
 .task-textarea,
@@ -359,10 +413,13 @@
 .task-input:focus,
 .task-textarea:focus,
 .task-select:focus {
-  border-color: var(--accent, #a78bfa);
+  border-color: var(--accent, #c8f060);
 }
 
-.task-textarea { resize: vertical; min-height: 72px; }
+.task-textarea {
+  resize: vertical;
+  min-height: 72px;
+}
 
 .task-select {
   appearance: none;
@@ -392,9 +449,9 @@
 
 .priority-btn.active,
 .priority-btn:hover {
-  border-color: var(--accent, #a78bfa);
+  border-color: var(--accent, #c8f060);
   color: var(--text, #e2e8f0);
-  background: color-mix(in srgb, var(--accent, #a78bfa) 12%, var(--background, #111));
+  background: color-mix(in srgb, var(--accent, #c8f060) 12%, var(--background, #111));
 }
 
 .modal-footer {
@@ -416,7 +473,9 @@
   transition: background 0.15s;
 }
 
-.btn-modal-delete:hover { background: #ef444420; }
+.btn-modal-delete:hover {
+  background: #ef444420;
+}
 
 .modal-actions {
   display: flex;
@@ -434,12 +493,14 @@
   transition: background 0.15s;
 }
 
-.btn-modal-cancel:hover { background: var(--border, #2a2a2a); color: var(--text, #e2e8f0); }
+.btn-modal-cancel:hover {
+  background: var(--border, #2a2a2a);
+  color: var(--text, #e2e8f0);
+}
 
 .btn-modal-save {
-  background: var(--primary, #6d28d9);
-  border: none;
-  color: #fff;
+  background: var(--primary);
+  color: #0f0f0f;
   border-radius: 10px;
   padding: 8px 20px;
   font-size: 0.88rem;
@@ -448,4 +509,6 @@
   transition: opacity 0.15s;
 }
 
-.btn-modal-save:hover { opacity: 0.85; }
+.btn-modal-save:hover {
+  opacity: 0.85;
+}

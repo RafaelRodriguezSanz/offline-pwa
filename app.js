@@ -114,6 +114,7 @@ async function navigate(target) {
 function toggleMenu(show) {
   sideNav.classList.toggle("open", show);
   navOverlay.classList.toggle("show", show);
+  document.body.classList.toggle("menu-open", show);
 }
 
 function setupNavigation() {
@@ -224,15 +225,12 @@ function setStatus(message, type = "") {
 async function updateLastSyncDisplay() {
   try {
     const { lastSyncAt, hasUnsyncedChanges } = await getSyncState();
-    const loginIndicator = document.getElementById("login-indicator");
-    if (loginIndicator) {
-      if (hasValidToken()) {
-        loginIndicator.classList.add("logged-in");
-        loginIndicator.title = "Conectado a Google Drive";
-      } else {
-        loginIndicator.classList.remove("logged-in");
-        loginIndicator.title = "No conectado a Google Drive";
-      }
+    const cloudIcon = document.querySelector("#btn-sync-global .cloud-icon");
+    const isLoggedIn = hasValidToken();
+
+    if (cloudIcon) {
+      cloudIcon.classList.toggle("logged-in", isLoggedIn);
+      cloudIcon.title = isLoggedIn ? "Conectado a Google Drive" : "No conectado a Google Drive";
     }
 
     if (!lastSyncAt) {
@@ -307,6 +305,8 @@ async function init() {
   try {
     setupNavigation();
     registerServiceWorker();
+    updateLastSyncDisplay(); // Update indicator immediately from sessionStorage
+
 
     console.log("[App] Prefetching templates...");
     const prefetchPromise = prefetchTemplates();

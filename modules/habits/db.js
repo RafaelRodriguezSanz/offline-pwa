@@ -1,7 +1,7 @@
 /**
  * modules/habits/db.js
  */
-import { openDB } from "../../db.js";
+import { openDB } from "../../db-base.js";
 
 export async function addWaterIntake() {
   const db = await openDB();

@@ -4,7 +4,7 @@
 
 import { addBook, getAllBooks, updateBookProgress, deleteBook } from "./db.js";
 import { markUnsyncedChanges } from "../../db.js";
-import { confirmModal } from "../ui.js";
+import { confirmModal, alertModal } from "../ui.js";
 
 export async function initBooks(container, preloadedHtml) {
   if (preloadedHtml) {
@@ -73,7 +73,10 @@ export async function initBooks(container, preloadedHtml) {
     const author = container.querySelector("#book-author").value;
     const coverUrl = container.querySelector("#book-cover").value;
     const totalPages = container.querySelector("#book-pages").value;
-    if (!title || !author || !totalPages) return alert("Please fill Title, Author and Pages");
+    if (!title || !author || !totalPages) {
+      await alertModal("Faltan datos", "Por favor completa el Título, Autor y Número de páginas.");
+      return;
+    }
 
     await addBook({ title, author, coverUrl, totalPages, currentPage: 0 });
     await markUnsyncedChanges();

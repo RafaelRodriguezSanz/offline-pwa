@@ -1,75 +1,22 @@
 /**
- * db.js — Base DB Engine & Metadata
+ * db.js — Main Database Facade
+ * Orchestrates module-specific DB logic and global sync operations.
  */
 
-const DB_NAME    = "appDB";
-const DB_VERSION = 5;
+import { openDB as openBaseDB } from "./db-base.js";
 
-/** Open (or upgrade) the database. Returns a Promise<IDBDatabase>. */
-export function openDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+// Re-export openDB for utility
+export const openDB = openBaseDB;
 
-    // Timeout safety for DB open
-    const timeout = setTimeout(() => {
-      reject(new Error("IndexedDB opening timed out after 3s"));
-    }, 3000);
+// Module-specific imports
+import * as notesDB from "./modules/notes/db.js";
+import * as habitsDB from "./modules/habits/db.js";
+import * as booksDB from "./modules/books/db.js";
+import * as fitnessDB from "./modules/fitness/db.js";
+import * as tasksDB from "./modules/tasks/db.js";
+import * as settingsDB from "./modules/settings/db.js";
 
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-
-      // Notes store
-      if (!db.objectStoreNames.contains("items")) {
-        const store = db.createObjectStore("items", { keyPath: "id", autoIncrement: true });
-        store.createIndex("createdAt", "createdAt", { unique: false });
-      }
-
-      // Metadata store (Global sync state)
-      if (!db.objectStoreNames.contains("metadata")) {
-        db.createObjectStore("metadata", { keyPath: "key" });
-      }
-
-      // Water store
-      if (!db.objectStoreNames.contains("water")) {
-        const waterStore = db.createObjectStore("water", { keyPath: "id", autoIncrement: true });
-        waterStore.createIndex("date", "date", { unique: false });
-      }
-
-      // Books store
-      if (!db.objectStoreNames.contains("books")) {
-        db.createObjectStore("books", { keyPath: "id", autoIncrement: true });
-      }
-
-      // Reading Log store
-      if (!db.objectStoreNames.contains("reading_log")) {
-        const logStore = db.createObjectStore("reading_log", { keyPath: "id", autoIncrement: true });
-        logStore.createIndex("bookId", "bookId", { unique: false });
-        logStore.createIndex("date", "date", { unique: false });
-      }
-
-      // Exercises store
-      if (!db.objectStoreNames.contains("exercises")) {
-        db.createObjectStore("exercises", { keyPath: "id", autoIncrement: true });
-      }
-
-      // Tasks store (Kanban)
-      if (!db.objectStoreNames.contains("tasks")) {
-        const tasksStore = db.createObjectStore("tasks", { keyPath: "id", autoIncrement: true });
-        tasksStore.createIndex("col", "col", { unique: false });
-        tasksStore.createIndex("createdAt", "createdAt", { unique: false });
-      }
-    };
-
-    request.onsuccess = () => {
-      clearTimeout(timeout);
-      resolve(request.result);
-    };
-    request.onerror   = () => {
-      clearTimeout(timeout);
-      reject(request.error);
-    };
-  });
-}
+export { notesDB, habitsDB, booksDB, fitnessDB, tasksDB, settingsDB };
 
 // ─── Metadata & Sync State (Global) ───────────────────────────────────────────
 
@@ -119,44 +66,34 @@ export async function markUnsyncedChanges() {
  */
 export async function getAllDataForSync() {
   const db = await openDB();
+  const STORES = ["items", "water", "books", "reading_log", "exercises", "tasks"];
+  
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(["items", "water", "books", "reading_log", "exercises", "tasks"], "readonly");
-    const notesStore = tx.objectStore("items");
-    const waterStore = tx.objectStore("water");
-    const booksStore = tx.objectStore("books");
-    const logsStore  = tx.objectStore("reading_log");
-    const exerStore  = tx.objectStore("exercises");
-    const tasksStore = tx.objectStore("tasks");
+    const tx = db.transaction(STORES, "readonly");
+    const results = {};
+    const promises = STORES.map(storeName => {
+      return new Promise((res, rej) => {
+        const req = tx.objectStore(storeName).getAll();
+        req.onsuccess = () => { results[storeName === "items" ? "items" : storeName] = req.result; res(); };
+        req.onerror = () => rej(req.error);
+      });
+    });
 
-    const data = {};
-    const reqs = [
-      notesStore.getAll(),
-      waterStore.getAll(),
-      booksStore.getAll(),
-      logsStore.getAll(),
-      exerStore.getAll(),
-      tasksStore.getAll(),
-    ];
-
-    Promise.all(reqs.map(r => new Promise((res, rej) => {
-      r.onsuccess = () => res(r.result);
-      r.onerror = () => rej(r.error);
-    }))).then(([items, water, books, reading_log, exercises, tasks]) => {
-      resolve({ items, water, books, reading_log, exercises, tasks });
-    }).catch(reject);
+    Promise.all(promises)
+      .then(() => resolve(results))
+      .catch(reject);
   });
 }
 
 /**
  * Used by sync.js to restore from backup.
- * DANGER: Overwrites local data.
  */
 export async function importAllData(data) {
   const db = await openDB();
-  const stores = ["items", "water", "books", "reading_log", "exercises", "tasks"];
-  const tx = db.transaction(stores, "readwrite");
+  const STORES = ["items", "water", "books", "reading_log", "exercises", "tasks"];
+  const tx = db.transaction(STORES, "readwrite");
 
-  for (const storeName of stores) {
+  for (const storeName of STORES) {
     const store = tx.objectStore(storeName);
     store.clear();
     const records = data[storeName] || [];
@@ -170,4 +107,3 @@ export async function importAllData(data) {
     tx.onerror = () => reject(tx.error);
   });
 }
-
