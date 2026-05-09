@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Saddle Points</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* NN Theme */
+      --accent:         #c47c15; 
+      --accent-hover:   #a1630c;
+      --accent-bg:      rgba(196,124,21,0.08);
+      --accent-border:  rgba(196,124,21,0.25);
+      --tag-nn:         #c47c15;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-nn { color:var(--tag-nn); border-color:var(--tag-nn); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    
+    .canvas-wrapper { width: 100%; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface); position: relative;}
+    canvas { width: 100%; height: 350px; border-radius: var(--radius-sm); }
+    
+    .legend { display: flex; gap: 1rem; font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.5rem;}
+    .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+    .dot-sgd { width: 10px; height: 10px; border-radius: 50%; background: #d32f2f; }
+    .dot-adam { width: 10px; height: 10px; border-radius: 50%; background: #388e3c; }
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .demo-controls-bar { display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); justify-content: center; flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 4 — Redes Neuronales</a><span class="sep">›</span>
+    <span class="current">Módulo 19 · Saddle Points</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-nn">● NN · Módulo 19</span>
+    <h1 class="module-title">Paisajes de Pérdida &<br>Saddle Points</h1>
+    <p class="module-subtitle">En alta dimensionalidad, los mínimos locales no son el problema principal. El verdadero enemigo son las mesetas o "Puntos de Silla".</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Redes Neuronales</span>
+      <span><strong>Duración</strong> ~10 min</span>
+      <span><strong>Prerrequisitos</strong> Gradiente Descendente</span>
+    </div>
+  </header>
+
+  <section class="section fade-up d1">
+    <div class="section-label">Topología Multidimensional</div>
+    <h2 class="section-title">El Punto de Silla (Saddle Point)</h2>
+    <p>Imagina una silla de montar a caballo. Hacia adelante y atrás sube, hacia los lados baja. En el centro exacto, el gradiente (la pendiente) es cero. Si un optimizador básico como SGD llega allí, "piensa" que llegó al fondo y se detiene.</p>
+    <p>Optimizadores modernos como <strong>Adam</strong> usan <em>Momentum</em> (inercia). Aunque el gradiente sea cero en un punto, la velocidad acumulada los empuja más allá de la parte plana hasta que caen por la ladera correcta.</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Adam vs SGD en Contornos</h2>
+    <p>Estás viendo un mapa topográfico 2D. Las zonas oscuras son los valles (mínimo global a la izquierda). En el centro hay un "Saddle Point". Presiona <strong>Lanzar</strong> para ver cómo SGD se queda clavado en el centro, mientras Adam acumula inercia y escapa.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Mapa de Contornos (Saddle Point)</span>
+      </div>
+
+      <div class="demo-layout">
+        <div class="canvas-wrapper">
+          <canvas id="canvas-saddle" width="600" height="350"></canvas>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="dot-sgd"></div> SGD Básico</div>
+          <div class="legend-item"><div class="dot-adam"></div> Adam (Momentum)</div>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <button id="btn-start" class="btn-primary">▶ Lanzar Optimizadores</button>
+        <button id="btn-reset" class="btn">↻ Reiniciar</button>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="18_nn_optimizadores.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="20_dl_cnn.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: SADDLE POINT (SGD vs ADAM)
+══════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('canvas-saddle');
+  const ctx = canvas.getContext('2d');
+  
+  let animId;
+  let running = false;
+  
+  // Saddle point function: f(x,y) = x^2 - y^2
+  // We'll map x and y from -2 to 2
+  function f(x, y) {
+    return x*x - y*y;
+  }
+  
+  function df(x, y) {
+    return { dx: 2*x, dy: -2*y };
+  }
+  
+  let sgd = { x: 1.5, y: 0.05 };
+  let adam = { x: 1.5, y: 0.05, vx: 0, vy: 0 };
+  
+  let trailSGD = [];
+  let trailAdam = [];
+
+  function init() {
+    running = false;
+    cancelAnimationFrame(animId);
+    sgd = { x: 1.5, y: 0.05 }; // Start slightly off-center to allow escape eventually if momentum works
+    adam = { x: 1.5, y: 0.05, vx: 0, vy: 0 };
+    trailSGD = [];
+    trailAdam = [];
+    draw();
+  }
+
+  function start() {
+    if(running) return;
+    running = true;
+    loop();
+  }
+
+  function loop() {
+    update();
+    draw();
+    if(running) animId = requestAnimationFrame(loop);
+  }
+
+  function update() {
+    // Learning rate
+    const lrSGD = 0.05;
+    const lrAdam = 0.03;
+    const beta = 0.9;
+    
+    // Gradient SGD
+    let g1 = df(sgd.x, sgd.y);
+    sgd.x -= lrSGD * g1.dx;
+    sgd.y -= lrSGD * g1.dy;
+    trailSGD.push({x: sgd.x, y: sgd.y});
+    
+    // Gradient Adam (simplified momentum)
+    let g2 = df(adam.x, adam.y);
+    adam.vx = beta * adam.vx + (1 - beta) * g2.dx;
+    adam.vy = beta * adam.vy + (1 - beta) * g2.dy;
+    adam.x -= lrAdam * adam.vx;
+    adam.y -= lrAdam * adam.vy;
+    trailAdam.push({x: adam.x, y: adam.y});
+    
+    // Stop condition
+    if (adam.y > 2 || adam.y < -2) running = false;
+  }
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    
+    // Background contours (simplified visual rendering)
+    let imgData = ctx.createImageData(W, H);
+    for(let i=0; i<W; i+=4) {
+      for(let j=0; j<H; j+=4) {
+        // Map pixel to -2, 2
+        let x = (i / W) * 4 - 2;
+        let y = (j / H) * 4 - 2;
+        let val = f(x, y);
+        
+        // Color mapping
+        // val ranges roughly -4 to 4
+        let norm = (val + 4) / 8; // 0 to 1
+        let c = Math.floor(norm * 255);
+        
+        // draw 4x4 block for performance
+        for(let dx=0; dx<4; dx++) {
+          for(let dy=0; dy<4; dy++) {
+            let idx = ((j+dy) * W + (i+dx)) * 4;
+            imgData.data[idx] = c;
+            imgData.data[idx+1] = c;
+            imgData.data[idx+2] = c;
+            imgData.data[idx+3] = 255;
+          }
+        }
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    // Draw coordinate system
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.beginPath();
+    ctx.moveTo(0, H/2); ctx.lineTo(W, H/2);
+    ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H);
+    ctx.stroke();
+
+    // Mapping function for dots
+    const mapX = (x) => ((x + 2) / 4) * W;
+    const mapY = (y) => ((y + 2) / 4) * H; // Inverted visually
+
+    // Draw trails
+    ctx.lineWidth = 2;
+    
+    ctx.strokeStyle = '#d32f2f'; // SGD
+    ctx.beginPath();
+    trailSGD.forEach((p, i) => {
+      if(i===0) ctx.moveTo(mapX(p.x), mapY(p.y));
+      else ctx.lineTo(mapX(p.x), mapY(p.y));
+    });
+    ctx.stroke();
+    
+    ctx.strokeStyle = '#388e3c'; // Adam
+    ctx.beginPath();
+    trailAdam.forEach((p, i) => {
+      if(i===0) ctx.moveTo(mapX(p.x), mapY(p.y));
+      else ctx.lineTo(mapX(p.x), mapY(p.y));
+    });
+    ctx.stroke();
+
+    // Draw dots
+    ctx.beginPath();
+    ctx.arc(mapX(sgd.x), mapY(sgd.y), 6, 0, Math.PI*2);
+    ctx.fillStyle = '#d32f2f';
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.arc(mapX(adam.x), mapY(adam.y), 6, 0, Math.PI*2);
+    ctx.fillStyle = '#388e3c';
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  document.getElementById('btn-start').addEventListener('click', start);
+  document.getElementById('btn-reset').addEventListener('click', init);
+
+  init();
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>IA desde Cero — Neocórtex y Sueño</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500&family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #f5f0eb; --bg-surface: #faf7f4; --bg-raised: #ffffff;
+      --border-subtle: #e8e1d9; --border-default: #d9d0c7; --border-strong: #bfb5ab;
+      --text-primary: #1a1714; --text-secondary: #4a4540; --text-muted: #8c847c;
+      --accent: #9c27b0; --accent-bg: rgba(156,39,176,0.08);
+      --font-serif: 'Crimson Pro', serif; --font-mono: 'Geist Mono', monospace; --font-sans: 'Geist', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); line-height: 1.7; padding: 0 1.5rem 5rem; max-width: 860px; margin: 0 auto; }
+    .topbar { padding:1.25rem 0; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; }
+    h1 { font-family:var(--font-serif); font-size:2.6rem; font-weight:400; line-height: 1.2; margin-bottom: 0.75rem;}
+    h2 { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin: 2rem 0 0.5rem; }
+    p, ul { color:var(--text-secondary); margin-bottom:1rem; }
+    ul { padding-left: 1.5rem; }
+    code { font-family: var(--font-mono); font-size: 0.85em; background: rgba(0,0,0,0.05); padding: 0.1em 0.3em; border-radius: 3px; }
+    .module-badge { font-family:var(--font-mono); font-size:0.67rem; padding:0.28em 0.75em; border-radius:999px; border:1px solid var(--accent); color:var(--accent); background:var(--accent-bg); margin-bottom:1rem; display: inline-block;}
+    
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:10px; padding:2rem; margin:1.5rem 0; text-align: center; }
+    
+    .db-anim { display: flex; align-items: center; justify-content: center; gap: 2rem; margin: 2rem 0; }
+    .db-node { width: 120px; height: 120px; border-radius: 50%; border: 2px dashed var(--border-strong); display: flex; align-items: center; justify-content: center; flex-direction: column; background: var(--bg-surface); font-family: var(--font-mono); font-size: 0.8rem;}
+    .db-arrow { font-size: 2rem; color: var(--border-strong); position: relative; }
+    .packet { position: absolute; left: -10px; top: 0; font-size: 1.5rem; opacity: 0; }
+
+    @keyframes transfer { 0% { left: -30px; opacity: 1; } 100% { left: 40px; opacity: 0; } }
+    .packet.active { animation: transfer 1.5s ease-in-out; }
+
+    button { font-family:var(--font-mono); padding:0.5em 1em; border-radius:6px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; }
+    
+    .module-nav { display:flex; justify-content:space-between; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a> › Área 9 › <span style="color:var(--text-secondary)">Módulo 47 · Neocórtex</span></nav>
+  <span class="module-badge">● BIO · Módulo 47</span>
+  <h1>Consolidación Neocortical (El Sueño)</h1>
+  <p>El Hipocampo es solo un disco temporal (RAM). Las memorias a largo plazo residen en la Corteza. Pero, ¿cómo se transfiere el conocimiento sin corromper lo anterior? A través de la Consolidación Sistémica durante el <strong>sueño de ondas lentas</strong>.</p>
+  
+  <h2>NeocortexConsolidator y SQLite</h2>
+  <p>El módulo <code>neocortex.py</code> de <code>my-brain</code> es el encargado de simular el proceso de dormir. En biología, la red CA3 reproduce a alta velocidad secuencias aprendidas en el día (<em>Sharp-Wave Ripples</em>). En código, el consolidador extrae los pesos <code>W_rec</code> y patrones del hipocampo y los serializa en una base de datos <strong>SQLite</strong> a largo plazo (<code>brain_memory.db</code>).</p>
+  <ul>
+    <li><strong>Pruning (Poda por desuso):</strong> Ejecuta <code>prune_unused()</code>, simulando que "sinapsis que no se usan en 10 simulaciones, se eliminan".</li>
+    <li><strong>Compresión GZIP:</strong> Simula la eficiencia volumétrica del cerebro empaquetando pesos inactivos.</li>
+    <li><strong>Independencia Hipocampal:</strong> Una vez guardada, la memoria reside en la corteza y sobrevive incluso si "reinicias" la red CA3.</li>
+  </ul>
+
+  <div class="demo-container">
+    <p style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">Simula la ejecución de <code>sleep_consolidation()</code> para persistir los datos diurnos en SQLite.</p>
+    
+    <div class="db-anim">
+      <div class="db-node" style="border-color: var(--accent);">
+        <span style="font-size: 2rem;">🧠</span>
+        <br>Hipocampo (CA3)
+      </div>
+      <div class="db-arrow">
+        →
+        <div class="packet" id="data-pkt">💾</div>
+      </div>
+      <div class="db-node" style="border-style: solid; background: #fafafa;">
+        <span style="font-size: 2rem;">🗄️</span>
+        <br>SQLite (Neocórtex)
+      </div>
+    </div>
+    
+    <button id="btn-sleep">🌙 Iniciar Sueño (Replay Offline)</button>
+    <p id="log" style="font-family: var(--font-mono); font-size: 0.7rem; color: #4caf50; opacity: 0; margin-top: 1rem;">[SQL] INSERT INTO synapses... SUCCESS.</p>
+  </div>
+
+  <nav class="module-nav">
+    <a href="46_bio_hipocampo.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <span aria-disabled="true">Próximo: Módulo 48 (pendiente)</span>
+  </nav>
+
+  <script>
+    const btn = document.getElementById('btn-sleep');
+    const pkt = document.getElementById('data-pkt');
+    const log = document.getElementById('log');
+
+    btn.addEventListener('click', () => {
+      btn.disabled = true;
+      pkt.classList.remove('active');
+      log.style.opacity = '0';
+      
+      // trigger reflow
+      void pkt.offsetWidth; 
+      
+      pkt.classList.add('active');
+      
+      setTimeout(() => {
+        log.style.opacity = '1';
+        btn.disabled = false;
+      }, 1500);
+    });
+  </script>
+</body>
+</html>

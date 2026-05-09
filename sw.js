@@ -61,6 +61,8 @@ const ASSETS_TO_CACHE = [
   "./modules/tasks/db.js",
   "./modules/tasks/tasks.css",
   "./modules/tasks/tasks.html",
+  "./modules/learning/learning.js",
+  "./modules/learning/learning.html",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
 ];

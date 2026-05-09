@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Reinforcement Learning</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* ML/RL Theme */
+      --accent:         #1976d2; /* distinct blue for RL */
+      --accent-hover:   #1565c0;
+      --accent-bg:      rgba(25,118,210,0.08);
+      --accent-border:  rgba(25,118,210,0.25);
+      --tag-rl:         #1976d2;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-rl { color:var(--tag-rl); border-color:var(--tag-rl); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    
+    .grid { display: grid; grid-template-columns: repeat(4, 60px); grid-template-rows: repeat(4, 60px); gap: 2px; background: var(--border-strong); border: 2px solid var(--border-strong); }
+    .cell { width: 60px; height: 60px; background: var(--bg-raised); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; position: relative; }
+    
+    .agent { background: var(--accent); border-radius: 50%; width: 30px; height: 30px; position: absolute; transition: all 0.1s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10; }
+    .goal { font-size: 2rem; }
+    .trap { font-size: 2rem; }
+    
+    .q-val { position: absolute; font-size: 0.4rem; font-family: var(--font-mono); color: var(--text-faint); }
+    .q-up { top: 2px; } .q-down { bottom: 2px; } .q-left { left: 2px; } .q-right { right: 2px; }
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .demo-controls-bar { display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); justify-content: center; flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 3 — Reinforcement Learning</a><span class="sep">›</span>
+    <span class="current">Módulo 14 · Q-Learning</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-rl">● RL · Módulo 14</span>
+    <h1 class="module-title">Reinforcement Learning:<br>Agentes, Recompensas y Q-Learning</h1>
+    <p class="module-subtitle">Enseñando a las máquinas a través del ensayo y error. Sin datos etiquetados, solo recompensas (premios) y castigos.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Reinforcement Learning</span>
+      <span><strong>Duración</strong> ~15 min</span>
+      <span><strong>Prerrequisitos</strong> Ecuación de Bellman</span>
+    </div>
+  </header>
+
+  <section class="section fade-up d1">
+    <div class="section-label">Aprendizaje por Refuerzo</div>
+    <h2 class="section-title">El Algoritmo Q-Learning</h2>
+    <p>Un Agente interactúa con un Entorno. En cada <strong>Estado</strong> $S$, toma una <strong>Acción</strong> $A$ y recibe una <strong>Recompensa</strong> $R$. El objetivo es maximizar la suma de recompensas futuras.</p>
+    <p>Para esto, el agente mantiene una "Tabla Q" que evalúa la calidad de cada acción en cada estado. Utiliza la famosa <strong>Ecuación de Bellman</strong> para actualizar el valor de su estado actual basándose en la máxima recompensa que puede obtener en el <em>siguiente</em> estado.</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Agente de Cuadrícula</h2>
+    <p>El agente (Círculo azul) empieza en la esquina superior izquierda. Su objetivo es la <strong>Estrella (+100)</strong>, evitando el <strong>Fuego (-100)</strong>. Observa cómo al principio se mueve al azar (Exploración) y poco a poco los numeritos pequeños en cada celda (Valores Q) se actualizan, creando un camino óptimo hacia el objetivo.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Simulador Q-Learning (Grid 4x4)</span>
+        <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted);" id="lbl-status">Episodio: 0</span>
+      </div>
+
+      <div class="demo-layout">
+        <div style="position: relative;">
+          <div class="grid" id="grid">
+            <!-- 16 cells -->
+          </div>
+          <div class="agent" id="agent"></div>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <button id="btn-step" class="btn">Dar un paso</button>
+        <button id="btn-train" class="btn-primary">▶ Entrenar (Automático)</button>
+        <button id="btn-reset" class="btn">↻ Reiniciar Tabla Q</button>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="13_ml_bias_variance.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="15_nn_perceptron.html">Próximo →</a>
+  </nav>
+</div>
+
+<script>
+(function() {
+  const gridEl = document.getElementById('grid');
+  const agentEl = document.getElementById('agent');
+  const lblStatus = document.getElementById('lbl-status');
+  const btnTrain = document.getElementById('btn-train');
+  const btnStep = document.getElementById('btn-step');
+  
+  const SIZE = 4;
+  const GOAL = { x: 3, y: 3 };
+  const TRAP = { x: 1, y: 2 };
+  
+  let qTable = {}; // key: "x,y", value: [up, right, down, left]
+  let state = { x: 0, y: 0 };
+  let episode = 0;
+  let isTraining = false;
+  let trainInterval = null;
+  
+  const alpha = 0.1; // learning rate
+  const gamma = 0.9; // discount factor
+  let epsilon = 1.0; // exploration rate
+  
+  const ACTIONS = [
+    { dx: 0, dy: -1 }, // UP (0)
+    { dx: 1, dy: 0 },  // RIGHT (1)
+    { dx: 0, dy: 1 },  // DOWN (2)
+    { dx: -1, dy: 0 }  // LEFT (3)
+  ];
+
+  function initGrid() {
+    gridEl.innerHTML = '';
+    for(let y=0; y<SIZE; y++) {
+      for(let x=0; x<SIZE; x++) {
+        let cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.id = `cell-${x}-${y}`;
+        
+        if (x === GOAL.x && y === GOAL.y) cell.innerHTML = '<span class="goal">⭐</span>';
+        else if (x === TRAP.x && y === TRAP.y) cell.innerHTML = '<span class="trap">🔥</span>';
+        else {
+          cell.innerHTML = `
+            <span class="q-val q-up" id="q-${x}-${y}-0">0</span>
+            <span class="q-val q-right" id="q-${x}-${y}-1">0</span>
+            <span class="q-val q-down" id="q-${x}-${y}-2">0</span>
+            <span class="q-val q-left" id="q-${x}-${y}-3">0</span>
+          `;
+        }
+        gridEl.appendChild(cell);
+        qTable[`${x},${y}`] = [0, 0, 0, 0];
+      }
+    }
+    resetAgent();
+  }
+
+  function resetAgent() {
+    state = { x: 0, y: 0 };
+    updateAgentPos();
+  }
+
+  function updateAgentPos() {
+    // Each cell is 60px + 2px gap = 62px total offset roughly
+    agentEl.style.transform = `translate(${state.x * 62 + 15}px, ${state.y * 62 + 15}px)`;
+  }
+
+  function updateQVisuals() {
+    for(let y=0; y<SIZE; y++) {
+      for(let x=0; x<SIZE; x++) {
+        if((x===GOAL.x && y===GOAL.y) || (x===TRAP.x && y===TRAP.y)) continue;
+        let q = qTable[`${x},${y}`];
+        for(let a=0; a<4; a++) {
+          let el = document.getElementById(`q-${x}-${y}-${a}`);
+          if(el) {
+            let val = q[a];
+            el.textContent = val === 0 ? "0" : val.toFixed(1);
+            if (val > 0) el.style.color = '#388e3c';
+            else if (val < 0) el.style.color = '#d32f2f';
+            else el.style.color = 'var(--text-faint)';
+          }
+        }
+      }
+    }
+  }
+
+  function step() {
+    let sKey = `${state.x},${state.y}`;
+    
+    // Choose Action (Epsilon-Greedy)
+    let actionIdx;
+    if (Math.random() < epsilon) {
+      actionIdx = Math.floor(Math.random() * 4);
+    } else {
+      let qVals = qTable[sKey];
+      let maxQ = Math.max(...qVals);
+      // get all actions with maxQ to break ties randomly
+      let bestActions = [];
+      for(let i=0; i<4; i++) if(qVals[i] === maxQ) bestActions.push(i);
+      actionIdx = bestActions[Math.floor(Math.random() * bestActions.length)];
+    }
+    
+    let a = ACTIONS[actionIdx];
+    let nextX = state.x + a.dx;
+    let nextY = state.y + a.dy;
+    
+    let reward = -1; // step penalty
+    let isDone = false;
+    
+    // Bounds check
+    if(nextX < 0 || nextX >= SIZE || nextY < 0 || nextY >= SIZE) {
+      nextX = state.x; nextY = state.y;
+      reward = -5; // hit wall
+    } else if (nextX === GOAL.x && nextY === GOAL.y) {
+      reward = 100;
+      isDone = true;
+    } else if (nextX === TRAP.x && nextY === TRAP.y) {
+      reward = -100;
+      isDone = true;
+    }
+    
+    // Update Q-Table
+    let nextKey = `${nextX},${nextY}`;
+    let maxNextQ = isDone ? 0 : Math.max(...qTable[nextKey]);
+    
+    let oldQ = qTable[sKey][actionIdx];
+    qTable[sKey][actionIdx] = oldQ + alpha * (reward + gamma * maxNextQ - oldQ);
+    
+    state.x = nextX;
+    state.y = nextY;
+    updateAgentPos();
+    updateQVisuals();
+    
+    if (isDone) {
+      episode++;
+      lblStatus.textContent = `Episodio: ${episode} (Epsilon: ${epsilon.toFixed(2)})`;
+      epsilon = Math.max(0.1, epsilon * 0.95); // decay exploration
+      setTimeout(resetAgent, 100);
+    }
+  }
+
+  btnStep.addEventListener('click', step);
+  
+  btnTrain.addEventListener('click', () => {
+    if(isTraining) {
+      clearInterval(trainInterval);
+      isTraining = false;
+      btnTrain.textContent = '▶ Entrenar (Automático)';
+    } else {
+      trainInterval = setInterval(step, 50); // fast forward
+      isTraining = true;
+      btnTrain.textContent = '⏸ Pausar';
+    }
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    epsilon = 1.0;
+    episode = 0;
+    lblStatus.textContent = `Episodio: 0`;
+    initGrid();
+  });
+
+  initGrid();
+})();
+</script>
+</body>
+</html>

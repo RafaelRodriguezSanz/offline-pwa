@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Aplicaciones GA & NEAT</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* GA Theme */
+      --accent:         #2e7d7d; 
+      --accent-hover:   #1f5c5c;
+      --accent-bg:      rgba(46,125,125,0.08);
+      --accent-border:  rgba(46,125,125,0.25);
+      --tag-ga:         #2e7d7d;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-ga { color:var(--tag-ga); border-color:var(--tag-ga); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* CALLOUTS */
+    .callout { border-left:2px solid; padding:0.9rem 1.2rem; border-radius:0 var(--radius-md) var(--radius-md) 0; margin:1.5rem 0; background:var(--bg-raised); box-shadow:var(--shadow-sm); }
+    .callout-key  { border-color:var(--accent);    background:var(--accent-bg); }
+    .callout-label { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.35rem; }
+    .callout-key  .callout-label { color:var(--accent); }
+    .callout p { margin-bottom:0; }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .demo-layout .canvas-wrapper { flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.5rem; background: var(--bg-surface); }
+    .demo-layout canvas { width: 100%; height: auto; border-radius: var(--radius-sm); }
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .demo-controls-bar { display: flex; gap: 1.5rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); justify-content: center; flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 7 — Genéticos</a><span class="sep">›</span>
+    <span class="current">Módulo 35 · TSP</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-ga">● GA · Módulo 35</span>
+    <h1 class="module-title">Aplicaciones: TSP,<br>Neuroevolución & NEAT</h1>
+    <p class="module-subtitle">Cuando los algoritmos genéticos se mezclan con problemas NP-Hard de logística y el diseño de redes neuronales.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Genéticos</span>
+      <span><strong>Duración</strong> ~20 min</span>
+      <span><strong>Prerrequisitos</strong> Operadores Genéticos</span>
+    </div>
+  </header>
+
+  <section class="section fade-up d1">
+    <div class="section-label">Problemas NP-Hard</div>
+    <h2 class="section-title">El Problema del Viajante (TSP)</h2>
+    <p>El Traveling Salesman Problem (TSP) pregunta: "Dada una lista de ciudades, ¿cuál es la ruta más corta que visita cada ciudad exactamente una vez?". Para 20 ciudades, las combinaciones posibles superan los billones. Probar todas es imposible.</p>
+    <p>Los Algoritmos Genéticos brillan aquí. El cromosoma es el orden de las ciudades (ej. `[C, A, D, B]`). El *crossover* tiene que ser especial para no duplicar ciudades (Order Crossover), y la mutación simplemente intercambia dos ciudades de lugar.</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">Evolucionando IA</div>
+    <h2 class="section-title">Neuroevolución (NEAT)</h2>
+    <p>En lugar de usar Backpropagation, podemos usar GAs para entrenar redes neuronales. Esto es útil en videojuegos donde la "función de costo" no es diferenciable (solo sabes que Mario murió, no sabes el gradiente matemático del salto).</p>
+    <div class="callout callout-key">
+      <div class="callout-label">NEAT (NeuroEvolution of Augmenting Topologies)</div>
+      <p>Es un algoritmo famoso que no solo evoluciona los "pesos" de las conexiones, sino que evoluciona la **estructura** de la red. Empieza con redes simples (sin capas ocultas) y las mutaciones agregan nuevas neuronas y nuevas sinapsis lentamente. Las redes "crecen" en complejidad según lo requiera el problema.</p>
+    </div>
+  </section>
+
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">TSP con Algoritmos Genéticos</h2>
+    <p>La pantalla muestra ciudades aleatorias. El objetivo es encontrar el camino gris más corto que las conecte a todas. Al darle a "▶ Iniciar Evolución", verás a las generaciones cruzar e intercambiar rutas hasta converger a una solución muy optimizada.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Evolución de Rutas (TSP)</span>
+        <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted);" id="tsp-dist">Distancia: --</span>
+      </div>
+
+      <div class="demo-layout">
+        <div class="canvas-wrapper">
+          <canvas id="canvas-tsp" width="600" height="300"></canvas>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <button id="btn-start" class="btn-primary">▶ Iniciar Evolución</button>
+        <button id="btn-reset">↺ Nuevas Ciudades</button>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="34_ga_operadores.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="36_ga_vs_gradiente.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: TSP GENETIC ALGORITHM
+══════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('canvas-tsp');
+  const ctx = canvas.getContext('2d');
+  const distLabel = document.getElementById('tsp-dist');
+  
+  let isRunning = false;
+  let animId = null;
+
+  const NUM_CITIES = 25;
+  const POP_SIZE = 100;
+  
+  let cities = [];
+  let population = []; // array of order arrays
+  let fitness = []; // array of distances (smaller is better)
+  let bestRoute = [];
+  let bestDist = Infinity;
+  let generation = 0;
+
+  function initCities() {
+    cities = [];
+    const margin = 20;
+    for (let i = 0; i < NUM_CITIES; i++) {
+      cities.push({
+        x: margin + Math.random() * (canvas.width - margin*2),
+        y: margin + Math.random() * (canvas.height - margin*2)
+      });
+    }
+  }
+
+  function calcDistance(order) {
+    let sum = 0;
+    for (let i = 0; i < order.length - 1; i++) {
+      let a = cities[order[i]];
+      let b = cities[order[i+1]];
+      let dx = a.x - b.x;
+      let dy = a.y - b.y;
+      sum += Math.sqrt(dx*dx + dy*dy);
+    }
+    // Loop back
+    let a = cities[order[order.length-1]];
+    let b = cities[order[0]];
+    sum += Math.sqrt(Math.pow(a.x-b.x,2) + Math.pow(a.y-b.y,2));
+    return sum;
+  }
+
+  function initPop() {
+    population = [];
+    bestDist = Infinity;
+    for (let i = 0; i < POP_SIZE; i++) {
+      let order = [];
+      for (let j = 0; j < NUM_CITIES; j++) order.push(j);
+      // shuffle
+      for (let j = order.length - 1; j > 0; j--) {
+        const k = Math.floor(Math.random() * (j + 1));
+        [order[j], order[k]] = [order[k], order[j]];
+      }
+      population.push(order);
+    }
+  }
+
+  function evaluate() {
+    fitness = [];
+    for (let i = 0; i < POP_SIZE; i++) {
+      let d = calcDistance(population[i]);
+      fitness.push(d);
+      if (d < bestDist) {
+        bestDist = d;
+        bestRoute = [...population[i]];
+      }
+    }
+    distLabel.textContent = `Distancia: ${bestDist.toFixed(0)} (Gen ${generation})`;
+  }
+
+  function nextGen() {
+    // Tournament selection
+    function pick() {
+      let idx1 = Math.floor(Math.random() * POP_SIZE);
+      let idx2 = Math.floor(Math.random() * POP_SIZE);
+      return fitness[idx1] < fitness[idx2] ? population[idx1] : population[idx2];
+    }
+
+    let newPop = [];
+    // Elitism
+    newPop.push([...bestRoute]);
+
+    while (newPop.length < POP_SIZE) {
+      let p1 = pick();
+      let p2 = pick();
+      
+      // Order Crossover (OX1)
+      let start = Math.floor(Math.random() * NUM_CITIES);
+      let end = start + Math.floor(Math.random() * (NUM_CITIES - start));
+      
+      let child = new Array(NUM_CITIES).fill(-1);
+      // copy chunk from p1
+      for(let i = start; i <= end; i++) {
+        child[i] = p1[i];
+      }
+      
+      // fill rest from p2
+      let p2Idx = 0;
+      for(let i = 0; i < NUM_CITIES; i++) {
+        if(child[i] === -1) {
+          while(child.includes(p2[p2Idx])) {
+            p2Idx++;
+          }
+          child[i] = p2[p2Idx];
+        }
+      }
+
+      // Mutation (swap)
+      if (Math.random() < 0.1) {
+        let i = Math.floor(Math.random() * NUM_CITIES);
+        let j = Math.floor(Math.random() * NUM_CITIES);
+        [child[i], child[j]] = [child[j], child[i]];
+      }
+
+      newPop.push(child);
+    }
+
+    population = newPop;
+    generation++;
+    evaluate();
+  }
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw route
+    if (bestRoute.length > 0) {
+      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim();
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let i = 0; i < bestRoute.length; i++) {
+        let n = bestRoute[i];
+        if (i === 0) ctx.moveTo(cities[n].x, cities[n].y);
+        else ctx.lineTo(cities[n].x, cities[n].y);
+      }
+      // close loop
+      ctx.lineTo(cities[bestRoute[0]].x, cities[bestRoute[0]].y);
+      ctx.stroke();
+    }
+
+    // Draw cities
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    for (let i = 0; i < cities.length; i++) {
+      ctx.beginPath();
+      ctx.arc(cities[i].x, cities[i].y, 5, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function loop() {
+    if (!isRunning) return;
+    
+    // speed up by doing multiple gens per frame
+    for(let i=0; i<10; i++) nextGen();
+    draw();
+    
+    if (generation < 2000) {
+      animId = requestAnimationFrame(loop);
+    } else {
+      isRunning = false;
+      document.getElementById('btn-start').textContent = "▶ Iniciar Evolución";
+    }
+  }
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = 300;
+    
+    // We only reset if not running, to avoid breaking current render
+    if (!isRunning) {
+      initCities();
+      initPop();
+      evaluate();
+      draw();
+    }
+  }
+
+  document.getElementById('btn-start').addEventListener('click', function() {
+    if (isRunning) {
+      isRunning = false;
+      this.textContent = "▶ Continuar";
+    } else {
+      isRunning = true;
+      this.textContent = "⏸ Pausar";
+      loop();
+    }
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    isRunning = false;
+    document.getElementById('btn-start').textContent = "▶ Iniciar Evolución";
+    generation = 0;
+    initCities();
+    initPop();
+    evaluate();
+    draw();
+  });
+
+  window.addEventListener('resize', resize);
+  resize();
+
+})();
+</script>
+</body>
+</html>

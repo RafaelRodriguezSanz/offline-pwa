@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Operadores Genéticos</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* GA Theme */
+      --accent:         #2e7d7d; 
+      --accent-hover:   #1f5c5c;
+      --accent-bg:      rgba(46,125,125,0.08);
+      --accent-border:  rgba(46,125,125,0.25);
+      --tag-ga:         #2e7d7d;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-ga { color:var(--tag-ga); border-color:var(--tag-ga); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; flex-direction: column; gap: 1rem; align-items: center; }
+    
+    /* Chromosome Viz */
+    .chromosome { display: flex; border: 2px solid var(--border-strong); border-radius: 4px; overflow: hidden; width: 100%; max-width: 400px; box-shadow: var(--shadow-sm); }
+    .gene { flex: 1; text-align: center; font-family: var(--font-mono); font-size: 1.1rem; padding: 0.5rem 0; transition: all 0.3s; font-weight: bold; }
+    .gene.p1 { background: #e0f2f1; color: #00695c; border-right: 1px solid rgba(0,0,0,0.1); } /* Teal light */
+    .gene.p2 { background: #fff3e0; color: #e65100; border-right: 1px solid rgba(0,0,0,0.1); } /* Orange light */
+    .gene:last-child { border-right: none; }
+    .gene.mutated { animation: flash 0.5s; background: #ffcdd2; color: #b71c1c; }
+
+    .chrom-label { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; width: 100%; max-width: 400px; margin-bottom: -0.5rem; }
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .ctrl-group { display:flex; align-items:center; gap:0.6rem; }
+    .ctrl-label { font-family:var(--font-mono); font-size:0.67rem; color:var(--text-muted); letter-spacing:0.04em; }
+
+    input[type="range"] { -webkit-appearance:none; width:120px; height:3px; background:var(--border-default); border-radius:999px; outline:none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:var(--accent); cursor:pointer; transition:box-shadow var(--transition); border: 2px solid #fff; box-shadow: var(--shadow-sm); }
+    input[type="range"]::-webkit-slider-thumb:hover { box-shadow:0 0 0 4px var(--accent-bg); }
+
+    .demo-controls-bar { display: flex; gap: 1.5rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); justify-content: center; flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes flash { 0% { background-color: #ff1744; } 100% { background-color: #ffcdd2; } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 7 — Genéticos</a><span class="sep">›</span>
+    <span class="current">Módulo 34 · Operadores GA</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-ga">● GA · Módulo 34</span>
+    <h1 class="module-title">Operadores: Cruce,<br>Mutación & Elitismo</h1>
+    <p class="module-subtitle">El delicado equilibrio entre Exploración (buscar nuevas ideas locas) y Explotación (refinar las ideas que ya funcionan).</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Genéticos</span>
+      <span><strong>Duración</strong> ~15 min</span>
+      <span><strong>Prerrequisitos</strong> Fundamentos GA</span>
+    </div>
+  </header>
+
+  <section class="section fade-up d1">
+    <div class="section-label">Recombinación</div>
+    <h2 class="section-title">El poder del Crossover</h2>
+    <p>El Crossover o Cruce es el equivalente al sexo en la biología. Tomamos dos soluciones que son buenas por distintas razones, las partimos a la mitad y combinamos sus genes. La esperanza (heurística) es que el hijo herede las "buenas sub-estructuras" de ambos padres.</p>
+    <p>Existen variantes como <em>Single-Point</em> (corte en un punto), <em>Multi-Point</em> (cortes múltiples) o <em>Uniform Crossover</em> (tirar una moneda por cada gen).</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">Exploración</div>
+    <h2 class="section-title">Mutación & Elitismo</h2>
+    <p>Si solo usamos cruce, la población eventualmente perderá diversidad genética: todos los individuos se volverán iguales e incestuosos. La <strong>Mutación</strong> (cambiar un gen al azar con baja probabilidad, ej. 1%) inyecta material genético completamente nuevo, permitiendo escapar de mínimos locales.</p>
+    <p>Por otro lado, el <strong>Elitismo</strong> asegura que los individuos más brillantes de la generación pasen directamente a la siguiente sin ser destruidos por el cruce o la mutación. Garantiza que el conocimiento nunca retroceda.</p>
+  </section>
+
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Laboratorio Genético</h2>
+    <p>Representamos cromosomas como cadenas binarias de 10 bits. Modifica el <strong>Punto de Cruce</strong> para ver cómo se combinan el Padre A (Turquesa) y el Padre B (Naranja). Luego haz clic en <strong>"Forzar Mutación"</strong> para simular un rayo cósmico golpeando el ADN del hijo.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Single-Point Crossover (Binario)</span>
+      </div>
+
+      <div class="demo-layout">
+        <div class="chrom-label">Padre A</div>
+        <div class="chromosome" id="chrom-pa">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="chrom-label" style="margin-top:0.5rem">Padre B</div>
+        <div class="chromosome" id="chrom-pb">
+          <!-- Populated by JS -->
+        </div>
+
+        <div style="font-size:1.5rem; color:var(--border-strong); margin: 0.5rem 0;">↓</div>
+
+        <div class="chrom-label">Hijo (Recombinado)</div>
+        <div class="chromosome" id="chrom-child">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Punto de Cruce</span>
+          <input type="range" id="sl-crossover" min="1" max="9" step="1" value="5">
+        </div>
+        <button id="btn-mutate" class="btn-primary">⚡ Forzar Mutación</button>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="33_ga_fundamentos.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="35_ga_aplicaciones.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: CROSSOVER & MUTATION SIMULATOR
+══════════════════════════════════════════════ */
+(function() {
+  const chromPa = document.getElementById('chrom-pa');
+  const chromPb = document.getElementById('chrom-pb');
+  const chromChild = document.getElementById('chrom-child');
+  const slCross = document.getElementById('sl-crossover');
+  
+  // 10 bits
+  const parentA = [1,0,0,1,1,0,1,0,0,1];
+  const parentB = [0,1,1,0,0,1,0,1,1,0];
+  let child = [];
+
+  function drawChromosome(container, data, colorClass, cutoff = -1, overrideColor = null) {
+    container.innerHTML = '';
+    data.forEach((bit, i) => {
+      const gene = document.createElement('div');
+      
+      // Assign color based on origin
+      if (overrideColor) {
+        gene.className = `gene ${overrideColor}`;
+      } else {
+        if (i < cutoff) gene.className = 'gene p1';
+        else gene.className = 'gene p2';
+      }
+      
+      gene.textContent = bit;
+      container.appendChild(gene);
+    });
+  }
+
+  function update() {
+    const cut = parseInt(slCross.value);
+    
+    // Draw parents (pure)
+    drawChromosome(chromPa, parentA, 'p1', 10);
+    drawChromosome(chromPb, parentB, 'p2', 0);
+    
+    // Compute child
+    child = [];
+    for(let i=0; i<10; i++) {
+      if(i < cut) child.push(parentA[i]);
+      else child.push(parentB[i]);
+    }
+    
+    drawChromosome(chromChild, child, '', cut);
+  }
+
+  slCross.addEventListener('input', update);
+
+  document.getElementById('btn-mutate').addEventListener('click', () => {
+    // Force a mutation on a random bit
+    const cut = parseInt(slCross.value);
+    const mutIdx = Math.floor(Math.random() * 10);
+    
+    // Flip bit
+    child[mutIdx] = child[mutIdx] === 1 ? 0 : 1;
+    
+    // Redraw child
+    chromChild.innerHTML = '';
+    child.forEach((bit, i) => {
+      const gene = document.createElement('div');
+      
+      if (i === mutIdx) {
+        gene.className = `gene mutated`;
+      } else {
+        if (i < cut) gene.className = 'gene p1';
+        else gene.className = 'gene p2';
+      }
+      
+      gene.textContent = bit;
+      chromChild.appendChild(gene);
+    });
+  });
+
+  // Init
+  update();
+
+})();
+</script>
+</body>
+</html>

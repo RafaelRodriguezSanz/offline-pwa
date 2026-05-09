@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Módulo 05 · Regresión Lineal & Gradiente Descendente</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      --accent:         #3a7d44;
+      --accent-hover:   #2f6537;
+      --accent-bg:      rgba(58,125,68,0.07);
+      --accent-border:  rgba(58,125,68,0.2);
+      --tag-ml:         #3a7d44;
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: rgba(58,125,68,0.12); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; color:var(--tag-ml); border-color:var(--tag-ml); background:rgba(58,125,68,0.06); }
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* CALLOUTS */
+    .callout { border-left:2px solid; padding:0.9rem 1.2rem; border-radius:0 var(--radius-md) var(--radius-md) 0; margin:1.5rem 0; background:var(--bg-raised); box-shadow:var(--shadow-sm); }
+    .callout-key  { border-color:var(--accent);    background:var(--accent-bg); }
+    .callout-info { border-color:#2a6496; background:rgba(42,100,150,0.04); }
+    .callout-tip  { border-color:var(--tag-ml);    background:rgba(58,125,68,0.04); }
+    .callout-warn { border-color:#c47c15;    background:rgba(196,124,21,0.05); }
+    .callout-label { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.35rem; }
+    .callout-key  .callout-label { color:var(--accent); }
+    .callout-info .callout-label { color:#2a6496; }
+    .callout-tip  .callout-label { color:var(--tag-ml); }
+    .callout-warn .callout-label { color:#c47c15; }
+    .callout p { margin-bottom:0; max-width:none; }
+
+    /* CODE */
+    pre { background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-md); padding:1.2rem 1.4rem; overflow-x:auto; margin:1.5rem 0; font-family:var(--font-mono); font-size:0.8rem; line-height:1.65; color:var(--code-text); box-shadow:var(--shadow-sm); }
+    .code-header { display:flex; align-items:center; justify-content:space-between; background:var(--bg-overlay); border:1px solid var(--border-default); border-bottom:none; border-radius:var(--radius-md) var(--radius-md) 0 0; padding:0.45rem 1rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); margin-top:1.5rem; }
+    .code-header + pre { margin-top:0; border-top-left-radius:0; border-top-right-radius:0; }
+    code { font-family:var(--font-mono); font-size:0.84em; background:var(--code-bg); padding:0.13em 0.42em; border-radius:4px; color:var(--accent); border:1px solid var(--code-border); }
+    pre code { background:none; padding:0; border:none; color:inherit; font-size:inherit; }
+
+    /* MATH */
+    .math-block { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:1.4rem 2rem; margin:1.5rem 0; overflow-x:auto; text-align:center; box-shadow:var(--shadow-sm); }
+    .math-block .math-label { font-family:var(--font-mono); font-size:0.66rem; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.75rem; text-align:left; }
+
+    /* TABLE */
+    table { width:100%; border-collapse:collapse; font-size:0.875rem; margin:1.5rem 0; }
+    th { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); text-align:left; padding:0.55rem 1rem; border-bottom:1px solid var(--border-default); }
+    td { padding:0.6rem 1rem; border-bottom:1px solid var(--border-subtle); color:var(--text-secondary); vertical-align:top; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:var(--bg-overlay); }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.5rem; }
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    input[type="range"] { -webkit-appearance:none; width:140px; height:3px; background:var(--border-default); border-radius:999px; outline:none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--accent); cursor:pointer; transition:box-shadow var(--transition); }
+    input[type="range"]::-webkit-slider-thumb:hover { box-shadow:0 0 0 4px var(--accent-bg); }
+
+    .val-pill { font-family:var(--font-mono); font-size:0.67rem; background:var(--bg-overlay); border:1px solid var(--border-subtle); padding:0.12em 0.5em; border-radius:999px; color:var(--accent); min-width:2.5rem; text-align:center; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background:var(--border-default); border-radius:999px; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+    .d4 { animation-delay:0.32s; opacity:0; }
+    .d5 { animation-delay:0.41s; opacity:0; }
+
+    /* ── CANVAS DEMO ── */
+    #scatter-canvas {
+      width: 100%;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      cursor: crosshair;
+      display: block;
+    }
+    .demo-controls { display:flex; flex-wrap:wrap; gap:1rem; align-items:center; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border-subtle); }
+    .ctrl-group { display:flex; align-items:center; gap:0.6rem; }
+    .ctrl-label { font-family:var(--font-mono); font-size:0.67rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .stat-row { display:flex; gap:1rem; flex-wrap:wrap; margin-top:0.75rem; }
+    .stat-chip { font-family:var(--font-mono); font-size:0.67rem; background:var(--bg-overlay); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:0.25em 0.65em; color:var(--text-secondary); }
+    .stat-chip span { color:var(--accent); font-weight:500; }
+
+    /* GD DEMO */
+    #gd-canvas { width:100%; border-radius:var(--radius-md); border:1px solid var(--border-subtle); background:var(--bg-surface); display:block; }
+    .gd-log { font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); height:90px; overflow-y:auto; background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-md); padding:0.6rem 0.8rem; margin-top:0.75rem; line-height:1.7; }
+    .gd-log .iter { color:var(--accent); }
+
+    /* steps list */
+    .steps-list { list-style:none; display:flex; flex-direction:column; gap:0.65rem; margin:1.25rem 0; }
+    .steps-list li { display:flex; gap:0.8rem; align-items:flex-start; }
+    .step-num { font-family:var(--font-mono); font-size:0.65rem; background:var(--accent); color:#fff; border-radius:999px; min-width:1.35rem; height:1.35rem; display:flex; align-items:center; justify-content:center; margin-top:0.18rem; flex-shrink:0; }
+    .step-text { color:var(--text-secondary); font-size:0.9rem; line-height:1.6; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 2 — Machine Learning</a><span class="sep">›</span>
+    <span class="current">Módulo 06 · Regresión Lineal</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge">● ML · Módulo 6</span>
+    <h1 class="module-title">Regresión Lineal &<br>Gradiente Descendente</h1>
+    <p class="module-subtitle">El primer paso del aprendizaje automático: ajustar una recta a datos y optimizar sus parámetros minimizando el error cuadrático con cálculo diferencial.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Machine Learning</span>
+      <span><strong>Duración</strong> ~30 min</span>
+      <span><strong>Prerrequisitos</strong> Derivadas básicas</span>
+    </div>
+  </header>
+
+  <!-- ══ 1. ¿QUÉ ES REGRESIÓN? ══ -->
+  <section class="section fade-up d1">
+    <div class="section-label">Concepto</div>
+    <h2 class="section-title">El problema: aprender de datos</h2>
+    <p>Supongamos que tenemos una colección de pares $(x_i, y_i)$: horas de estudio y notas, metros cuadrados y precios de casas, temperatura y consumo eléctrico. <strong>La regresión lineal busca la recta que mejor explique esa relación.</strong></p>
+    <p>Esa recta tiene la forma $\hat{y} = wx + b$, donde $w$ es la pendiente (<em>weight</em>) y $b$ el intercepto (<em>bias</em>). Aprender un modelo lineal significa encontrar los valores de $w$ y $b$ que minimicen el error entre las predicciones $\hat{y}_i$ y los valores reales $y_i$.</p>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Idea central</div>
+      <p>El aprendizaje es <strong>optimización</strong>. Definimos qué significa "error", lo medimos con una función matemática (la pérdida), y usamos cálculo para reducirla sistemáticamente ajustando los parámetros del modelo.</p>
+    </div>
+  </section>
+
+  <!-- ══ 2. FUNCIÓN DE PÉRDIDA ══ -->
+  <section class="section fade-up d2">
+    <div class="section-label">Matemática</div>
+    <h2 class="section-title">Error Cuadrático Medio (MSE)</h2>
+    <p>Necesitamos una función que mida qué tan mala es la recta actual. El <strong>Error Cuadrático Medio</strong> suma los cuadrados de las diferencias entre predicciones y valores reales, dividido por el número de puntos $n$:</p>
+
+    <div class="math-block">
+      <div class="math-label">Función de pérdida</div>
+      $$\mathcal{L}(w, b) = \frac{1}{n} \sum_{i=1}^{n} (\hat{y}_i - y_i)^2 = \frac{1}{n} \sum_{i=1}^{n} (wx_i + b - y_i)^2$$
+    </div>
+
+    <p>¿Por qué elevar al cuadrado? Dos razones: los errores positivos y negativos no se cancelan entre sí, y penaliza más los errores grandes que los pequeños — una propiedad conveniente. También garantiza que $\mathcal{L}$ sea diferenciable y convexa en $w$ y $b$, lo que facilita la optimización.</p>
+
+    <div class="callout callout-info">
+      <div class="callout-label">Convexidad</div>
+      <p>La función $\mathcal{L}(w, b)$ tiene forma de paraboloide: un único mínimo global. Esto es una propiedad especial de la regresión lineal con MSE. En redes neuronales profundas la superficie de pérdida es mucho más compleja, con mínimos locales y puntos de silla.</p>
+    </div>
+
+    <ul class="steps-list" style="margin-top:1.5rem;">
+      <li><span class="step-num">1</span><span class="step-text">Para cada punto $i$, calcula la predicción $\hat{y}_i = wx_i + b$</span></li>
+      <li><span class="step-num">2</span><span class="step-num" style="background:var(--accent)">2</span></li>
+    </ul>
+
+    <!-- rewrite steps cleanly -->
+    <ul class="steps-list" style="margin-top:0.5rem;">
+      <li><span class="step-num">1</span><span class="step-text">Calcula la predicción: $\hat{y}_i = wx_i + b$</span></li>
+      <li><span class="step-num">2</span><span class="step-text">Calcula el residuo: $e_i = \hat{y}_i - y_i$</span></li>
+      <li><span class="step-num">3</span><span class="step-text">Eleva al cuadrado: $e_i^2$</span></li>
+      <li><span class="step-num">4</span><span class="step-text">Promedia sobre todos los puntos: $\mathcal{L} = \frac{1}{n}\sum e_i^2$</span></li>
+    </ul>
+  </section>
+
+  <!-- ══ 3. GRADIENTE DESCENDENTE ══ -->
+  <section class="section fade-up d2">
+    <div class="section-label">Algoritmo</div>
+    <h2 class="section-title">Gradiente Descendente</h2>
+    <p>Tenemos una función de pérdida $\mathcal{L}(w, b)$. Queremos bajar "cuesta abajo" en esa superficie hasta llegar al mínimo. El <strong>gradiente</strong> $\nabla\mathcal{L}$ apunta en la dirección de máximo ascenso; si nos movemos en sentido contrario, bajamos.</p>
+
+    <div class="math-block">
+      <div class="math-label">Regla de actualización</div>
+      $$w \leftarrow w - \alpha \frac{\partial \mathcal{L}}{\partial w} \qquad b \leftarrow b - \alpha \frac{\partial \mathcal{L}}{\partial b}$$
+    </div>
+
+    <p>El hiperparámetro $\alpha$ (alpha) es el <strong>learning rate</strong> — controla el tamaño de cada paso. Las derivadas parciales se calculan por la regla de la cadena:</p>
+
+    <div class="math-block">
+      <div class="math-label">Derivadas parciales del MSE</div>
+      $$\frac{\partial \mathcal{L}}{\partial w} = \frac{2}{n}\sum_{i=1}^{n}(wx_i + b - y_i)\cdot x_i \qquad \frac{\partial \mathcal{L}}{\partial b} = \frac{2}{n}\sum_{i=1}^{n}(wx_i + b - y_i)$$
+    </div>
+
+    <div class="callout callout-warn">
+      <div class="callout-label">El learning rate importa</div>
+      <p><strong>Demasiado grande:</strong> el algoritmo oscila o diverge — salta por encima del mínimo repetidamente. <strong>Demasiado pequeño:</strong> converge muy lento, requiriendo miles de iteraciones. En la práctica se usa learning rate scheduling o adaptativo (Adam, RMSProp). En el módulo 12 se profundiza esto.</p>
+    </div>
+
+    <p>El algoritmo completo es notablemente simple. En Python con NumPy:</p>
+
+    <div class="code-header"><span>gradient_descent.py</span><span>NumPy</span></div>
+    <pre><code>import numpy as np
+
+def gradient_descent(X, y, lr=0.01, epochs=1000):
+    n = len(X)
+    w, b = 0.0, 0.0                     # inicialización en cero
+
+    for epoch in range(epochs):
+        y_hat = w * X + b               # predicciones actuales
+        residuals = y_hat - y           # errores
+
+        # gradientes
+        dw = (2/n) * np.dot(residuals, X)
+        db = (2/n) * np.sum(residuals)
+
+        # actualización simultánea
+        w -= lr * dw
+        b -= lr * db
+
+        if epoch % 100 == 0:
+            mse = np.mean(residuals**2)
+            print(f"Epoch {epoch:4d} | MSE: {mse:.4f} | w={w:.3f} b={b:.3f}")
+
+    return w, b</code></pre>
+
+    <div class="callout callout-tip">
+      <div class="callout-label">Batch, Mini-batch y SGD</div>
+      <p>El código anterior es <strong>Batch Gradient Descent</strong>: usa todos los datos en cada paso. <strong>SGD (Stochastic)</strong> usa un solo punto aleatorio por iteración — es ruidoso pero más rápido para datasets grandes. <strong>Mini-batch</strong> (típicamente 32–256 ejemplos) es el estándar en deep learning: balance entre velocidad y estabilidad.</p>
+    </div>
+  </section>
+
+  <!-- ══ 4. DEMO INTERACTIVA 1: AJUSTE DE RECTA ══ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Ajustá la recta en tiempo real</h2>
+    <p>Hacé clic en el canvas para agregar puntos de datos. Luego mové los sliders de pendiente $w$ y bias $b$ para ajustar la recta manualmente, o presioná <strong>Entrenar</strong> para ver el gradiente descendente converger automáticamente.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Regresión Lineal — Ajuste Manual</span>
+        <div style="display:flex;gap:0.5rem;">
+          <button id="btn-random">Datos aleatorios</button>
+          <button id="btn-clear">Limpiar</button>
+          <button class="btn-primary" id="btn-train">▶ Entrenar</button>
+        </div>
+      </div>
+
+      <canvas id="scatter-canvas" height="320"></canvas>
+
+      <div class="demo-controls">
+        <div class="ctrl-group">
+          <span class="ctrl-label">w (pendiente)</span>
+          <input type="range" id="slider-w" min="-3" max="3" step="0.01" value="0">
+          <span class="val-pill" id="val-w">0.00</span>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">b (bias)</span>
+          <input type="range" id="slider-b" min="-3" max="3" step="0.01" value="0">
+          <span class="val-pill" id="val-b">0.00</span>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">lr α</span>
+          <input type="range" id="slider-lr" min="0.001" max="0.5" step="0.001" value="0.05">
+          <span class="val-pill" id="val-lr">0.050</span>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-chip">MSE <span id="stat-mse">—</span></div>
+        <div class="stat-chip">w* óptimo <span id="stat-w-opt">—</span></div>
+        <div class="stat-chip">b* óptimo <span id="stat-b-opt">—</span></div>
+        <div class="stat-chip">Puntos <span id="stat-n">0</span></div>
+        <div class="stat-chip">Iteración <span id="stat-iter">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 5. DEMO 2: SUPERFICIE DE PÉRDIDA ══ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Visualización</div>
+    <h2 class="section-title">Superficie de pérdida y trayectoria del descenso</h2>
+    <p>El espacio $(w, b)$ define una superficie de pérdida. El gradiente descendente navega esta superficie paso a paso. Podés ver cómo la trayectoria converge al mínimo (punto rojo) desde distintos puntos de inicio.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Superficie de pérdida $\mathcal{L}(w, b)$</span>
+        <div style="display:flex;gap:0.5rem;">
+          <button id="btn-gd-run">▶ Correr GD</button>
+          <button id="btn-gd-reset">↺ Reiniciar</button>
+        </div>
+      </div>
+
+      <canvas id="gd-canvas" height="300"></canvas>
+
+      <div class="demo-controls" style="margin-top:0.75rem;">
+        <div class="ctrl-group">
+          <span class="ctrl-label">lr α</span>
+          <input type="range" id="slider-gd-lr" min="0.01" max="1.5" step="0.01" value="0.3">
+          <span class="val-pill" id="val-gd-lr">0.30</span>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">w₀ inicial</span>
+          <input type="range" id="slider-gd-w0" min="-2.5" max="2.5" step="0.1" value="-2">
+          <span class="val-pill" id="val-gd-w0">-2.0</span>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">b₀ inicial</span>
+          <input type="range" id="slider-gd-b0" min="-2.5" max="2.5" step="0.1" value="2">
+          <span class="val-pill" id="val-gd-b0">2.0</span>
+        </div>
+      </div>
+
+      <div class="gd-log" id="gd-log"><span style="color:var(--text-faint)">Presioná ▶ Correr GD para ver el proceso...</span></div>
+    </div>
+  </section>
+
+  <!-- ══ 6. SOLUCIÓN ANALÍTICA ══ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Teoría</div>
+    <h2 class="section-title">Ecuación Normal: la solución exacta</h2>
+    <p>Para regresión lineal existe una fórmula de forma cerrada. Derivar $\mathcal{L}$ respecto a los parámetros, igualando a cero y resolviendo, da la <strong>ecuación normal</strong>:</p>
+
+    <div class="math-block">
+      <div class="math-label">Solución analítica (forma vectorial)</div>
+      $$\boldsymbol{\theta}^* = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}$$
+    </div>
+
+    <p>Para el caso univariado ($\hat{y} = wx + b$) las fórmulas simplifican a:</p>
+
+    <div class="math-block">
+      <div class="math-label">Solución analítica (caso 1D)</div>
+      $$w^* = \frac{\sum(x_i - \bar{x})(y_i - \bar{y})}{\sum(x_i - \bar{x})^2} \qquad b^* = \bar{y} - w^*\bar{x}$$
+    </div>
+
+    <p>Si existe la solución exacta, ¿para qué usar gradiente descendente? La respuesta está en la escala.</p>
+
+    <table>
+      <thead><tr><th>Método</th><th>Complejidad</th><th>Cuándo usarlo</th></tr></thead>
+      <tbody>
+        <tr><td>Ecuación Normal</td><td>$O(n \cdot d^2 + d^3)$ — invertir matriz $d{\times}d$</td><td>Pocos features ($d \lesssim 10^4$), dataset pequeño</td></tr>
+        <tr><td>Gradiente Descendente (Batch)</td><td>$O(n \cdot d)$ por iteración</td><td>Datasets medianos, base del pipeline ML</td></tr>
+        <tr><td>SGD / Mini-batch</td><td>$O(b \cdot d)$ por paso, $b \ll n$</td><td>Millones de ejemplos, redes neuronales</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Por qué GD es fundamental</div>
+      <p>Para redes neuronales profundas con millones de parámetros, invertir una matriz es computacionalmente imposible. El gradiente descendente — y sus variantes estocásticas — es el único método práctico. Entender regresión lineal con GD es el fundamento conceptual de todo el deep learning.</p>
+    </div>
+  </section>
+
+  <!-- ══ 7. NORMALIZACIÓN ══ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Práctica</div>
+    <h2 class="section-title">Feature Scaling: por qué normalizar</h2>
+    <p>Si los features tienen escalas muy distintas (por ejemplo, edad en [0,100] y precio en [0,1.000.000]), la superficie de pérdida se vuelve un elipsoide muy elongado. El gradiente "zigzaguea" por las paredes del elipsoide en lugar de ir directo al mínimo.</p>
+    <p>La solución es <strong>normalizar</strong> los features antes de entrenar. Dos técnicas comunes:</p>
+
+    <div class="math-block">
+      <div class="math-label">Normalización estándar (Z-score)</div>
+      $$x' = \frac{x - \mu}{\sigma}$$
+    </div>
+    <div class="math-block">
+      <div class="math-label">Normalización Min-Max</div>
+      $$x' = \frac{x - x_{\min}}{x_{\max} - x_{\min}}$$
+    </div>
+
+    <div class="callout callout-tip">
+      <div class="callout-label">Regla práctica</div>
+      <p>Siempre escalá los features con los estadísticos del <em>training set</em>. Nunca con los del test set — eso constituye <em>data leakage</em> y produce métricas de evaluación engañosamente optimistas.</p>
+    </div>
+
+    <div class="code-header"><span>normalizacion.py</span></div>
+    <pre><code># Z-score normalization (nunca usar el test set para calcular mu/sigma)
+mu_train  = X_train.mean(axis=0)
+std_train = X_train.std(axis=0)
+
+X_train_norm = (X_train - mu_train) / std_train
+X_test_norm  = (X_test  - mu_train) / std_train   # ← mismos estadísticos</code></pre>
+  </section>
+
+  <!-- ══ 8. RESUMEN ══ -->
+  <section class="section fade-up d5">
+    <div class="section-label">Resumen</div>
+    <h2 class="section-title">Lo que aprendiste</h2>
+
+    <table>
+      <thead><tr><th>Concepto</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Modelo lineal</strong></td><td>$\hat{y} = wx + b$ — dos parámetros que definen una recta</td></tr>
+        <tr><td><strong>MSE</strong></td><td>Función de pérdida convexa: $\frac{1}{n}\sum(\hat{y}_i - y_i)^2$</td></tr>
+        <tr><td><strong>Gradiente</strong></td><td>Derivada parcial de $\mathcal{L}$ respecto a $w$ y $b$</td></tr>
+        <tr><td><strong>GD update</strong></td><td>$\theta \leftarrow \theta - \alpha \nabla_\theta \mathcal{L}$</td></tr>
+        <tr><td><strong>Learning rate</strong></td><td>Hiperparámetro crítico: muy grande diverge, muy pequeño es lento</td></tr>
+        <tr><td><strong>Ecuación Normal</strong></td><td>Solución exacta en $O(d^3)$ — práctica solo para dimensiones bajas</td></tr>
+        <tr><td><strong>Feature scaling</strong></td><td>Escala los inputs para que la superficie de pérdida sea más circular</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <nav class="module-nav">
+    <a href="05_gofai_csp.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="07_ml_kmeans.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO 1 — SCATTER + LÍNEA DE REGRESIÓN
+══════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('scatter-canvas');
+  const ctx = canvas.getContext('2d');
+  let points = [];
+  let w = 0, b = 0;
+  let animId = null;
+  let iteration = 0;
+  let training = false;
+
+  const CW = () => canvas.width;
+  const CH = () => canvas.height;
+
+  // Responsive canvas
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width - 48;
+    canvas.height = 320;
+    draw();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Data space: x in [-3,3], y in [-3,3]
+  function toCanvas(dx, dy) {
+    const px = (dx + 3) / 6 * CW();
+    const py = CH() - (dy + 3) / 6 * CH();
+    return [px, py];
+  }
+  function toData(px, py) {
+    return [(px / CW()) * 6 - 3, 3 - (py / CH()) * 6];
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, CW(), CH());
+
+    // Grid
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border-subtle').trim();
+    ctx.lineWidth = 1;
+    for (let v = -3; v <= 3; v++) {
+      const [x0] = toCanvas(v, 0); const [,y0] = toCanvas(0, v);
+      ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x0, CH()); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, y0); ctx.lineTo(CW(), y0); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim();
+    ctx.lineWidth = 1.5;
+    const [ax] = toCanvas(0, 0); const [,ay] = toCanvas(0, 0);
+    ctx.beginPath(); ctx.moveTo(ax, 0); ctx.lineTo(ax, CH()); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, ay); ctx.lineTo(CW(), ay); ctx.stroke();
+
+    // Residuals
+    if (points.length > 1) {
+      ctx.strokeStyle = 'rgba(58,125,68,0.18)';
+      ctx.lineWidth = 1;
+      for (const p of points) {
+        const yhat = w * p.x + b;
+        const [px, py] = toCanvas(p.x, p.y);
+        const [,pyh] = toCanvas(p.x, yhat);
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, pyh); ctx.stroke();
+      }
+    }
+
+    // Regression line
+    if (points.length > 0) {
+      const [x1, y1] = toCanvas(-4, w * -4 + b);
+      const [x2, y2] = toCanvas(4, w * 4 + b);
+      ctx.strokeStyle = '#3a7d44';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    }
+
+    // Points
+    for (const p of points) {
+      const [px, py] = toCanvas(p.x, p.y);
+      ctx.beginPath();
+      ctx.arc(px, py, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#1a1714';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // MSE label
+    if (points.length > 1) {
+      const mse = calcMSE();
+      ctx.font = '11px "Geist Mono", monospace';
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+      ctx.fillText(`MSE = ${mse.toFixed(4)}  w = ${w.toFixed(3)}  b = ${b.toFixed(3)}`, 10, 18);
+    } else {
+      ctx.font = '11px "Geist Mono", monospace';
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-faint').trim();
+      ctx.fillText('Clic para agregar puntos', 10, 18);
+    }
+  }
+
+  canvas.addEventListener('click', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const px = (e.clientX - rect.left) * scaleX;
+    const py = (e.clientY - rect.top) * scaleY;
+    const [dx, dy] = toData(px, py);
+    if (dx >= -3 && dx <= 3 && dy >= -3 && dy <= 3) {
+      points.push({x: dx, y: dy});
+      stopTraining();
+      updateStats();
+      draw();
+    }
+  });
+
+  function calcMSE() {
+    if (!points.length) return 0;
+    return points.reduce((s, p) => s + (w * p.x + b - p.y) ** 2, 0) / points.length;
+  }
+
+  function calcGradients() {
+    const n = points.length;
+    let dw = 0, db = 0;
+    for (const p of points) {
+      const r = w * p.x + b - p.y;
+      dw += r * p.x;
+      db += r;
+    }
+    return [2 / n * dw, 2 / n * db];
+  }
+
+  function calcOptimal() {
+    const n = points.length;
+    if (n < 2) return [0, 0];
+    const mx = points.reduce((s, p) => s + p.x, 0) / n;
+    const my = points.reduce((s, p) => s + p.y, 0) / n;
+    const num = points.reduce((s, p) => s + (p.x - mx) * (p.y - my), 0);
+    const den = points.reduce((s, p) => s + (p.x - mx) ** 2, 0);
+    const wOpt = den === 0 ? 0 : num / den;
+    const bOpt = my - wOpt * mx;
+    return [wOpt, bOpt];
+  }
+
+  function updateStats() {
+    document.getElementById('stat-n').textContent = points.length;
+    if (points.length < 2) {
+      document.getElementById('stat-mse').textContent = '—';
+      document.getElementById('stat-w-opt').textContent = '—';
+      document.getElementById('stat-b-opt').textContent = '—';
+      return;
+    }
+    document.getElementById('stat-mse').textContent = calcMSE().toFixed(4);
+    const [wo, bo] = calcOptimal();
+    document.getElementById('stat-w-opt').textContent = wo.toFixed(3);
+    document.getElementById('stat-b-opt').textContent = bo.toFixed(3);
+  }
+
+  function syncSliders() {
+    const sw = document.getElementById('slider-w');
+    const sb = document.getElementById('slider-b');
+    sw.value = Math.max(-3, Math.min(3, w));
+    sb.value = Math.max(-3, Math.min(3, b));
+    document.getElementById('val-w').textContent = w.toFixed(2);
+    document.getElementById('val-b').textContent = b.toFixed(2);
+  }
+
+  document.getElementById('slider-w').addEventListener('input', function() {
+    w = parseFloat(this.value);
+    document.getElementById('val-w').textContent = w.toFixed(2);
+    stopTraining();
+    updateStats();
+    draw();
+  });
+  document.getElementById('slider-b').addEventListener('input', function() {
+    b = parseFloat(this.value);
+    document.getElementById('val-b').textContent = b.toFixed(2);
+    stopTraining();
+    updateStats();
+    draw();
+  });
+  document.getElementById('slider-lr').addEventListener('input', function() {
+    document.getElementById('val-lr').textContent = parseFloat(this.value).toFixed(3);
+  });
+
+  function stopTraining() {
+    training = false;
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+    document.getElementById('btn-train').textContent = '▶ Entrenar';
+    document.getElementById('stat-iter').textContent = iteration || '—';
+  }
+
+  document.getElementById('btn-train').addEventListener('click', function() {
+    if (points.length < 2) return;
+    if (training) { stopTraining(); return; }
+    training = true;
+    iteration = 0;
+    this.textContent = '⏸ Pausar';
+    const lr = parseFloat(document.getElementById('slider-lr').value);
+
+    function step() {
+      if (!training) return;
+      for (let i = 0; i < 3; i++) {
+        const [dw, db] = calcGradients();
+        w -= lr * dw;
+        b -= lr * db;
+        iteration++;
+      }
+      syncSliders();
+      updateStats();
+      draw();
+      document.getElementById('stat-iter').textContent = iteration;
+      if (calcMSE() > 0.0001 && iteration < 10000) {
+        animId = requestAnimationFrame(step);
+      } else {
+        stopTraining();
+      }
+    }
+    step();
+  });
+
+  document.getElementById('btn-clear').addEventListener('click', function() {
+    points = []; w = 0; b = 0; iteration = 0;
+    stopTraining();
+    syncSliders();
+    updateStats();
+    draw();
+  });
+
+  document.getElementById('btn-random').addEventListener('click', function() {
+    points = [];
+    const trueW = (Math.random() * 2 - 1).toFixed(2) * 1;
+    const trueB = (Math.random() * 2 - 1).toFixed(2) * 1;
+    for (let i = 0; i < 18; i++) {
+      const x = (Math.random() * 4.5 - 2.25);
+      const y = trueW * x + trueB + (Math.random() * 0.9 - 0.45);
+      points.push({x, y});
+    }
+    w = 0; b = 0; iteration = 0;
+    stopTraining();
+    syncSliders();
+    updateStats();
+    draw();
+  });
+
+})();
+
+/* ══════════════════════════════════════════════
+   DEMO 2 — SUPERFICIE DE PÉRDIDA (contour plot 2D)
+══════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('gd-canvas');
+  const ctx = canvas.getContext('2d');
+  let path = [];
+  let animId2 = null;
+  let running = false;
+
+  // Fixed dataset for the loss surface
+  const DATA = [
+    {x: -2, y: -1.8}, {x: -1.5, y: -1.1}, {x: -1, y: -0.6},
+    {x: -0.5, y: 0.1}, {x: 0, y: 0.5}, {x: 0.5, y: 1.2},
+    {x: 1, y: 1.6}, {x: 1.5, y: 2.1}, {x: 2, y: 2.5},
+    {x: -0.8, y: -0.3}, {x: 0.3, y: 0.8}, {x: 1.2, y: 1.9}
+  ];
+
+  // True optimal (analytical)
+  const n = DATA.length;
+  const mx = DATA.reduce((s,p) => s + p.x, 0) / n;
+  const my = DATA.reduce((s,p) => s + p.y, 0) / n;
+  const num = DATA.reduce((s,p) => s + (p.x-mx)*(p.y-my), 0);
+  const den = DATA.reduce((s,p) => s + (p.x-mx)**2, 0);
+  const W_OPT = num / den;
+  const B_OPT = my - W_OPT * mx;
+
+  const CW = () => canvas.width;
+  const CH = () => canvas.height;
+
+  function calcLoss(w, b) {
+    return DATA.reduce((s, p) => s + (w * p.x + b - p.y) ** 2, 0) / DATA.length;
+  }
+
+  // Pre-compute loss grid for contour visualization
+  let lossGrid = null;
+  let minL, maxL;
+
+  function computeGrid(res = 80) {
+    lossGrid = [];
+    minL = Infinity; maxL = -Infinity;
+    for (let i = 0; i <= res; i++) {
+      lossGrid[i] = [];
+      for (let j = 0; j <= res; j++) {
+        const w = -3 + i * 6 / res;
+        const b = -3 + j * 6 / res;
+        const l = calcLoss(w, b);
+        lossGrid[i][j] = l;
+        if (l < minL) minL = l;
+        if (l > maxL) maxL = l;
+      }
+    }
+  }
+  computeGrid();
+
+  function resize2() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width - 48;
+    canvas.height = 300;
+    drawSurface();
+  }
+  resize2();
+  window.addEventListener('resize', resize2);
+
+  // Parameter space: w in [-3,3], b in [-3,3]
+  function toCanvas(dw, db) {
+    const px = (dw + 3) / 6 * CW();
+    const py = CH() - (db + 3) / 6 * CH();
+    return [px, py];
+  }
+
+  function drawSurface() {
+    ctx.clearRect(0, 0, CW(), CH());
+    const res = lossGrid.length - 1;
+
+    // Draw heatmap
+    const cellW = CW() / res;
+    const cellH = CH() / res;
+    for (let i = 0; i < res; i++) {
+      for (let j = 0; j < res; j++) {
+        const l = lossGrid[i][j];
+        const t = Math.pow((l - minL) / (maxL - minL + 1e-9), 0.4);
+        // Color: low loss = green, high = warm beige/orange
+        const r = Math.round(245 + (58 - 245) * (1 - t));
+        const g = Math.round(240 + (125 - 240) * (1 - t));
+        const bv = Math.round(235 + (68 - 235) * (1 - t));
+        ctx.fillStyle = `rgb(${r},${g},${bv})`;
+        const px = i * cellW;
+        const py = CH() - (j + 1) * cellH;
+        ctx.fillRect(px, py, cellW + 1, cellH + 1);
+      }
+    }
+
+    // Contour lines at a few levels
+    // (simplified: draw iso-value borders by checking sign changes)
+    const levels = [0.1, 0.3, 0.6, 1.2, 2.5, 5, 10];
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 0.8;
+    for (const lv of levels) {
+      for (let i = 0; i < res; i++) {
+        for (let j = 0; j < res; j++) {
+          const a = lossGrid[i][j], b2 = lossGrid[i+1] ? lossGrid[i+1][j] : a;
+          if ((a - lv) * (b2 - lv) < 0) {
+            const t = (lv - a) / (b2 - a);
+            const px = (i + t) * cellW;
+            const py = CH() - j * cellH;
+            ctx.beginPath(); ctx.arc(px, py, 0.5, 0, Math.PI*2); ctx.stroke();
+          }
+        }
+      }
+    }
+
+    // Axes labels
+    ctx.font = '10px "Geist Mono", monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText('w →', CW() - 30, CH() / 2 + 4);
+    ctx.save(); ctx.translate(10, 30); ctx.rotate(-Math.PI/2);
+    ctx.fillText('b ↑', 0, 0); ctx.restore();
+
+    // Optimal point
+    const [ox, oy] = toCanvas(W_OPT, B_OPT);
+    ctx.beginPath(); ctx.arc(ox, oy, 7, 0, Math.PI*2);
+    ctx.fillStyle = '#e04040'; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.font = '10px "Geist Mono", monospace';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`w*=${W_OPT.toFixed(2)} b*=${B_OPT.toFixed(2)}`, ox + 10, oy - 5);
+
+    // Draw path
+    if (path.length > 1) {
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 2]);
+      ctx.beginPath();
+      const [px0, py0] = toCanvas(path[0].w, path[0].b);
+      ctx.moveTo(px0, py0);
+      for (let k = 1; k < path.length; k++) {
+        const [px, py] = toCanvas(path[k].w, path[k].b);
+        ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Current position
+      const last = path[path.length - 1];
+      const [lx, ly] = toCanvas(last.w, last.b);
+      ctx.beginPath(); ctx.arc(lx, ly, 5, 0, Math.PI*2);
+      ctx.fillStyle = '#ffe066'; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+    } else if (path.length === 1) {
+      const [sx, sy] = toCanvas(path[0].w, path[0].b);
+      ctx.beginPath(); ctx.arc(sx, sy, 5, 0, Math.PI*2);
+      ctx.fillStyle = '#ffe066'; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+    }
+  }
+
+  function calcGrads(w, b) {
+    let dw = 0, db = 0;
+    for (const p of DATA) {
+      const r = w * p.x + b - p.y;
+      dw += r * p.x;
+      db += r;
+    }
+    return [2 / DATA.length * dw, 2 / DATA.length * db];
+  }
+
+  const gdLog = document.getElementById('gd-log');
+
+  document.getElementById('slider-gd-lr').addEventListener('input', function() {
+    document.getElementById('val-gd-lr').textContent = parseFloat(this.value).toFixed(2);
+  });
+  document.getElementById('slider-gd-w0').addEventListener('input', function() {
+    document.getElementById('val-gd-w0').textContent = parseFloat(this.value).toFixed(1);
+  });
+  document.getElementById('slider-gd-b0').addEventListener('input', function() {
+    document.getElementById('val-gd-b0').textContent = parseFloat(this.value).toFixed(1);
+  });
+
+  document.getElementById('btn-gd-reset').addEventListener('click', function() {
+    if (animId2) { cancelAnimationFrame(animId2); animId2 = null; }
+    running = false;
+    path = [];
+    gdLog.innerHTML = '<span style="color:var(--text-faint)">Presioná ▶ Correr GD para ver el proceso...</span>';
+    document.getElementById('btn-gd-run').textContent = '▶ Correr GD';
+    drawSurface();
+  });
+
+  document.getElementById('btn-gd-run').addEventListener('click', function() {
+    if (running) {
+      running = false;
+      if (animId2) { cancelAnimationFrame(animId2); animId2 = null; }
+      this.textContent = '▶ Correr GD';
+      return;
+    }
+    running = true;
+    this.textContent = '⏸ Pausar';
+    gdLog.innerHTML = '';
+
+    const lr = parseFloat(document.getElementById('slider-gd-lr').value);
+    let w0 = parseFloat(document.getElementById('slider-gd-w0').value);
+    let b0 = parseFloat(document.getElementById('slider-gd-b0').value);
+
+    path = [{w: w0, b: b0}];
+    let iter = 0;
+
+    function log(msg) {
+      gdLog.innerHTML += msg + '\n';
+      gdLog.scrollTop = gdLog.scrollHeight;
+    }
+    log(`<span class="iter">Inicio:</span> w=${w0.toFixed(3)} b=${b0.toFixed(3)} L=${calcLoss(w0,b0).toFixed(4)}`);
+
+    function step() {
+      if (!running) return;
+      let cw = path[path.length-1].w, cb = path[path.length-1].b;
+      for (let k = 0; k < 5; k++) {
+        const [dw, db] = calcGrads(cw, cb);
+        cw -= lr * dw;
+        cb -= lr * db;
+        iter++;
+      }
+      path.push({w: cw, b: cb});
+      drawSurface();
+      if (iter % 20 === 0) {
+        log(`<span class="iter">iter ${iter}:</span> w=${cw.toFixed(3)} b=${cb.toFixed(3)} L=${calcLoss(cw,cb).toFixed(4)}`);
+      }
+      const dist = Math.sqrt((cw - W_OPT)**2 + (cb - B_OPT)**2);
+      if (dist < 0.01 || iter > 2000) {
+        running = false;
+        document.getElementById('btn-gd-run').textContent = '▶ Correr GD';
+        log(`<span class="iter">Convergió en iter ${iter}:</span> w=${cw.toFixed(4)} b=${cb.toFixed(4)} L=${calcLoss(cw,cb).toFixed(5)}`);
+      } else {
+        animId2 = requestAnimationFrame(step);
+      }
+    }
+    step();
+  });
+
+  drawSurface();
+})();
+</script>
+</body>
+</html>

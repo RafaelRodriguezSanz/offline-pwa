@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Módulo 04: CSP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+  <style>
+    :root {
+      --bg-base:#f5f0eb; --bg-surface:#faf7f4; --bg-raised:#ffffff; --bg-overlay:#ede8e1;
+      --border-subtle:#e8e1d9; --border-default:#d9d0c7; --border-strong:#bfb5ab;
+      --text-primary:#1a1714; --text-secondary:#4a4540; --text-muted:#8c847c; --text-faint:#b8b0a8;
+      --accent:#c96442; --accent-hover:#b05838; --accent-bg:rgba(201,100,66,0.07); --accent-border:rgba(201,100,66,0.2);
+      --tag-gofai:#2a6496; --tag-ml:#3a7d44; --tag-nn:#c47c15; --tag-llm:#7b52a8;
+      --code-bg:#f0ebe4; --code-border:#ddd6ce; --code-text:#3a3530;
+      --shadow-sm:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:'Crimson Pro',Georgia,serif;
+      --font-mono:'Geist Mono','Fira Code',monospace;
+      --font-sans:'Geist',system-ui,sans-serif;
+      --transition:0.18s ease;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{font-size:16px;scroll-behavior:smooth;}
+    body{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-sans);font-size:0.9375rem;line-height:1.7;-webkit-font-smoothing:antialiased;}
+    ::selection{background:rgba(201,100,66,0.12);}
+    .page-wrapper{max-width:900px;margin:0 auto;padding:0 1.5rem 5rem;}
+
+    .topbar{display:flex;align-items:center;gap:0.5rem;padding:1.25rem 0 1rem;font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);letter-spacing:0.04em;border-bottom:1px solid var(--border-subtle);margin-bottom:2.5rem;}
+    .topbar a{color:var(--text-muted);text-decoration:none;transition:color var(--transition);font-size:1.1rem;}
+    .topbar a:hover{color:var(--text-secondary);}
+    .topbar .sep{color:var(--border-strong);}
+    .topbar .current{color:var(--text-secondary);}
+
+    .module-header{margin-bottom:2.5rem;}
+    .module-badge{display:inline-flex;align-items:center;gap:0.4rem;font-family:var(--font-mono);font-size:0.67rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.28em 0.75em;border-radius:999px;border:1px solid;margin-bottom:1rem;color:var(--tag-gofai);border-color:var(--tag-gofai);background:rgba(42,100,150,0.06);}
+    .module-title{font-family:var(--font-serif);font-size:clamp(1.75rem,4vw,2.6rem);line-height:1.2;margin-bottom:0.75rem;font-weight:400;letter-spacing:-0.01em;}
+    .module-subtitle{font-size:0.9375rem;color:var(--text-secondary);max-width:60ch;line-height:1.65;}
+    .module-meta{display:flex;gap:1.5rem;margin-top:1.25rem;flex-wrap:wrap;}
+    .module-meta span{font-family:var(--font-mono);font-size:0.68rem;color:var(--text-muted);letter-spacing:0.04em;}
+    .module-meta span strong{color:var(--text-secondary);font-weight:500;}
+
+    .section{margin-bottom:3rem;}
+    .section-label{font-family:var(--font-mono);font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:0.75rem;display:flex;align-items:center;gap:0.75rem;}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--border-subtle);}
+    .section-title{font-family:var(--font-serif);font-size:1.45rem;font-weight:400;margin-bottom:0.75rem;}
+
+    p{color:var(--text-secondary);margin-bottom:1rem;max-width:72ch;}
+    strong{color:var(--text-primary);font-weight:600;}
+    em{font-style:italic;}
+
+    .callout{border-left:2px solid;padding:0.9rem 1.2rem;border-radius:0 var(--radius-md) var(--radius-md) 0;margin:1.5rem 0;background:var(--bg-raised);box-shadow:var(--shadow-sm);}
+    .callout-key   {border-color:var(--accent);   background:var(--accent-bg);}
+    .callout-info  {border-color:var(--tag-gofai);background:rgba(42,100,150,0.04);}
+    .callout-tip   {border-color:var(--tag-ml);   background:rgba(58,125,68,0.04);}
+    .callout-warn  {border-color:var(--tag-nn);   background:rgba(196,124,21,0.05);}
+    .callout-purple{border-color:var(--tag-llm);  background:rgba(123,82,168,0.04);}
+    .callout-label{font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem;}
+    .callout-key    .callout-label{color:var(--accent);}
+    .callout-info   .callout-label{color:var(--tag-gofai);}
+    .callout-tip    .callout-label{color:var(--tag-ml);}
+    .callout-warn   .callout-label{color:var(--tag-nn);}
+    .callout-purple .callout-label{color:var(--tag-llm);}
+    .callout p{margin-bottom:0;}
+
+    pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:var(--radius-md);padding:1.2rem 1.4rem;overflow-x:auto;margin:1.5rem 0;font-family:var(--font-mono);font-size:0.8rem;line-height:1.65;color:var(--code-text);box-shadow:var(--shadow-sm);}
+    .code-header{display:flex;align-items:center;justify-content:space-between;background:var(--bg-overlay);border:1px solid var(--border-default);border-bottom:none;border-radius:var(--radius-md) var(--radius-md) 0 0;padding:0.45rem 1rem;font-family:var(--font-mono);font-size:0.68rem;color:var(--text-muted);margin-top:1.5rem;}
+    .code-header+pre{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;}
+    code{font-family:var(--font-mono);font-size:0.84em;background:var(--code-bg);padding:0.13em 0.42em;border-radius:4px;color:var(--accent);border:1px solid var(--code-border);}
+    pre code{background:none;padding:0;border:none;color:inherit;font-size:inherit;}
+
+    .math-block{background:var(--bg-raised);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:1.4rem 2rem;margin:1.5rem 0;overflow-x:auto;text-align:center;box-shadow:var(--shadow-sm);}
+    .math-block .math-label{font-family:var(--font-mono);font-size:0.66rem;color:var(--text-faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.75rem;text-align:left;}
+
+    table{width:100%;border-collapse:collapse;font-size:0.875rem;margin:1.5rem 0;}
+    th{font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:0.55rem 1rem;border-bottom:1px solid var(--border-default);}
+    td{padding:0.6rem 1rem;border-bottom:1px solid var(--border-subtle);color:var(--text-secondary);vertical-align:top;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:var(--bg-overlay);}
+
+    hr{border:none;border-top:1px solid var(--border-subtle);margin:2rem 0;}
+
+    /* ─── DEMO SHARED ─── */
+    .demo-container{background:var(--bg-raised);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:1.5rem;margin:1.5rem 0;box-shadow:var(--shadow-md);}
+    .demo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.75rem;}
+    .demo-title{font-family:var(--font-mono);font-size:0.73rem;color:var(--text-secondary);letter-spacing:0.04em;display:flex;align-items:center;gap:0.5rem;}
+    .demo-title::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent);}
+
+    button,.btn{font-family:var(--font-mono);font-size:0.73rem;letter-spacing:0.03em;padding:0.42em 0.95em;border-radius:var(--radius-sm);border:1px solid var(--border-default);background:var(--bg-raised);color:var(--text-secondary);cursor:pointer;transition:all var(--transition);display:inline-flex;align-items:center;gap:0.4em;box-shadow:var(--shadow-sm);}
+    button:hover,.btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg);}
+    button:disabled{opacity:0.38;pointer-events:none;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:#fff;}
+
+    select.ctrl-select{font-family:var(--font-mono);font-size:0.72rem;padding:0.38em 0.65em;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-raised);color:var(--text-secondary);cursor:pointer;box-shadow:var(--shadow-sm);}
+
+    .ctrl-row{display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem;}
+
+    .stat-bar{display:flex;flex-wrap:wrap;gap:1rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:0.65rem 1rem;margin-bottom:1rem;}
+    .stat-item{font-family:var(--font-mono);font-size:0.7rem;display:flex;flex-direction:column;gap:0.1rem;}
+    .stat-item .sk{color:var(--text-faint);font-size:0.62rem;letter-spacing:0.07em;text-transform:uppercase;}
+    .stat-item .sv{color:var(--text-primary);font-weight:500;}
+
+    .status-msg{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted);padding:0.45rem 0.75rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);min-height:2rem;margin-top:0.75rem;}
+    .status-ok  {color:var(--tag-ml);}
+    .status-fail{color:var(--accent);}
+
+    /* ─── N-QUEENS ─── */
+    .queens-layout{display:grid;grid-template-columns:auto 1fr;gap:1.25rem;align-items:start;}
+    @media(max-width:600px){.queens-layout{grid-template-columns:1fr;}}
+
+    #queens-canvas{border:1px solid var(--border-default);border-radius:var(--radius-md);display:block;}
+
+    .side-panel{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:0.9rem 1rem;}
+    .side-panel-label{font-family:var(--font-mono);font-size:0.63rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:0.6rem;}
+
+    .domain-grid{display:flex;flex-direction:column;gap:0.3rem;}
+    .domain-row{display:flex;align-items:center;gap:0.4rem;font-family:var(--font-mono);font-size:0.72rem;}
+    .domain-row .dvar{color:var(--tag-gofai);width:2.5rem;flex-shrink:0;}
+    .domain-row .dvals{display:flex;gap:0.2rem;flex-wrap:wrap;}
+    .dval{padding:0.1em 0.45em;border-radius:4px;border:1px solid var(--border-subtle);background:var(--bg-raised);color:var(--text-secondary);font-size:0.7rem;}
+    .dval.assigned{background:rgba(42,100,150,0.1);border-color:var(--tag-gofai);color:var(--tag-gofai);}
+    .dval.pruned{background:rgba(201,100,66,0.07);border-color:var(--accent-border);color:var(--text-faint);text-decoration:line-through;}
+    .dval.current{background:rgba(58,125,68,0.12);border-color:var(--tag-ml);color:var(--tag-ml);}
+
+    .bt-log{font-family:var(--font-mono);font-size:0.7rem;line-height:1.8;max-height:160px;overflow-y:auto;color:var(--text-muted);}
+    .bt-assign {color:var(--tag-gofai);}
+    .bt-conflict{color:var(--accent);}
+    .bt-backtrack{color:var(--tag-nn);}
+    .bt-prune  {color:var(--tag-llm);}
+    .bt-solved {color:var(--tag-ml);font-weight:600;}
+
+    /* ─── MAP COLORING ─── */
+    .map-layout{display:grid;grid-template-columns:1fr auto;gap:1.25rem;align-items:start;}
+    @media(max-width:600px){.map-layout{grid-template-columns:1fr;}}
+
+    #map-canvas{border:1px solid var(--border-default);border-radius:var(--radius-md);display:block;width:100%;}
+
+    .map-side{display:flex;flex-direction:column;gap:0.75rem;min-width:170px;}
+    .color-legend{display:flex;flex-direction:column;gap:0.35rem;}
+    .color-row{display:flex;align-items:center;gap:0.55rem;font-family:var(--font-mono);font-size:0.73rem;color:var(--text-secondary);}
+    .color-swatch{width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,0.1);flex-shrink:0;}
+
+    /* ─── AC-3 ANIMATION ─── */
+    .arc-panel{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:0.85rem 1rem;margin-top:0.75rem;}
+    .arc-panel-label{font-family:var(--font-mono);font-size:0.63rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:0.5rem;}
+    .arc-log{font-family:var(--font-mono);font-size:0.7rem;line-height:1.75;max-height:130px;overflow-y:auto;color:var(--text-muted);}
+    .arc-check {color:var(--tag-gofai);}
+    .arc-prune {color:var(--accent);}
+    .arc-ok    {color:var(--tag-ml);}
+
+    .module-nav{display:flex;justify-content:space-between;align-items:center;padding:1.5rem 0;border-top:1px solid var(--border-subtle);margin-top:3rem;}
+    .module-nav a{font-family:var(--font-mono);font-size:0.73rem;color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:0.5rem;transition:color var(--transition);}
+    .module-nav a:hover{color:var(--text-primary);}
+
+    ::-webkit-scrollbar{width:5px;height:5px;}
+    ::-webkit-scrollbar-track{background:var(--bg-base);}
+    ::-webkit-scrollbar-thumb{background:var(--border-default);border-radius:999px;}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+    .fade-up{animation:fadeUp 0.4s ease forwards;}
+    .d1{animation-delay:0.05s;opacity:0;}.d2{animation-delay:0.14s;opacity:0;}.d3{animation-delay:0.23s;opacity:0;}.d4{animation-delay:0.32s;opacity:0;}.d5{animation-delay:0.40s;opacity:0;}
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="#">GOFAI</a><span class="sep">›</span>
+    <span class="current">Módulo 05 · CSP</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge">● GOFAI · Módulo 5</span>
+    <h1 class="module-title">Satisfacción de<br>Restricciones (CSP)</h1>
+    <p class="module-subtitle">Un framework unificador para problemas de asignación: horarios, coloreo de mapas, Sudoku, N-Reinas. La estructura del problema guía la búsqueda de forma que el backtracking ciego no puede.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> GOFAI</span>
+      <span><strong>Duración</strong> ~35 min</span>
+      <span><strong>Prerrequisitos</strong> Módulos 01–03</span>
+      <span><strong>Algoritmos</strong> Backtracking, AC-3, MRV, Forward Checking</span>
+    </div>
+  </header>
+
+  <!-- ══════════════════════
+       1. QUÉ ES UN CSP
+  ══════════════════════ -->
+  <section class="section fade-up d1">
+    <div class="section-label">Definición</div>
+    <h2 class="section-title">¿Qué es un CSP?</h2>
+
+    <p>Un <strong>problema de satisfacción de restricciones</strong> se define por tres elementos: variables, dominios y restricciones. El objetivo es asignar un valor del dominio a cada variable de forma que todas las restricciones se cumplan simultáneamente.</p>
+
+    <div class="math-block">
+      <div class="math-label">Definición formal</div>
+      $$\text{CSP} = \langle X,\, D,\, C \rangle$$
+      $$X = \{X_1, X_2, \ldots, X_n\} \quad \text{(variables)}$$
+      $$D = \{D_1, D_2, \ldots, D_n\} \quad \text{(dominios, } D_i \text{ son los valores posibles de } X_i\text{)}$$
+      $$C = \{C_1, C_2, \ldots, C_m\} \quad \text{(restricciones sobre subconjuntos de } X\text{)}$$
+    </div>
+
+    <p>Una <strong>solución</strong> es una asignación completa y consistente: cada variable tiene un valor, y ninguna restricción es violada. Una <strong>asignación parcial</strong> es consistente si las restricciones sobre las variables ya asignadas se cumplen.</p>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Por qué CSP es poderoso</div>
+      <p>A diferencia de la búsqueda ciega, un CSP expone la <strong>estructura interna</strong> del problema. Esto permite usar <em>propagación de restricciones</em> para eliminar valores imposibles antes de asignarlos, reduciendo dramáticamente el espacio de búsqueda.</p>
+    </div>
+
+    <table>
+      <thead><tr><th>Problema</th><th>Variables</th><th>Dominio</th><th>Restricciones</th></tr></thead>
+      <tbody>
+        <tr><td>N-Reinas</td><td>Fila de cada reina por columna</td><td>$\{1,\ldots,N\}$</td><td>No misma fila, no misma diagonal</td></tr>
+        <tr><td>Coloreo de mapa</td><td>Color de cada región</td><td>{rojo, verde, azul, amarillo}</td><td>Regiones adyacentes con colores distintos</td></tr>
+        <tr><td>Sudoku</td><td>Valor de cada celda vacía</td><td>$\{1,\ldots,9\}$</td><td>Unicidad por fila, columna y caja 3×3</td></tr>
+        <tr><td>Horario universitario</td><td>Turno de cada materia</td><td>Franjas horarias</td><td>Sin solapamiento de aula, docente o alumno</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ══════════════════════
+       2. BACKTRACKING
+  ══════════════════════ -->
+  <section class="section fade-up d2">
+    <div class="section-label">Algoritmo base</div>
+    <h2 class="section-title">Backtracking</h2>
+
+    <p>El algoritmo de backtracking para CSP es una búsqueda DFS que asigna valores uno a uno. Cuando una asignación parcial viola una restricción, <em>retrocede</em> y prueba el siguiente valor. Con CSPs, la estructura nos permite podar el árbol de búsqueda antes de explorar ramas enteras.</p>
+
+    <div class="math-block">
+      <div class="math-label">Árbol de búsqueda para N=4 (columnas ↓, filas →)</div>
+      $$\underbrace{Q_1=1}_{\text{columna 1}} \to \underbrace{Q_2=3}_{\text{col. 2}} \to \underbrace{Q_3=?}_{\text{col. 3, sin valores}} \to \text{backtrack}$$
+      $$Q_1=2 \to Q_2=4 \to Q_3=1 \to Q_4=3 \quad \checkmark$$
+    </div>
+
+    <div class="code-header"><span>backtracking_csp.py</span></div>
+<pre><code><span style="color:#6b93b8">def</span> <span style="color:#3a7d44">backtrack</span>(assignment, csp):
+    <span style="color:#6b93b8">if</span> is_complete(assignment, csp):
+        <span style="color:#6b93b8">return</span> assignment                    <span style="color:#a0a0a0"># solución encontrada</span>
+
+    var = select_unassigned_variable(assignment, csp)  <span style="color:#a0a0a0"># heurística MRV</span>
+
+    <span style="color:#6b93b8">for</span> value <span style="color:#6b93b8">in</span> order_domain_values(var, assignment, csp):  <span style="color:#a0a0a0"># heurística LCV</span>
+        <span style="color:#6b93b8">if</span> is_consistent(var, value, assignment, csp):
+            assignment[var] = value
+
+            <span style="color:#a0a0a0"># Forward Checking: propagar y verificar dominios</span>
+            inferences = inference(csp, var, value)
+            <span style="color:#6b93b8">if</span> inferences <span style="color:#6b93b8">is not None</span>:
+                result = backtrack(assignment, csp)
+                <span style="color:#6b93b8">if</span> result: <span style="color:#6b93b8">return</span> result
+
+            <span style="color:#a0a0a0"># Backtrack: deshacer asignación e inferencias</span>
+            <span style="color:#6b93b8">del</span> assignment[var]
+            restore_domains(csp, inferences)
+
+    <span style="color:#6b93b8">return None</span>                              <span style="color:#a0a0a0"># falla → backtrack al padre</span></code></pre>
+
+    <hr>
+
+    <h2 class="section-title">Heurísticas de Selección</h2>
+    <p>El orden en que se eligen variables y valores impacta enormemente el rendimiento:</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin:1.25rem 0;">
+
+      <div style="background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1rem;box-shadow:var(--shadow-sm);border-top:3px solid var(--tag-gofai);">
+        <div style="font-family:var(--font-mono);font-size:0.67rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--tag-gofai);margin-bottom:0.4rem;">MRV — Minimum Remaining Values</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);">Elegir la variable con el <strong>dominio más pequeño</strong>. Falla primero, ahorra trabajo. También llamado <em>fail-first heuristic</em>.</div>
+        <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--tag-gofai);margin-top:0.5rem;">$\text{var}^* = \arg\min_{v \notin \text{asig}} |D_v|$</div>
+      </div>
+
+      <div style="background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1rem;box-shadow:var(--shadow-sm);border-top:3px solid var(--tag-ml);">
+        <div style="font-family:var(--font-mono);font-size:0.67rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--tag-ml);margin-bottom:0.4rem;">LCV — Least Constraining Value</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);">Elegir el valor que <strong>elimina menos opciones</strong> de las variables vecinas. Deja más flexibilidad para el futuro.</div>
+        <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--tag-ml);margin-top:0.5rem;">$\text{val}^* = \arg\max_v \sum_{j \in \text{vecinos}} |D_j \setminus \{v\}|$</div>
+      </div>
+
+      <div style="background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1rem;box-shadow:var(--shadow-sm);border-top:3px solid var(--tag-nn);">
+        <div style="font-family:var(--font-mono);font-size:0.67rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--tag-nn);margin-bottom:0.4rem;">Degree Heuristic</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);">Elegir la variable con <strong>más restricciones</strong> sobre variables no asignadas. Rompe empates de MRV.</div>
+        <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--tag-nn);margin-top:0.5rem;">$\text{var}^* = \arg\max_{v \notin \text{asig}} \deg(v)$</div>
+      </div>
+
+      <div style="background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1rem;box-shadow:var(--shadow-sm);border-top:3px solid var(--tag-llm);">
+        <div style="font-family:var(--font-mono);font-size:0.67rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--tag-llm);margin-bottom:0.4rem;">Forward Checking</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);">Al asignar $X_i = v$, eliminar $v$ de los dominios de las variables vecinas. Detecta fallos temprano.</div>
+        <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--tag-llm);margin-top:0.5rem;">$D_j \leftarrow D_j \setminus \{v\} \quad \forall j \in \text{vecinos}(X_i)$</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════
+       3. AC-3
+  ══════════════════════ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Propagación de arcos</div>
+    <h2 class="section-title">AC-3 — Arc Consistency</h2>
+
+    <p>Un arco $(X_i, X_j)$ es <strong>arco-consistente</strong> si para todo valor en $D_i$ existe al menos un valor en $D_j$ compatible con la restricción entre $X_i$ y $X_j$. El algoritmo <strong>AC-3</strong> fuerza arc-consistency en todas las variables antes y durante la búsqueda.</p>
+
+    <div class="math-block">
+      <div class="math-label">Condición de arc-consistency</div>
+      $$\forall\, x \in D_i,\; \exists\, y \in D_j : \langle X_i = x,\, X_j = y \rangle \text{ satisface } C_{ij}$$
+    </div>
+
+    <div class="code-header"><span>ac3.py</span></div>
+<pre><code><span style="color:#6b93b8">from</span> collections <span style="color:#6b93b8">import</span> deque
+
+<span style="color:#6b93b8">def</span> <span style="color:#3a7d44">ac3</span>(csp):
+    queue = deque(csp.all_arcs())      <span style="color:#a0a0a0"># todos los arcos (Xi, Xj)</span>
+
+    <span style="color:#6b93b8">while</span> queue:
+        Xi, Xj = queue.popleft()
+
+        <span style="color:#6b93b8">if</span> revise(csp, Xi, Xj):            <span style="color:#a0a0a0"># ¿se eliminó algún valor de Di?</span>
+            <span style="color:#6b93b8">if</span> len(csp.domains[Xi]) == <span style="color:#c47c15">0</span>:
+                <span style="color:#6b93b8">return False</span>                   <span style="color:#a0a0a0"># dominio vacío → sin solución</span>
+            <span style="color:#6b93b8">for</span> Xk <span style="color:#6b93b8">in</span> csp.neighbors(Xi) - {Xj}:
+                queue.append((Xk, Xi))  <span style="color:#a0a0a0"># re-encolar vecinos afectados</span>
+
+    <span style="color:#6b93b8">return True</span>
+
+<span style="color:#6b93b8">def</span> <span style="color:#3a7d44">revise</span>(csp, Xi, Xj):
+    revised = <span style="color:#c96442">False</span>
+    <span style="color:#6b93b8">for</span> x <span style="color:#6b93b8">in</span> list(csp.domains[Xi]):
+        <span style="color:#a0a0a0"># ¿existe algún y en Dj que satisfaga la restricción?</span>
+        <span style="color:#6b93b8">if not</span> any(csp.satisfies(x, y, Xi, Xj) <span style="color:#6b93b8">for</span> y <span style="color:#6b93b8">in</span> csp.domains[Xj]):
+            csp.domains[Xi].remove(x)
+            revised = <span style="color:#c96442">True</span>
+    <span style="color:#6b93b8">return</span> revised</code></pre>
+
+    <div class="math-block">
+      <div class="math-label">Complejidad de AC-3</div>
+      $$O(e \cdot d^3) \quad \text{donde } e = \text{arcos},\; d = \max|D_i|$$
+    </div>
+  </section>
+
+  <!-- ══════════════════════
+       4. DEMO N-REINAS
+  ══════════════════════ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Demo interactiva 1</div>
+    <h2 class="section-title">N-Reinas con Backtracking + Forward Checking</h2>
+    <p>Observá cómo el motor asigna reinas columna a columna, propaga dominios con Forward Checking, detecta conflictos y retrocede. El panel de dominios muestra qué valores quedan disponibles para cada variable.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">N-Reinas · Backtracking</span>
+        <select class="ctrl-select" id="queens-n">
+          <option value="4">4 Reinas</option>
+          <option value="6">6 Reinas</option>
+          <option value="8" selected>8 Reinas</option>
+        </select>
+      </div>
+
+      <div class="stat-bar" id="queens-stats">
+        <div class="stat-item"><div class="sk">Asignaciones</div><div class="sv" id="qs-assign">0</div></div>
+        <div class="stat-item"><div class="sk">Backtracks</div><div class="sv" id="qs-bt">0</div></div>
+        <div class="stat-item"><div class="sk">Podas FC</div><div class="sv" id="qs-prune">0</div></div>
+        <div class="stat-item"><div class="sk">Columna actual</div><div class="sv" id="qs-col">—</div></div>
+      </div>
+
+      <div class="queens-layout">
+        <div>
+          <canvas id="queens-canvas"></canvas>
+          <div class="ctrl-row" style="margin-top:0.75rem;">
+            <button class="btn-primary" id="q-run">▶ Ejecutar</button>
+            <button id="q-step">→ Paso</button>
+            <button id="q-reset">↺ Reiniciar</button>
+            <select class="ctrl-select" id="q-speed">
+              <option value="300">Lento</option>
+              <option value="80" selected>Normal</option>
+              <option value="16">Rápido</option>
+              <option value="0">Instantáneo</option>
+            </select>
+          </div>
+          <div class="status-msg" id="q-status">Presioná Ejecutar o avanzá paso a paso.</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:0.75rem;">
+          <div class="side-panel">
+            <div class="side-panel-label">Dominios actuales</div>
+            <div class="domain-grid" id="domain-grid"></div>
+          </div>
+          <div class="side-panel">
+            <div class="side-panel-label">Traza</div>
+            <div class="bt-log" id="bt-log"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════
+       5. DEMO MAP COLORING + AC-3
+  ══════════════════════ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Demo interactiva 2</div>
+    <h2 class="section-title">Coloreo de Mapa con AC-3</h2>
+    <p>El coloreo de mapas es un CSP clásico: cada región es una variable con dominio {rojo, verde, azul, amarillo} y la restricción es que regiones adyacentes deben tener colores distintos. Observá cómo AC-3 propaga las restricciones antes de asignar.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Coloreo · AC-3 + Backtracking</span>
+        <select class="ctrl-select" id="map-select">
+          <option value="australia">Australia</option>
+          <option value="sudamerica">Sudamérica (simplificado)</option>
+          <option value="usa">EEUU (región noreste)</option>
+        </select>
+      </div>
+
+      <div class="stat-bar">
+        <div class="stat-item"><div class="sk">Regiones</div><div class="sv" id="ms-regions">—</div></div>
+        <div class="stat-item"><div class="sk">Restricciones</div><div class="sv" id="ms-arcs">—</div></div>
+        <div class="stat-item"><div class="sk">Colores usados</div><div class="sv" id="ms-colors">—</div></div>
+        <div class="stat-item"><div class="sk">Backtracks</div><div class="sv" id="ms-bt">0</div></div>
+      </div>
+
+      <div class="map-layout">
+        <div>
+          <canvas id="map-canvas" height="320"></canvas>
+          <div class="ctrl-row" style="margin-top:0.75rem;">
+            <button class="btn-primary" id="m-run">▶ Resolver</button>
+            <button id="m-step">→ Paso</button>
+            <button id="m-reset">↺ Reiniciar</button>
+          </div>
+          <div class="status-msg" id="m-status">Seleccioná un mapa y presioná Resolver.</div>
+          <div class="arc-panel">
+            <div class="arc-panel-label">Log AC-3</div>
+            <div class="arc-log" id="arc-log">—</div>
+          </div>
+        </div>
+
+        <div class="map-side">
+          <div class="side-panel">
+            <div class="side-panel-label">Paleta</div>
+            <div class="color-legend" id="color-legend"></div>
+          </div>
+          <div class="side-panel">
+            <div class="side-panel-label">Asignación</div>
+            <div class="domain-grid" id="map-assignment"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════
+       6. CIERRE
+  ══════════════════════ -->
+  <section class="section fade-up d5">
+    <div class="section-label">Resumen y conexiones</div>
+    <h2 class="section-title">CSP en el paisaje de la IA</h2>
+
+    <table>
+      <thead><tr><th>Técnica</th><th>Cuándo es mejor</th><th>Limitación</th></tr></thead>
+      <tbody>
+        <tr><td>Backtracking puro</td><td>CSPs pequeños o con pocas restricciones</td><td>Exponencial sin poda</td></tr>
+        <tr><td>+ Forward Checking</td><td>Detecta fallos temprano, recomendado siempre</td><td>Solo mira un paso adelante</td></tr>
+        <tr><td>+ AC-3</td><td>Restricciones densas, dominios grandes</td><td>$O(ed^3)$, no garantiza solución única</td></tr>
+        <tr><td>+ MRV / LCV</td><td>Variables muy heterogéneas en tamaño de dominio</td><td>Overhead de cómputo de heurística</td></tr>
+        <tr><td>Min-Conflicts (local)</td><td>CSPs muy grandes (millones de variables)</td><td>Puede quedarse en mínimos locales</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-tip">
+      <div class="callout-label">Conexión con Machine Learning</div>
+      <p>Los CSPs son <strong>deterministas</strong>: los dominios son discretos y las restricciones son duras (se cumplen o no). ML maneja el mundo real con <em>restricciones blandas</em> y <em>incertidumbre</em>. Las <strong>Redes Bayesianas</strong> (un próximo módulo) son la versión probabilística de los CSPs: variables con dominios, pero las restricciones se convierten en distribuciones de probabilidad condicional.</p>
+    </div>
+
+    <div class="callout callout-purple">
+      <div class="callout-label">Cierre del área GOFAI</div>
+      <p>Con este módulo completamos el área GOFAI. Hemos visto <strong>sistemas expertos</strong> (conocimiento como reglas), <strong>búsqueda</strong> (explorar espacios de estados), <strong>lógica FOL</strong> (representación formal del conocimiento) y <strong>CSPs</strong> (estructura del problema como palanca de eficiencia). El hilo conductor: la IA clásica <em>razona explícitamente</em>. A partir del siguiente módulo entramos en el <strong>Machine Learning</strong>, donde el razonamiento emerge de los datos.</p>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="04_gofai_logica.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="06_ml_regresion.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<!-- ════════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════ -->
+<script>
+/* ═══════════════════════════════
+   N-QUEENS CSP ENGINE
+═══════════════════════════════ */
+let qN = 8;
+let qAssignment = [];   // qAssignment[col] = row (1-based), -1 = unassigned
+let qDomains    = [];   // qDomains[col] = Set of available rows
+let qStats      = { assigns:0, backtracks:0, prunes:0 };
+let qGen        = null, qRunning = false, qTimer = null;
+const QUEEN = '♛';
+
+function qInit() {
+  qN = parseInt(document.getElementById('queens-n').value);
+  qAssignment = new Array(qN).fill(-1);
+  qDomains    = Array.from({length:qN}, () => new Set(Array.from({length:qN},(_,i)=>i+1)));
+  qStats      = { assigns:0, backtracks:0, prunes:0 };
+  qGen = null; qRunning = false;
+  if (qTimer) { clearInterval(qTimer); qTimer = null; }
+  document.getElementById('q-run').textContent = '▶ Ejecutar';
+  document.getElementById('q-run').disabled = false;
+  document.getElementById('q-step').disabled = false;
+  renderQueens();
+  renderDomains();
+  document.getElementById('bt-log').innerHTML = '';
+  qUpdateStats();
+  setQStatus('Presioná Ejecutar o avanzá paso a paso.', '');
+}
+
+function qUpdateStats() {
+  document.getElementById('qs-assign').textContent = qStats.assigns;
+  document.getElementById('qs-bt').textContent     = qStats.backtracks;
+  document.getElementById('qs-prune').textContent  = qStats.prunes;
+  const col = qAssignment.findIndex(v => v===-1);
+  document.getElementById('qs-col').textContent = col===-1 ? '✓' : `col ${col+1}`;
+}
+
+function setQStatus(msg, type) {
+  const el = document.getElementById('q-status');
+  el.textContent = msg;
+  el.className = 'status-msg' + (type==='ok'?' status-ok':type==='fail'?' status-fail':'');
+}
+
+function qLog(msg, cls) {
+  const el = document.getElementById('bt-log');
+  const d  = document.createElement('div');
+  d.className = cls;
+  d.textContent = msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
+// Check if placing row r in col c conflicts with existing assignments
+function qConflicts(col, row) {
+  for (let c = 0; c < col; c++) {
+    const r = qAssignment[c];
+    if (r === -1) continue;
+    if (r === row) return true;                      // same row
+    if (Math.abs(r - row) === Math.abs(c - col)) return true; // diagonal
+  }
+  return false;
+}
+
+// Forward Checking: return pruned values map or null if domain wipe-out
+function qFC(col, row) {
+  const pruned = {}; // col -> [values]
+  for (let c = col+1; c < qN; c++) {
+    const toRemove = [];
+    for (const v of qDomains[c]) {
+      if (v === row) toRemove.push(v);
+      else if (Math.abs(v - row) === Math.abs(c - col)) toRemove.push(v);
+    }
+    if (toRemove.length) {
+      pruned[c] = toRemove;
+      toRemove.forEach(v => qDomains[c].delete(v));
+      qStats.prunes += toRemove.length;
+      if (qDomains[c].size === 0) {
+        // wipe-out: restore and return null
+        Object.entries(pruned).forEach(([cc, vs]) => vs.forEach(v => qDomains[cc].add(v)));
+        return null;
+      }
+    }
+  }
+  return pruned;
+}
+
+function qRestoreFC(pruned) {
+  Object.entries(pruned).forEach(([c, vs]) => vs.forEach(v => qDomains[parseInt(c)].add(v)));
+}
+
+// Generator-based backtracking
+function* qBacktrack(col) {
+  if (col === qN) { yield 'solved'; return; }
+
+  // MRV: pick variable with smallest domain (here sequential for visualization)
+  const domain = [...qDomains[col]].sort((a,b)=>a-b);
+
+  for (const row of domain) {
+    if (!qConflicts(col, row)) {
+      qAssignment[col] = row;
+      qStats.assigns++;
+      qLog(`col ${col+1} ← fila ${row}`, 'bt-assign');
+      qUpdateStats();
+      renderQueens();
+      renderDomains();
+      yield 'step';
+
+      const pruned = qFC(col, row);
+      if (pruned !== null) {
+        if (Object.keys(pruned).length) {
+          const summary = Object.entries(pruned).map(([c,vs])=>`col${parseInt(c)+1}:[-${vs.join(',')}]`).join(' ');
+          qLog(`  FC → ${summary}`, 'bt-prune');
+        }
+        yield* qBacktrack(col+1);
+        if (qAssignment[qN-1] !== -1) return; // solved
+        qRestoreFC(pruned);
+      } else {
+        qLog(`  FC → dominio vacío, poda`, 'bt-prune');
+      }
+
+      qAssignment[col] = -1;
+      qStats.backtracks++;
+      qLog(`  ↩ backtrack desde col ${col+1}`, 'bt-backtrack');
+      qUpdateStats();
+      renderQueens();
+      renderDomains();
+      yield 'step';
+    }
+  }
+}
+
+function qMakeGen() { return qBacktrack(0); }
+
+function renderQueens() {
+  const canvas = document.getElementById('queens-canvas');
+  const SZ = Math.min(Math.floor(340 / qN), 48);
+  canvas.width  = qN * SZ;
+  canvas.height = qN * SZ;
+  const ctx = canvas.getContext('2d');
+
+  for (let r = 0; r < qN; r++) {
+    for (let c = 0; c < qN; c++) {
+      const light = (r+c)%2===0;
+      ctx.fillStyle = light ? '#faf7f4' : '#e8e1d9';
+      ctx.fillRect(c*SZ, r*SZ, SZ, SZ);
+    }
+  }
+
+  // highlight current col
+  const curCol = qAssignment.findIndex(v=>v===-1);
+  if (curCol >= 0 && curCol < qN) {
+    ctx.fillStyle = 'rgba(42,100,150,0.08)';
+    ctx.fillRect(curCol*SZ, 0, SZ, qN*SZ);
+  }
+
+  // conflict highlights
+  for (let c = 0; c < qN; c++) {
+    const r = qAssignment[c];
+    if (r === -1) continue;
+    for (let c2 = c+1; c2 < qN; c2++) {
+      const r2 = qAssignment[c2];
+      if (r2 === -1) continue;
+      if (r===r2 || Math.abs(r-r2)===Math.abs(c-c2)) {
+        ctx.fillStyle = 'rgba(201,100,66,0.18)';
+        ctx.fillRect(c*SZ,(r-1)*SZ,SZ,SZ);
+        ctx.fillRect(c2*SZ,(r2-1)*SZ,SZ,SZ);
+      }
+    }
+  }
+
+  // queens
+  for (let c = 0; c < qN; c++) {
+    const r = qAssignment[c];
+    if (r === -1) continue;
+    const x = c*SZ + SZ/2;
+    const y = (r-1)*SZ + SZ/2 + SZ*0.05;
+    const solved = qAssignment.every(v=>v!==-1);
+    ctx.fillStyle = solved ? '#3a7d44' : '#2a6496';
+    ctx.font = `${Math.floor(SZ*0.62)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(QUEEN, x, y);
+  }
+
+  // grid lines
+  ctx.strokeStyle='rgba(0,0,0,0.07)'; ctx.lineWidth=0.5;
+  for(let i=0;i<=qN;i++){
+    ctx.beginPath();ctx.moveTo(i*SZ,0);ctx.lineTo(i*SZ,qN*SZ);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,i*SZ);ctx.lineTo(qN*SZ,i*SZ);ctx.stroke();
+  }
+}
+
+function renderDomains() {
+  const el = document.getElementById('domain-grid');
+  el.innerHTML = '';
+  for (let c = 0; c < qN; c++) {
+    const row = document.createElement('div');
+    row.className = 'domain-row';
+    const assigned = qAssignment[c];
+    row.innerHTML = `<span class="dvar">Q${c+1}</span><span class="dvals"></span>`;
+    const vals = row.querySelector('.dvals');
+    for (let v = 1; v <= qN; v++) {
+      const span = document.createElement('span');
+      span.className = 'dval';
+      span.textContent = v;
+      if (assigned !== -1 && v === assigned) span.classList.add('assigned');
+      else if (assigned !== -1 && v !== assigned) span.classList.add('pruned');
+      else if (!qDomains[c].has(v)) span.classList.add('pruned');
+      vals.appendChild(span);
+    }
+    el.appendChild(row);
+  }
+}
+
+// Controls
+document.getElementById('queens-n').addEventListener('change', qInit);
+
+document.getElementById('q-run').addEventListener('click', () => {
+  if (qRunning) {
+    clearInterval(qTimer); qTimer=null; qRunning=false;
+    document.getElementById('q-run').textContent='▶ Continuar';
+    return;
+  }
+  if (!qGen) qGen = qMakeGen();
+  qRunning = true;
+  document.getElementById('q-run').textContent = '⏸ Pausar';
+  const delay = parseInt(document.getElementById('q-speed').value);
+  function step() {
+    const res = qGen.next();
+    if (res.value === 'solved' || res.done) {
+      clearInterval(qTimer); qTimer=null; qRunning=false;
+      document.getElementById('q-run').disabled = true;
+      document.getElementById('q-step').disabled = true;
+      document.getElementById('q-run').textContent = '▶ Ejecutar';
+      if (qAssignment.every(v=>v!==-1)) {
+        qLog(`✓ Solución: [${qAssignment.join(', ')}]`, 'bt-solved');
+        setQStatus(`✓ Solución encontrada: [${qAssignment.join(', ')}]`, 'ok');
+      } else {
+        setQStatus('Sin solución.', 'fail');
+      }
+      renderQueens(); renderDomains();
+    }
+  }
+  if (delay === 0) {
+    while(true){ const r=qGen.next(); if(r.value==='solved'||r.done)break; }
+    qRunning=false;
+    document.getElementById('q-run').disabled=true;
+    document.getElementById('q-step').disabled=true;
+    document.getElementById('q-run').textContent='▶ Ejecutar';
+    if (qAssignment.every(v=>v!==-1)) {
+      setQStatus(`✓ Solución: [${qAssignment.join(', ')}]`, 'ok');
+    }
+    renderQueens(); renderDomains(); qUpdateStats();
+  } else {
+    qTimer = setInterval(step, delay);
+  }
+});
+
+document.getElementById('q-step').addEventListener('click', () => {
+  if (qRunning) return;
+  if (!qGen) qGen = qMakeGen();
+  const res = qGen.next();
+  if (res.value==='solved'||res.done) {
+    document.getElementById('q-step').disabled=true;
+    document.getElementById('q-run').disabled=true;
+    if (qAssignment.every(v=>v!==-1)) {
+      setQStatus(`✓ Solución: [${qAssignment.join(', ')}]`, 'ok');
+    }
+    renderQueens(); renderDomains();
+  }
+});
+
+document.getElementById('q-reset').addEventListener('click', qInit);
+
+/* ═══════════════════════════════
+   MAP COLORING ENGINE
+═══════════════════════════════ */
+
+const PALETTE = [
+  { name:'Rojo',     hex:'#d95f5f', light:'#f5d5d5' },
+  { name:'Verde',    hex:'#5aaa72', light:'#d4eed9' },
+  { name:'Azul',     hex:'#5b8dd9', light:'#d3e4f7' },
+  { name:'Amarillo', hex:'#e8c547', light:'#faf3cc' },
+];
+
+const MAPS = {
+  australia: {
+    regions: [
+      { id:'WA',  label:'WA',   cx:0.14, cy:0.50 },
+      { id:'NT',  label:'NT',   cx:0.34, cy:0.30 },
+      { id:'SA',  label:'SA',   cx:0.40, cy:0.58 },
+      { id:'QLD', label:'QLD',  cx:0.60, cy:0.35 },
+      { id:'NSW', label:'NSW',  cx:0.64, cy:0.60 },
+      { id:'VIC', label:'VIC',  cx:0.60, cy:0.76 },
+      { id:'TAS', label:'TAS',  cx:0.63, cy:0.92 },
+    ],
+    adjacency: [
+      ['WA','NT'],['WA','SA'],
+      ['NT','SA'],['NT','QLD'],
+      ['SA','QLD'],['SA','NSW'],['SA','VIC'],
+      ['QLD','NSW'],
+      ['NSW','VIC'],
+    ],
+    polygons: {
+      WA: [[0.02,0.08],[0.28,0.08],[0.28,0.72],[0.02,0.72]],
+      NT: [[0.28,0.08],[0.56,0.08],[0.56,0.48],[0.28,0.48]],
+      SA: [[0.28,0.48],[0.56,0.48],[0.56,0.68],[0.48,0.68],[0.48,0.88],[0.28,0.88]],
+      QLD:[[0.56,0.08],[0.92,0.08],[0.92,0.52],[0.56,0.52]],
+      NSW:[[0.56,0.52],[0.92,0.52],[0.92,0.76],[0.56,0.76]],
+      VIC:[[0.56,0.76],[0.86,0.76],[0.86,0.88],[0.56,0.88]],
+      TAS:[[0.58,0.90],[0.74,0.90],[0.74,0.99],[0.58,0.99]],
+    }
+  },
+  sudamerica: {
+    regions: [
+      { id:'COL', label:'Col',  cx:0.28, cy:0.17 },
+      { id:'VEN', label:'Ven',  cx:0.50, cy:0.13 },
+      { id:'ECU', label:'Ecu',  cx:0.18, cy:0.28 },
+      { id:'PER', label:'Per',  cx:0.24, cy:0.46 },
+      { id:'BRA', label:'Bra',  cx:0.60, cy:0.40 },
+      { id:'BOL', label:'Bol',  cx:0.38, cy:0.55 },
+      { id:'PAR', label:'Par',  cx:0.48, cy:0.67 },
+      { id:'CHI', label:'Chi',  cx:0.26, cy:0.70 },
+      { id:'ARG', label:'Arg',  cx:0.40, cy:0.82 },
+      { id:'URU', label:'Uru',  cx:0.57, cy:0.78 },
+    ],
+    adjacency: [
+      ['COL','VEN'],['COL','ECU'],['COL','PER'],['COL','BRA'],
+      ['VEN','BRA'],
+      ['ECU','PER'],
+      ['PER','BRA'],['PER','BOL'],['PER','CHI'],
+      ['BRA','BOL'],['BRA','PAR'],['BRA','ARG'],['BRA','URU'],
+      ['BOL','CHI'],['BOL','PAR'],['BOL','ARG'],
+      ['PAR','ARG'],
+      ['CHI','ARG'],
+      ['ARG','URU'],
+    ],
+    polygons: {
+      COL:[[0.14,0.08],[0.42,0.08],[0.42,0.28],[0.14,0.28]],
+      VEN:[[0.42,0.08],[0.76,0.08],[0.76,0.24],[0.42,0.24]],
+      ECU:[[0.08,0.28],[0.26,0.28],[0.26,0.42],[0.08,0.42]],
+      PER:[[0.08,0.42],[0.36,0.42],[0.36,0.64],[0.08,0.64]],
+      BRA:[[0.42,0.24],[0.92,0.24],[0.92,0.72],[0.42,0.72]],
+      BOL:[[0.28,0.48],[0.44,0.48],[0.44,0.66],[0.28,0.66]],
+      PAR:[[0.44,0.58],[0.58,0.58],[0.58,0.72],[0.44,0.72]],
+      CHI:[[0.12,0.64],[0.30,0.64],[0.30,0.94],[0.12,0.94]],
+      ARG:[[0.28,0.72],[0.52,0.72],[0.52,0.96],[0.28,0.96]],
+      URU:[[0.52,0.72],[0.70,0.72],[0.70,0.86],[0.52,0.86]],
+    }
+  },
+  usa: {
+    regions: [
+      { id:'ME',  label:'ME', cx:0.80, cy:0.10 },
+      { id:'NH',  label:'NH', cx:0.76, cy:0.20 },
+      { id:'VT',  label:'VT', cx:0.70, cy:0.18 },
+      { id:'MA',  label:'MA', cx:0.78, cy:0.30 },
+      { id:'RI',  label:'RI', cx:0.84, cy:0.34 },
+      { id:'CT',  label:'CT', cx:0.78, cy:0.38 },
+      { id:'NY',  label:'NY', cx:0.58, cy:0.30 },
+      { id:'NJ',  label:'NJ', cx:0.72, cy:0.46 },
+      { id:'PA',  label:'PA', cx:0.55, cy:0.46 },
+    ],
+    adjacency: [
+      ['ME','NH'],
+      ['NH','VT'],['NH','MA'],
+      ['VT','MA'],['VT','NY'],
+      ['MA','RI'],['MA','CT'],['MA','NY'],
+      ['RI','CT'],
+      ['CT','NY'],['CT','NJ'],
+      ['NY','NJ'],['NY','PA'],
+      ['NJ','PA'],
+    ],
+    polygons: {
+      ME: [[0.68,0.04],[0.92,0.04],[0.92,0.22],[0.68,0.22]],
+      NH: [[0.68,0.14],[0.80,0.14],[0.80,0.32],[0.68,0.32]],
+      VT: [[0.56,0.10],[0.70,0.10],[0.70,0.30],[0.56,0.30]],
+      MA: [[0.64,0.30],[0.88,0.30],[0.88,0.44],[0.64,0.44]],
+      RI: [[0.80,0.36],[0.92,0.36],[0.92,0.48],[0.80,0.48]],
+      CT: [[0.68,0.42],[0.82,0.42],[0.82,0.56],[0.68,0.56]],
+      NY: [[0.32,0.14],[0.70,0.14],[0.70,0.56],[0.32,0.56]],
+      NJ: [[0.66,0.52],[0.80,0.52],[0.80,0.70],[0.66,0.70]],
+      PA: [[0.28,0.52],[0.68,0.52],[0.68,0.72],[0.28,0.72]],
+    }
+  }
+};
+
+let mapData  = null;
+let mapColor = {};  // regionId -> color index or -1
+let mapBT    = 0;
+let mapGen   = null, mapRunning = false, mapTimer = null;
+let arcLogLines = [];
+
+function loadMap() {
+  const key = document.getElementById('map-select').value;
+  mapData  = MAPS[key];
+  mapColor = {};
+  mapData.regions.forEach(r => mapColor[r.id] = -1);
+  mapBT   = 0;
+  mapGen  = null; mapRunning=false;
+  if (mapTimer) { clearInterval(mapTimer); mapTimer=null; }
+  arcLogLines = [];
+  document.getElementById('m-run').textContent='▶ Resolver';
+  document.getElementById('m-run').disabled=false;
+  document.getElementById('m-step').disabled=false;
+  document.getElementById('ms-regions').textContent = mapData.regions.length;
+  document.getElementById('ms-arcs').textContent    = mapData.adjacency.length;
+  document.getElementById('ms-colors').textContent  = '—';
+  document.getElementById('ms-bt').textContent      = '0';
+  document.getElementById('m-status').textContent   = 'Presioná Resolver para iniciar.';
+  document.getElementById('m-status').className     = 'status-msg';
+  renderColorLegend();
+  renderMapAssignment();
+  renderArcLog();
+  drawMap();
+}
+
+function renderColorLegend() {
+  const el = document.getElementById('color-legend');
+  el.innerHTML = '';
+  PALETTE.forEach(p => {
+    el.innerHTML += `<div class="color-row"><div class="color-swatch" style="background:${p.hex}"></div>${p.name}</div>`;
+  });
+}
+
+function renderMapAssignment() {
+  const el = document.getElementById('map-assignment');
+  el.innerHTML = '';
+  mapData.regions.forEach(r => {
+    const ci = mapColor[r.id];
+    const color = ci >= 0 ? PALETTE[ci].hex : 'var(--text-faint)';
+    const name  = ci >= 0 ? PALETTE[ci].name : '—';
+    el.innerHTML += `<div class="domain-row">
+      <span class="dvar" style="width:3rem;">${r.label}</span>
+      <span style="font-family:var(--font-mono);font-size:0.72rem;color:${color}">${name}</span>
+    </div>`;
+  });
+}
+
+function drawMap() {
+  const canvas = document.getElementById('map-canvas');
+  const W = canvas.offsetWidth || 480;
+  canvas.width  = W;
+  const ctx = canvas.getContext('2d');
+  const H   = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // draw polygons
+  mapData.regions.forEach(r => {
+    const poly = mapData.polygons[r.id];
+    if (!poly) return;
+    const ci = mapColor[r.id];
+    ctx.beginPath();
+    poly.forEach(([px,py], i) => {
+      i===0 ? ctx.moveTo(px*W, py*H) : ctx.lineTo(px*W, py*H);
+    });
+    ctx.closePath();
+    ctx.fillStyle   = ci >= 0 ? PALETTE[ci].hex : '#ede8e1';
+    ctx.strokeStyle = '#bfb5ab';
+    ctx.lineWidth   = 1.5;
+    ctx.fill(); ctx.stroke();
+
+    // label
+    ctx.fillStyle  = ci >= 0 ? '#fff' : '#8c847c';
+    ctx.font       = `600 ${Math.max(11, W*0.025)}px Geist, sans-serif`;
+    ctx.textAlign  = 'center'; ctx.textBaseline='middle';
+    ctx.fillText(r.label, r.cx*W, r.cy*H);
+  });
+}
+
+function renderArcLog() {
+  const el = document.getElementById('arc-log');
+  el.innerHTML = arcLogLines.slice(-40).join('') || '—';
+  el.scrollTop = el.scrollHeight;
+}
+
+function arcLog(msg, cls) {
+  arcLogLines.push(`<div class="${cls}">${msg}</div>`);
+  renderArcLog();
+}
+
+// Map coloring CSP engine
+function mapNeighbors(id) {
+  return mapData.adjacency
+    .filter(e => e.includes(id))
+    .map(e => e[0]===id ? e[1] : e[0]);
+}
+
+function mapConsistent(id, color) {
+  return mapNeighbors(id).every(nb => mapColor[nb] !== color);
+}
+
+function* mapBacktrack(idx, domains) {
+  if (idx === mapData.regions.length) { yield 'solved'; return; }
+  const r = mapData.regions[idx];
+
+  // run AC-3 pass before assignment
+  for (let ci = 0; ci < PALETTE.length; ci++) {
+    if (!domains[r.id].has(ci)) continue;
+    if (!mapConsistent(r.id, ci)) { domains[r.id].delete(ci); arcLog(`  AC-3: prunar ${r.label}≠${PALETTE[ci].name}`, 'arc-prune'); continue; }
+
+    mapColor[r.id] = ci;
+    arcLog(`Asignar ${r.label} → ${PALETTE[ci].name}`, 'arc-check');
+    document.getElementById('ms-bt').textContent = mapBT;
+    renderMapAssignment();
+    drawMap();
+    yield 'step';
+
+    // propagate
+    const pruned = {};
+    let fail = false;
+    for (const nb of mapNeighbors(r.id)) {
+      const ni = mapData.regions.findIndex(x=>x.id===nb);
+      if (ni <= idx) continue;
+      if (domains[nb].has(ci)) {
+        domains[nb].delete(ci);
+        pruned[nb] = ci;
+        arcLog(`  FC: ${nb} pierde ${PALETTE[ci].name}`, 'arc-prune');
+        if (domains[nb].size === 0) { fail=true; break; }
+      }
+    }
+
+    if (!fail) {
+      yield* mapBacktrack(idx+1, domains);
+      const solved = mapData.regions.every(r=>mapColor[r.id]!==-1);
+      if (solved) return;
+    }
+
+    // restore
+    Object.entries(pruned).forEach(([nb, ci]) => domains[nb].add(ci));
+    mapColor[r.id] = -1;
+    mapBT++;
+    arcLog(`↩ Backtrack ${r.label}`, 'arc-check');
+    drawMap();
+    yield 'step';
+  }
+}
+
+function mapMakeGen() {
+  const domains = {};
+  mapData.regions.forEach(r => { domains[r.id] = new Set([0,1,2,3]); });
+  return mapBacktrack(0, domains);
+}
+
+document.getElementById('map-select').addEventListener('change', loadMap);
+
+document.getElementById('m-run').addEventListener('click', () => {
+  if (mapRunning) {
+    clearInterval(mapTimer); mapTimer=null; mapRunning=false;
+    document.getElementById('m-run').textContent='▶ Continuar';
+    return;
+  }
+  if (!mapGen) mapGen = mapMakeGen();
+  mapRunning=true;
+  document.getElementById('m-run').textContent='⏸ Pausar';
+  mapTimer = setInterval(() => {
+    const res = mapGen.next();
+    if (res.value==='solved'||res.done) {
+      clearInterval(mapTimer); mapTimer=null; mapRunning=false;
+      document.getElementById('m-run').textContent='▶ Ejecutar';
+      document.getElementById('m-run').disabled=true;
+      document.getElementById('m-step').disabled=true;
+      const solved = mapData.regions.every(r=>mapColor[r.id]!==-1);
+      if (solved) {
+        const used = new Set(Object.values(mapColor)).size;
+        document.getElementById('ms-colors').textContent = used;
+        document.getElementById('ms-bt').textContent = mapBT;
+        document.getElementById('m-status').textContent = `✓ Coloreo válido con ${used} colores, ${mapBT} backtracks.`;
+        document.getElementById('m-status').className = 'status-msg status-ok';
+        renderMapAssignment(); drawMap();
+      }
+    }
+  }, 90);
+});
+
+document.getElementById('m-step').addEventListener('click', () => {
+  if (mapRunning) return;
+  if (!mapGen) mapGen = mapMakeGen();
+  const res = mapGen.next();
+  if (res.value==='solved'||res.done) {
+    document.getElementById('m-step').disabled=true;
+    document.getElementById('m-run').disabled=true;
+    const solved = mapData.regions.every(r=>mapColor[r.id]!==-1);
+    if (solved) {
+      const used = new Set(Object.values(mapColor)).size;
+      document.getElementById('ms-colors').textContent = used;
+      document.getElementById('m-status').textContent = `✓ Coloreo con ${used} colores.`;
+      document.getElementById('m-status').className = 'status-msg status-ok';
+    }
+    renderMapAssignment(); drawMap();
+  }
+});
+
+document.getElementById('m-reset').addEventListener('click', loadMap);
+
+// Init
+qInit();
+loadMap();
+</script>
+</body>
+</html>
