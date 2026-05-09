@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Bias–Variance, Overfitting & Regularización</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      --accent:         #3a7d44; /* Tag ML */
+      --accent-hover:   #2e6636;
+      --accent-bg:      rgba(58,125,68,0.07);
+      --accent-border:  rgba(58,125,68,0.2);
+      --tag-ml:         #3a7d44;
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+
+      --col-train: #2a6496; /* Train dots */
+      --col-test:  #c96442; /* Test dots */
+      --col-model: #7b52a8; /* Model curve */
+      --col-true:  #3a7d44; /* True function */
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-ml { color:var(--tag-ml); border-color:var(--tag-ml); background:rgba(58,125,68,0.06); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* CALLOUTS */
+    .callout { border-left:2px solid; padding:0.9rem 1.2rem; border-radius:0 var(--radius-md) var(--radius-md) 0; margin:1.5rem 0; background:var(--bg-raised); box-shadow:var(--shadow-sm); }
+    .callout-key  { border-color:var(--accent);    background:var(--accent-bg); }
+    .callout-tip  { border-color:var(--tag-ml);    background:rgba(58,125,68,0.04); }
+    .callout-warn { border-color:#c96442;          background:rgba(201,100,66,0.05); }
+    .callout-label { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.35rem; }
+    .callout-key  .callout-label { color:var(--accent); }
+    .callout-tip  .callout-label { color:var(--tag-ml); }
+    .callout-warn .callout-label { color:#c96442; }
+    .callout p { margin-bottom:0; }
+
+    /* CODE */
+    pre { background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-md); padding:1.2rem 1.4rem; overflow-x:auto; margin:1.5rem 0; font-family:var(--font-mono); font-size:0.8rem; line-height:1.65; color:var(--code-text); box-shadow:var(--shadow-sm); }
+    .code-header { display:flex; align-items:center; justify-content:space-between; background:var(--bg-overlay); border:1px solid var(--border-default); border-bottom:none; border-radius:var(--radius-md) var(--radius-md) 0 0; padding:0.45rem 1rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); margin-top:1.5rem; }
+    .code-header + pre { margin-top:0; border-top-left-radius:0; border-top-right-radius:0; }
+    code { font-family:var(--font-mono); font-size:0.84em; background:var(--code-bg); padding:0.13em 0.42em; border-radius:4px; color:var(--accent); border:1px solid var(--code-border); }
+    pre code { background:none; padding:0; border:none; color:inherit; font-size:inherit; }
+
+    /* MATH */
+    .math-block { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:1.4rem 2rem; margin:1.5rem 0; overflow-x:auto; text-align:center; box-shadow:var(--shadow-sm); }
+    .math-block .math-label { font-family:var(--font-mono); font-size:0.66rem; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.75rem; text-align:left; }
+
+    /* TABLE */
+    table { width:100%; border-collapse:collapse; font-size:0.875rem; margin:1.5rem 0; }
+    th { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); text-align:left; padding:0.55rem 1rem; border-bottom:1px solid var(--border-default); }
+    td { padding:0.6rem 1rem; border-bottom:1px solid var(--border-subtle); color:var(--text-secondary); vertical-align:top; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:var(--bg-overlay); }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .demo-layout .canvas-wrapper { flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.5rem; background: var(--bg-surface); }
+    .demo-layout canvas { width: 100%; height: auto; border-radius: var(--radius-sm); }
+    .demo-layout .canvas-title { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; display: flex; justify-content: space-between; width: 100%; padding: 0 0.5rem; }
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .ctrl-group { display:flex; align-items:center; gap:0.6rem; }
+    .ctrl-label { font-family:var(--font-mono); font-size:0.67rem; color:var(--text-muted); letter-spacing:0.04em; }
+
+    input[type="range"] { -webkit-appearance:none; width:120px; height:3px; background:var(--border-default); border-radius:999px; outline:none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--accent); cursor:pointer; transition:box-shadow var(--transition); }
+    input[type="range"]::-webkit-slider-thumb:hover { box-shadow:0 0 0 4px var(--accent-bg); }
+
+    .val-pill { font-family:var(--font-mono); font-size:0.67rem; background:var(--bg-overlay); border:1px solid var(--border-subtle); padding:0.12em 0.5em; border-radius:999px; color:var(--accent); min-width:2.5rem; text-align:center; }
+    
+    .demo-controls-bar { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); flex-wrap: wrap; }
+
+    /* Legend */
+    .legend-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; }
+    .dot-train { background:var(--col-train); }
+    .dot-test { background:var(--col-test); }
+    .line-model { display:inline-block; width:12px; height:2px; background:var(--col-model); margin-right:4px; vertical-align:middle; }
+    .line-true { display:inline-block; width:12px; height:2px; border-top:2px dashed var(--col-true); margin-right:4px; vertical-align:middle; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background:var(--border-default); border-radius:999px; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+    .d4 { animation-delay:0.32s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 2 — Machine Learning</a><span class="sep">›</span>
+    <span class="current">Módulo 13 · Bias-Variance</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-ml">● ML · Módulo 13</span>
+    <h1 class="module-title">Bias–Variance, Overfitting &<br>Regularización</h1>
+    <p class="module-subtitle">El delicado equilibrio del Machine Learning. Entendé por qué los modelos muy simples fallan, por qué los muy complejos memorizan, y cómo usar L1 y L2 para domesticarlos.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Machine Learning</span>
+      <span><strong>Duración</strong> ~25 min</span>
+      <span><strong>Prerrequisitos</strong> Regresión Lineal</span>
+    </div>
+  </header>
+
+  <!-- ══ 1. EL DILEMA ══ -->
+  <section class="section fade-up d1">
+    <div class="section-label">Concepto</div>
+    <h2 class="section-title">El dilema del aprendizaje</h2>
+    <p>El objetivo central del Machine Learning no es lograr que el modelo tenga cero error en los datos de entrenamiento (eso es trivial, basta con memorizar). El objetivo es que el modelo <strong>generalice</strong>, es decir, que tenga un error bajo en datos nuevos que nunca antes ha visto.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Escenario</th>
+            <th>Complejidad</th>
+            <th>Error en Training</th>
+            <th>Error en Test</th>
+            <th>Síntoma</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Underfitting</strong> (Subajuste)</td>
+            <td>Muy simple (ej: línea recta para curva)</td>
+            <td>Alto</td>
+            <td>Alto</td>
+            <td>Incapaz de capturar el patrón subyacente.</td>
+          </tr>
+          <tr>
+            <td><strong>Good Fit</strong> (Óptimo)</td>
+            <td>Adecuada</td>
+            <td>Bajo</td>
+            <td>Bajo</td>
+            <td>Captura la señal, ignora el ruido.</td>
+          </tr>
+          <tr>
+            <td><strong>Overfitting</strong> (Sobreajuste)</td>
+            <td>Muy complejo (ej: polinomio grado 15)</td>
+            <td>Casi cero</td>
+            <td><strong>Muy alto</strong></td>
+            <td>Memoriza el ruido y fluctúa salvajemente.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ 2. BIAS / VARIANCE ══ -->
+  <section class="section fade-up d2">
+    <div class="section-label">Teoría</div>
+    <h2 class="section-title">El Trade-off Bias/Varianza</h2>
+    <p>Matemáticamente, el error de predicción esperado de un modelo se puede descomponer en tres partes fundamentales:</p>
+
+    <div class="math-block">
+      <div class="math-label">Descomposición del Error Expected</div>
+      $$Error = \text{Bias}^2 + \text{Varianza} + \text{Ruido Irreducible}$$
+    </div>
+
+    <ul>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem"><strong>Bias (Sesgo):</strong> Error introducido por aproximar un problema de la vida real mediante un modelo demasiado simple. Genera <em>underfitting</em>.</li>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem"><strong>Varianza:</strong> Sensibilidad del modelo a pequeñas fluctuaciones en el set de entrenamiento. Un modelo con alta varianza cambia drásticamente si se entrena con un set de datos ligeramente distinto. Genera <em>overfitting</em>.</li>
+      <li style="color:var(--text-secondary);"><strong>Ruido Irreducible:</strong> La variabilidad inherente de los datos ($\epsilon$) que ningún modelo puede predecir.</li>
+    </ul>
+
+    <div class="callout callout-warn">
+      <div class="callout-label">El Trade-off</div>
+      <p>A medida que aumentamos la complejidad del modelo (por ejemplo, agregando más variables o subiendo el grado de un polinomio), <strong>el Bias disminuye pero la Varianza aumenta</strong>. El arte del Machine Learning es encontrar el punto exacto ("sweet spot") que minimiza el error total.</p>
+    </div>
+  </section>
+
+  <!-- ══ 3. DEMO INTERACTIVA ══ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Visualizando el Overfitting</h2>
+    <p>Experimentá ajustando un polinomio a un dataset ruidoso. Observá qué sucede cuando subís el <strong>grado del polinomio</strong>: la curva intentará pasar por cada punto de entrenamiento (azul), pero el error en los puntos de prueba (naranja) se disparará.</p>
+    <p>Luego, mantené el grado alto (ej: 12) y aumentá la <strong>Regularización ($\lambda$)</strong> para ver cómo se "domestica" la curva.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Regresión Polinomial & Regularización Ridge</span>
+        <div class="ctrl-group">
+          <button id="btn-regen-data">↺ Nuevos Datos</button>
+        </div>
+      </div>
+
+      <div class="demo-layout">
+        <div class="canvas-wrapper" style="flex:2">
+          <div class="canvas-title">
+            <span>Ajuste del Modelo</span>
+            <span>
+              <span class="legend-dot dot-train"></span>Train
+              <span class="legend-dot dot-test" style="margin-left:0.5rem"></span>Test
+              <span class="line-model" style="margin-left:0.5rem"></span>Modelo
+              <span class="line-true" style="margin-left:0.5rem"></span>Real
+            </span>
+          </div>
+          <canvas id="canvas-plot" width="500" height="300"></canvas>
+        </div>
+        <div class="canvas-wrapper" style="flex:1">
+          <div class="canvas-title">Error (MSE) Log-Scale</div>
+          <canvas id="canvas-error" width="250" height="300"></canvas>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <div class="ctrl-group">
+          <span class="ctrl-label" title="Grado del polinomio">Complejidad (Grado)</span>
+          <input type="range" id="sl-degree" min="1" max="15" step="1" value="1">
+          <span class="val-pill" id="vl-degree">1</span>
+        </div>
+        <div class="ctrl-group" style="margin-left:1rem">
+          <span class="ctrl-label" title="Fuerza de la regularización L2">Regularización $\lambda$ (L2)</span>
+          <input type="range" id="sl-lambda" min="-8" max="0" step="0.5" value="-8">
+          <span class="val-pill" id="vl-lambda">0.00</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 4. REGULARIZACIÓN ══ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Algoritmo</div>
+    <h2 class="section-title">Domesticando modelos: L1 y L2</h2>
+    <p>Cuando tenemos features muy complejas o correlacionadas, los pesos (coeficientes) del modelo pueden volverse astronómicamente grandes en su intento por ajustar el ruido. La <strong>Regularización</strong> consiste en añadir una "multa" a la función de pérdida por tener pesos grandes.</p>
+
+    <div class="math-block">
+      <div class="math-label">Loss Regularizada</div>
+      $$\mathcal{L} = \text{MSE}(y, \hat{y}) + \lambda \cdot \text{Penalidad}(W)$$
+    </div>
+
+    <table style="margin-top:1rem;">
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Nombre</th>
+          <th>Penalidad</th>
+          <th>Efecto Principal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>L2</strong></td>
+          <td>Ridge Regression</td>
+          <td>$\sum w_i^2$</td>
+          <td>Reduce todos los pesos uniformemente. Evita valores extremos. Mantiene todos los features.</td>
+        </tr>
+        <tr>
+          <td><strong>L1</strong></td>
+          <td>Lasso Regression</td>
+          <td>$\sum |w_i|$</td>
+          <td>Empuja algunos pesos <strong>exactamente a cero</strong>. Actúa como un selector de características natural.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Hiperparámetro Lambda ($\lambda$)</div>
+      <p>$\lambda$ controla la fuerza de la regularización. Si $\lambda=0$, volvemos a OLS normal (peligro de overfitting). Si $\lambda \to \infty$, todos los pesos colapsan a $0$ y el modelo predice una línea plana (underfitting). Debemos buscar un $\lambda$ intermedio mediante Validación Cruzada.</p>
+    </div>
+  </section>
+
+  <!-- ══ 5. CROSS VALIDATION ══ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Metodología</div>
+    <h2 class="section-title">Validación Cruzada (K-Fold)</h2>
+    <p>¿Cómo elegimos el mejor grado del polinomio o el mejor $\lambda$ si no podemos tocar el set de Test? Dividimos nuestro set de entrenamiento en $K$ partes (folds). Entrenamos en $K-1$ partes y validamos en la parte restante. Repetimos $K$ veces, rotando la parte de validación.</p>
+
+    <div style="display:flex; flex-direction:column; gap:4px; margin:1.5rem 0; font-family:var(--font-mono); font-size:0.75rem; text-align:center;">
+      <div style="display:flex; gap:4px;"><div style="flex:4;background:var(--col-train);color:#fff;padding:4px;border-radius:4px;">Train (Folds 1-4)</div><div style="flex:1;background:#eab308;color:#fff;padding:4px;border-radius:4px;">Val (Fold 5)</div></div>
+      <div style="display:flex; gap:4px;"><div style="flex:3;background:var(--col-train);color:#fff;padding:4px;border-radius:4px;">Train (Folds 1-3)</div><div style="flex:1;background:#eab308;color:#fff;padding:4px;border-radius:4px;">Val (Fold 4)</div><div style="flex:1;background:var(--col-train);color:#fff;padding:4px;border-radius:4px;">Train (Fold 5)</div></div>
+      <div style="color:var(--text-muted); font-size:1.2rem; line-height:1;">... repite K veces ...</div>
+    </div>
+
+    <p>El rendimiento del hiperparámetro es el promedio del error en los $K$ folds de validación. Una vez encontrado el mejor $\lambda$, reentrenamos el modelo final usando todo el set de entrenamiento.</p>
+  </section>
+
+  <nav class="module-nav">
+    <a href="12_ml_boosting.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="14_rl_qlearning.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: BIAS-VARIANCE POLYNOMIAL REGRESSION
+══════════════════════════════════════════════ */
+(function() {
+  const canvasPlot = document.getElementById('canvas-plot');
+  const ctxPlot = canvasPlot.getContext('2d');
+  const canvasError = document.getElementById('canvas-error');
+  const ctxError = canvasError.getContext('2d');
+
+  let dataTrain = [];
+  let dataTest = [];
+  let currentDegree = 1;
+  let currentLambda = 0; // effectively 0 if 10^-8
+  let modelWeights = [];
+  let errTrain = 0;
+  let errTest = 0;
+
+  // True function: a slightly complex curve
+  function trueFunc(x) {
+    // x is roughly in [-1, 1]
+    return Math.sin(x * Math.PI * 1.5) * 0.5 + x * 0.2;
+  }
+
+  // Generate Data
+  function generateData() {
+    dataTrain = [];
+    dataTest = [];
+    const N_TRAIN = 18;
+    const N_TEST = 30;
+
+    // We want points mostly within x in [-0.9, 0.9]
+    for (let i = 0; i < N_TRAIN; i++) {
+      const x = -0.9 + (i / (N_TRAIN - 1)) * 1.8 + (Math.random() - 0.5) * 0.1;
+      const y = trueFunc(x) + (Math.random() - 0.5) * 0.35; // Noise
+      dataTrain.push({ x, y });
+    }
+
+    for (let i = 0; i < N_TEST; i++) {
+      const x = -0.9 + Math.random() * 1.8;
+      const y = trueFunc(x) + (Math.random() - 0.5) * 0.35; // Same noise distribution
+      dataTest.push({ x, y });
+    }
+  }
+
+  // Basic Matrix Operations for Polynomial Regression
+  // To solve: (X^T X + lambda * I) w = X^T y
+  
+  function solveLinearSystem(A, b) {
+    const n = A.length;
+    // Gaussian elimination with partial pivoting
+    let M = A.map((row, i) => [...row, b[i]]);
+
+    for (let i = 0; i < n; i++) {
+      // Find pivot
+      let maxEl = Math.abs(M[i][i]);
+      let maxRow = i;
+      for (let k = i + 1; k < n; k++) {
+        if (Math.abs(M[k][i]) > maxEl) {
+          maxEl = Math.abs(M[k][i]);
+          maxRow = k;
+        }
+      }
+
+      // Swap
+      let tmp = M[maxRow];
+      M[maxRow] = M[i];
+      M[i] = tmp;
+
+      // Check singular
+      if (Math.abs(M[i][i]) < 1e-12) continue;
+
+      // Eliminate
+      for (let k = i + 1; k < n; k++) {
+        let c = -M[k][i] / M[i][i];
+        for (let j = i; j <= n; j++) {
+          if (i === j) M[k][j] = 0;
+          else M[k][j] += c * M[i][j];
+        }
+      }
+    }
+
+    // Back substitution
+    let x = new Array(n).fill(0);
+    for (let i = n - 1; i >= 0; i--) {
+      if (Math.abs(M[i][i]) < 1e-12) { x[i] = 0; continue; }
+      x[i] = M[i][n] / M[i][i];
+      for (let k = i - 1; k >= 0; k--) {
+        M[k][n] -= M[k][i] * x[i];
+      }
+    }
+    return x;
+  }
+
+  function fitModel() {
+    const d = currentDegree;
+    const n = dataTrain.length;
+    
+    // Construct X matrix
+    const X = [];
+    const Y = [];
+    for (let i = 0; i < n; i++) {
+      const row = [];
+      let val = 1;
+      for (let j = 0; j <= d; j++) {
+        row.push(val);
+        val *= dataTrain[i].x;
+      }
+      X.push(row);
+      Y.push(dataTrain[i].y);
+    }
+
+    // X^T X
+    const XtX = [];
+    for (let i = 0; i <= d; i++) {
+      XtX[i] = new Array(d + 1).fill(0);
+      for (let j = 0; j <= d; j++) {
+        let sum = 0;
+        for (let k = 0; k < n; k++) {
+          sum += X[k][i] * X[k][j];
+        }
+        XtX[i][j] = sum;
+      }
+    }
+
+    // Add Ridge Regularization (lambda * I), don't penalize bias term (index 0)
+    for (let i = 1; i <= d; i++) {
+      XtX[i][i] += currentLambda;
+    }
+    // Very small base regularization to avoid singular matrices when d is large
+    for (let i = 0; i <= d; i++) {
+      XtX[i][i] += 1e-9;
+    }
+
+    // X^T Y
+    const XtY = new Array(d + 1).fill(0);
+    for (let i = 0; i <= d; i++) {
+      let sum = 0;
+      for (let k = 0; k < n; k++) {
+        sum += X[k][i] * Y[k];
+      }
+      XtY[i] = sum;
+    }
+
+    modelWeights = solveLinearSystem(XtX, XtY);
+
+    // Calculate Errors
+    errTrain = calculateMSE(dataTrain);
+    errTest = calculateMSE(dataTest);
+  }
+
+  function predict(x) {
+    let y = 0;
+    let val = 1;
+    for (let i = 0; i < modelWeights.length; i++) {
+      y += modelWeights[i] * val;
+      val *= x;
+    }
+    return y;
+  }
+
+  function calculateMSE(data) {
+    let sumSq = 0;
+    for (const p of data) {
+      const err = predict(p.x) - p.y;
+      sumSq += err * err;
+    }
+    return sumSq / data.length;
+  }
+
+  // --- Rendering ---
+  function resizeCanvas(c) {
+    const rect = c.parentElement.getBoundingClientRect();
+    c.width = rect.width - 16;
+    c.height = 300;
+  }
+
+  function toPlotCoords(x, y, w, h) {
+    // x in [-1.1, 1.1], y in [-1.5, 1.5]
+    const px = ((x + 1.1) / 2.2) * w;
+    const py = h - ((y + 1.5) / 3.0) * h;
+    return [px, py];
+  }
+
+  function drawPlot() {
+    const W = canvasPlot.width;
+    const H = canvasPlot.height;
+    ctxPlot.clearRect(0, 0, W, H);
+
+    // Axes
+    ctxPlot.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border-default').trim();
+    ctxPlot.lineWidth = 1;
+    const [ax, ay] = toPlotCoords(0, 0, W, H);
+    ctxPlot.beginPath(); ctxPlot.moveTo(0, ay); ctxPlot.lineTo(W, ay); ctxPlot.stroke();
+    ctxPlot.beginPath(); ctxPlot.moveTo(ax, 0); ctxPlot.lineTo(ax, H); ctxPlot.stroke();
+
+    // True Function Curve (green dashed)
+    ctxPlot.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--col-true').trim();
+    ctxPlot.lineWidth = 2;
+    ctxPlot.setLineDash([5, 4]);
+    ctxPlot.beginPath();
+    for (let px = 0; px <= W; px++) {
+      const x = -1.1 + (px / W) * 2.2;
+      const y = trueFunc(x);
+      const [, cy] = toPlotCoords(x, y, W, H);
+      if (px === 0) ctxPlot.moveTo(px, cy);
+      else ctxPlot.lineTo(px, cy);
+    }
+    ctxPlot.stroke();
+    ctxPlot.setLineDash([]);
+
+    // Model Curve (purple)
+    ctxPlot.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--col-model').trim();
+    ctxPlot.lineWidth = 2.5;
+    ctxPlot.beginPath();
+    for (let px = 0; px <= W; px++) {
+      const x = -1.1 + (px / W) * 2.2;
+      const y = predict(x);
+      const [, cy] = toPlotCoords(x, y, W, H);
+      // Clip y to avoid drawing completely outside and ruining lines
+      const cyClipped = Math.max(-50, Math.min(H + 50, cy));
+      if (px === 0) ctxPlot.moveTo(px, cyClipped);
+      else ctxPlot.lineTo(px, cyClipped);
+    }
+    ctxPlot.stroke();
+
+    // Test points (orange)
+    ctxPlot.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--col-test').trim();
+    for (const p of dataTest) {
+      const [px, py] = toPlotCoords(p.x, p.y, W, H);
+      ctxPlot.beginPath(); ctxPlot.arc(px, py, 3.5, 0, Math.PI * 2); ctxPlot.fill();
+    }
+
+    // Train points (blue)
+    ctxPlot.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--col-train').trim();
+    ctxPlot.strokeStyle = '#fff';
+    ctxPlot.lineWidth = 1;
+    for (const p of dataTrain) {
+      const [px, py] = toPlotCoords(p.x, p.y, W, H);
+      ctxPlot.beginPath(); ctxPlot.arc(px, py, 5.5, 0, Math.PI * 2); ctxPlot.fill(); ctxPlot.stroke();
+    }
+  }
+
+  function drawError() {
+    const W = canvasError.width;
+    const H = canvasError.height;
+    ctxError.clearRect(0, 0, W, H);
+
+    // We will draw a bar chart for MSE
+    // Since MSE can grow exponentially when overfitting, we use a log-like scale visually
+    
+    // safe log10
+    const logErrTrain = Math.max(0, Math.log10(errTrain + 1e-5) + 2); // Shift up so small errors are positive bars
+    const logErrTest = Math.max(0, Math.log10(errTest + 1e-5) + 2);
+    
+    const maxBarHeight = 5; // represents 10^3 error approx
+    
+    const hTrain = Math.min(H - 40, (logErrTrain / maxBarHeight) * (H - 40));
+    const hTest = Math.min(H - 40, (logErrTest / maxBarHeight) * (H - 40));
+
+    const barW = Math.min(60, W / 3);
+    const gap = 20;
+    const startX = (W - (barW * 2 + gap)) / 2;
+
+    // Train bar
+    ctxError.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--col-train').trim();
+    ctxError.fillRect(startX, H - 20 - hTrain, barW, hTrain);
+    
+    // Test bar
+    ctxError.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--col-test').trim();
+    ctxError.fillRect(startX + barW + gap, H - 20 - hTest, barW, hTest);
+
+    // Labels
+    ctxError.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim();
+    ctxError.font = '10px "Geist Mono", monospace';
+    ctxError.textAlign = 'center';
+    ctxError.fillText('Train', startX + barW / 2, H - 5);
+    ctxError.fillText('Test', startX + barW + gap + barW / 2, H - 5);
+    
+    // Values
+    ctxError.fillText(errTrain.toFixed(3), startX + barW / 2, H - 25 - hTrain);
+    
+    // If test error is massive, show scientific notation
+    let testStr = errTest > 100 ? errTest.toExponential(1) : errTest.toFixed(3);
+    ctxError.fillText(testStr, startX + barW + gap + barW / 2, H - 25 - hTest);
+    
+    // Grid lines for reference
+    ctxError.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border-subtle').trim();
+    ctxError.beginPath(); ctxError.moveTo(0, H - 20); ctxError.lineTo(W, H - 20); ctxError.stroke();
+  }
+
+  function update() {
+    fitModel();
+    drawPlot();
+    drawError();
+  }
+
+  // --- Interaction ---
+  document.getElementById('btn-regen-data').addEventListener('click', () => {
+    generateData();
+    update();
+  });
+
+  const slDegree = document.getElementById('sl-degree');
+  slDegree.addEventListener('input', function() {
+    currentDegree = parseInt(this.value);
+    document.getElementById('vl-degree').textContent = currentDegree;
+    update();
+  });
+
+  const slLambda = document.getElementById('sl-lambda');
+  slLambda.addEventListener('input', function() {
+    const val = parseFloat(this.value);
+    if (val === -8) {
+      currentLambda = 0;
+      document.getElementById('vl-lambda').textContent = "0.00";
+    } else {
+      currentLambda = Math.pow(10, val);
+      document.getElementById('vl-lambda').textContent = currentLambda.toExponential(1);
+    }
+    update();
+  });
+
+  // Init
+  window.addEventListener('resize', () => {
+    resizeCanvas(canvasPlot);
+    resizeCanvas(canvasError);
+    update();
+  });
+  
+  setTimeout(() => {
+    resizeCanvas(canvasPlot);
+    resizeCanvas(canvasError);
+    generateData();
+    update();
+  }, 100);
+
+})();
+</script>
+</body>
+</html>

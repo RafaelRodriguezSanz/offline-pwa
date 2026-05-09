@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Plan de Estudio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      --accent:         #c96442;
+      --accent-hover:   #b05838;
+      --accent-bg:      rgba(201,100,66,0.07);
+      --accent-border:  rgba(201,100,66,0.2);
+
+      --tag-gofai: #2a6496;
+      --tag-ml:    #3a7d44;
+      --tag-nn:    #c47c15;
+      --tag-dl:    #c96442;
+      --tag-llm:   #7b52a8;
+      --tag-ga:    #2e7d7d;
+      --tag-qc:    #1a5fa0;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.04);
+
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
+      --font-serif: 'Crimson Pro', Georgia, serif;
+      --font-mono:  'Geist Mono', 'Fira Code', monospace;
+      --font-sans:  'Geist', system-ui, sans-serif;
+      --transition: 0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.9375rem;
+      line-height: 1.7;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(201,100,66,0.12); }
+
+    /* ── LAYOUT ── */
+    .page-wrapper { max-width: 920px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    .topbar {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 1.25rem 0 1rem;
+      font-family: var(--font-mono); font-size: 0.75rem;
+      color: var(--text-muted); letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 2rem;
+    }
+    .topbar a { color: var(--text-muted); text-decoration: none; transition: color var(--transition); font-size: 1.1rem; }
+    .topbar a:hover { color: var(--accent); }
+    .topbar .sep { color: var(--border-strong); }
+    .topbar .current { color: var(--text-secondary); }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 3.5rem 0 2.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 3rem;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block; width: 20px; height: 1px;
+      background: var(--accent);
+    }
+
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 400; line-height: 1.12;
+      letter-spacing: -0.015em;
+      margin-bottom: 1.1rem;
+      color: var(--text-primary);
+    }
+
+    .hero h1 .sub {
+      color: var(--text-muted);
+      display: block;
+      font-style: italic;
+    }
+
+    .hero-desc {
+      font-size: 0.9375rem; color: var(--text-secondary);
+      max-width: 58ch; line-height: 1.7; margin-bottom: 2rem;
+    }
+
+    .hero-stats {
+      display: flex; gap: 0; flex-wrap: wrap;
+      background: var(--bg-raised); border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg); overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      width: fit-content;
+    }
+
+    .stat {
+      padding: 0.9rem 1.6rem;
+      border-right: 1px solid var(--border-subtle);
+      display: flex; flex-direction: column; gap: 0.15rem;
+    }
+    .stat:last-child { border-right: none; }
+
+    .stat-n {
+      font-family: var(--font-serif);
+      font-size: 1.7rem; color: var(--text-primary);
+      line-height: 1; font-weight: 400;
+    }
+    .stat-l {
+      font-family: var(--font-mono); font-size: 0.64rem;
+      letter-spacing: 0.08em; color: var(--text-faint); text-transform: uppercase;
+    }
+
+    /* ── TRACK LABEL ── */
+    .track { margin-bottom: 2.25rem; }
+
+    .track-label {
+      font-family: var(--font-mono); font-size: 0.66rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 0.9rem;
+    }
+    .track-label::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+
+    .gofai-label { color: var(--tag-gofai); }
+    .ml-label    { color: var(--tag-ml);    }
+    .nn-label    { color: var(--tag-nn);    }
+    .dl-label    { color: var(--tag-dl);    }
+    .llm-label   { color: var(--tag-llm);   }
+    .ga-label    { color: var(--tag-ga);    }
+    .qc-label    { color: var(--tag-qc);    }
+
+    .track-header { margin-bottom: 1rem; }
+    .track-title {
+      font-family: var(--font-serif); font-size: 1.2rem;
+      font-weight: 400; color: var(--text-primary); margin-bottom: 0.2rem;
+    }
+    .track-desc { font-size: 0.8125rem; color: var(--text-muted); max-width: 62ch; }
+
+    /* ── MODULE CARDS ── */
+    .modules-grid { display: grid; gap: 0.4rem; }
+
+    .module-card {
+      display: grid;
+      grid-template-columns: 2.25rem 1fr auto;
+      align-items: start;
+      gap: 1rem;
+      padding: 0.9rem 1.1rem;
+      background: var(--bg-raised);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .module-card:hover {
+      border-color: var(--border-default);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    /* left accent stripe */
+    .module-card::before {
+      content: ''; position: absolute;
+      left: 0; top: 0; bottom: 0; width: 3px;
+    }
+    .card-gofai::before { background: var(--tag-gofai); }
+    .card-ml::before    { background: var(--tag-ml);    }
+    .card-nn::before    { background: var(--tag-nn);    }
+    .card-dl::before    { background: var(--tag-dl);    }
+    .card-llm::before   { background: var(--tag-llm);   }
+    .card-ga::before    { background: var(--tag-ga);    }
+    .card-qc::before    { background: var(--tag-qc);    }
+
+    .card-num {
+      font-family: var(--font-mono); font-size: 0.68rem;
+      color: var(--text-faint); text-align: right; padding-top: 0.12rem;
+    }
+
+    .card-title {
+      font-size: 0.9rem; font-weight: 500;
+      color: var(--text-primary); margin-bottom: 0.18rem; line-height: 1.35;
+    }
+
+    .card-desc {
+      font-size: 0.795rem; color: var(--text-muted); line-height: 1.5; max-width: 54ch;
+    }
+
+    .card-tags {
+      display: flex; flex-direction: column;
+      align-items: flex-end; gap: 0.3rem; padding-top: 0.05rem;
+    }
+
+    .tag {
+      font-family: var(--font-mono); font-size: 0.59rem;
+      letter-spacing: 0.05em; padding: 0.18em 0.55em;
+      border-radius: 999px; white-space: nowrap;
+    }
+    .tag-interactive { background:rgba(201,100,66,0.08); color:var(--tag-dl); border:1px solid rgba(201,100,66,0.18); }
+    .tag-math        { background:rgba(42,100,150,0.07);  color:var(--tag-gofai); border:1px solid rgba(42,100,150,0.18); }
+    .tag-code        { background:rgba(58,125,68,0.07);   color:var(--tag-ml); border:1px solid rgba(58,125,68,0.18); }
+    .tag-visual      { background:rgba(196,124,21,0.08);  color:var(--tag-nn); border:1px solid rgba(196,124,21,0.18); }
+    .tag-quantum     { background:rgba(26,95,160,0.07);   color:var(--tag-qc); border:1px solid rgba(26,95,160,0.18); }
+    .tag-bio         { background:rgba(46,125,125,0.07);  color:var(--tag-ga); border:1px solid rgba(46,125,125,0.18); }
+
+    /* ── FOOTER ── */
+    .page-footer {
+      padding-top: 2.5rem; border-top: 1px solid var(--border-subtle);
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .page-footer p { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-faint); letter-spacing: 0.04em; }
+    .page-footer a {
+      font-family: var(--font-mono); font-size: 0.73rem;
+      color: var(--accent); text-decoration: none;
+      border: 1px solid var(--accent-border); padding: 0.4em 1em;
+      border-radius: var(--radius-sm); background: var(--accent-bg);
+      transition: all var(--transition);
+    }
+    .page-footer a:hover { background: var(--accent); color: #fff; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 999px; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero         { animation: fadeUp 0.45s ease both; }
+    .track        { opacity: 0; animation: fadeUp 0.4s ease forwards; }
+    .track:nth-child(1) { animation-delay: 0.12s; }
+    .track:nth-child(2) { animation-delay: 0.20s; }
+    .track:nth-child(3) { animation-delay: 0.28s; }
+    .track:nth-child(4) { animation-delay: 0.36s; }
+    .track:nth-child(5) { animation-delay: 0.44s; }
+    .track:nth-child(6) { animation-delay: 0.52s; }
+    .track:nth-child(7) { animation-delay: 0.60s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .page-wrapper { padding: 0 1rem 4rem; }
+      .hero { padding: 2.5rem 0 2rem; }
+      .hero h1 { font-size: 2.4rem; }
+      .hero-stats { grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .module-card { 
+        grid-template-columns: 2rem 1fr; 
+        gap: 0.75rem;
+        padding: 1rem;
+      }
+      .card-tags { 
+        grid-column: 1 / span 2; 
+        flex-direction: row; 
+        justify-content: flex-start;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border-subtle);
+        margin-top: 0.5rem;
+      }
+      .card-desc { font-size: 0.78rem; }
+      .page-footer { flex-direction: column; text-align: center; }
+    }
+
+    @media (max-width: 400px) {
+      .hero h1 { font-size: 2rem; }
+      .hero-stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a>
+    <span class="sep">›</span>
+    <span class="current">Plan de Estudio</span>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <header class="hero">
+    <div class="hero-eyebrow">Plan de Estudio Interactivo</div>
+    <h1>
+      IA desde Cero
+      <span class="sub">de reglas simbólicas a qubits</span>
+    </h1>
+    <p class="hero-desc">
+      Un recorrido técnico y visual por los fundamentos de la inteligencia artificial.
+      Desde los sistemas expertos clásicos hasta los transformers modernos, algoritmos genéticos
+      y computación cuántica. Cada módulo incluye teoría, fórmulas y demos interactivas.
+    </p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-n">47</span><span class="stat-l">Módulos</span></div>
+      <div class="stat"><span class="stat-n">9</span><span class="stat-l">Áreas</span></div>
+      <div class="stat"><span class="stat-n">~26h</span><span class="stat-l">Tiempo total</span></div>
+      <div class="stat"><span class="stat-n">47</span><span class="stat-l">Demos</span></div>
+    </div>
+  </header>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       ÁREA 1 — GOFAI
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="track">
+    <div class="track-label gofai-label">â— Área 1 — GOFAI</div>
+    <div class="track-header">
+      <div class="track-title">Inteligencia Artificial Clásica</div>
+      <div class="track-desc">Razonamiento simbólico, lógica formal y búsqueda. La IA antes del aprendizaje automático.</div>
+    </div>
+    <div class="modules-grid">
+      <a href="01_gofai_sistemas_expertos.html" class="module-card card-gofai">
+        <div class="card-num">1</div>
+        <div class="card-body">
+          <div class="card-title">Sistemas Expertos &amp; Motores de Inferencia</div>
+          <div class="card-desc">Bases de conocimiento, reglas IF→THEN, forward y backward chaining. Demo: diagnóstico médico paso a paso.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">lógica</span></div>
+      </a>
+      <a href="02_gofai_busqueda.html" class="module-card card-gofai">
+        <div class="card-num">2</div>
+        <div class="card-body">
+          <div class="card-title">Búsqueda en Grafos: BFS, DFS &amp; A*</div>
+          <div class="card-desc">Espacios de estado, heurísticas admisibles, función $f = g + h$. Demo: laberinto con traza visual.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">algoritmos</span></div>
+      </a>
+      <a href="03_gofai_minimax.html" class="module-card card-gofai">
+        <div class="card-num">3</div>
+        <div class="card-body">
+          <div class="card-title">Juegos de Suma Cero: Minimax &amp; Alfa-Beta</div>
+          <div class="card-desc">Árboles de juego, turno MAX/MIN, poda de ramas. Demo: Juega Tic-Tac-Toe contra un Minimax perfecto.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
+      </a>
+      <a href="04_gofai_logica.html" class="module-card card-gofai">
+        <div class="card-num">4</div>
+        <div class="card-body">
+          <div class="card-title">Lógica de Primer Orden &amp; Resolución</div>
+          <div class="card-desc">Predicados, cuantificadores, unificación de Robinson, Prolog. Demo: motor de resolución en browser.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-code">código</span><span class="tag tag-math">lógica</span></div>
+      </a>
+      <a href="05_gofai_csp.html" class="module-card card-gofai">
+        <div class="card-num">5</div>
+        <div class="card-body">
+          <div class="card-title">Satisfacción de Restricciones (CSP)</div>
+          <div class="card-desc">Variables, dominios, arc-consistency (AC-3), backtracking. Demo: N-Reinas y Sudoku interactivo.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       ÁREA 2 — MACHINE LEARNING
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="track">
+    <div class="track-label ml-label">â— Área 2 — Machine Learning</div>
+    <div class="track-header">
+      <div class="track-title">Aprendizaje Estadístico</div>
+      <div class="track-desc">El giro de "escribir reglas" a "aprender de datos". Probabilidad, optimización y generalización.</div>
+    </div>
+    <div class="modules-grid">
+      <a href="06_ml_regresion.html" class="module-card card-ml">
+        <div class="card-num">6</div>
+        <div class="card-body">
+          <div class="card-title">Regresión Lineal &amp; Gradiente Descendente</div>
+          <div class="card-desc">MSE, derivadas parciales, learning rate, convergencia. Demo: ajustá la recta en tiempo real.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">cálculo</span></div>
+      </a>
+      <a href="07_ml_kmeans.html" class="module-card card-ml">
+        <div class="card-num">7</div>
+        <div class="card-body">
+          <div class="card-title">Aprendizaje No Supervisado: K-Means</div>
+          <div class="card-desc">Clustering, centroides, distancia euclidiana, descubrimiento de patrones. Demo: Agrupación interactiva 2D.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
+      </a>
+      <a href="08_ml_pca.html" class="module-card card-ml">
+        <div class="card-num">8</div>
+        <div class="card-body">
+          <div class="card-title">Reducción de Dimensionalidad: PCA &amp; t-SNE</div>
+          <div class="card-desc">Varianza máxima, compresión del espacio. Demo: Proyecta una nube 3D a 2D matemáticamente.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">álgebra</span></div>
+      </a>
+      <a href="09_ml_clasificacion.html" class="module-card card-ml">
+        <div class="card-num">9</div>
+        <div class="card-body">
+          <div class="card-title">Clasificación: Logística, SVM &amp; KNN</div>
+          <div class="card-desc">Fronteras de decisión, kernel trick, distancias de Minkowski. Demo: dibujá puntos y observá el clasificador.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">álgebra</span></div>
+      </a>
+      <a href="10_ml_naive_bayes.html" class="module-card card-ml">
+        <div class="card-num">10</div>
+        <div class="card-body">
+          <div class="card-title">Probabilidad: Clasificador Naive Bayes</div>
+          <div class="card-desc">Probabilidad condicional y Teorema de Bayes. Demo: Filtro anti-spam interactivo con vocabularios.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">estadística</span></div>
+      </a>
+      <a href="11_ml_arboles.html" class="module-card card-ml">
+        <div class="card-num">11</div>
+        <div class="card-body">
+          <div class="card-title">Árboles de Decisión &amp; Random Forest</div>
+          <div class="card-desc">Entropía, ganancia de información, bagging, feature importance. Demo: árbol que crece en vivo.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
+      </a>
+      <a href="12_ml_boosting.html" class="module-card card-ml">
+        <div class="card-num">12</div>
+        <div class="card-body">
+          <div class="card-title">Métodos Ensemble: Gradient Boosting &amp; XGBoost</div>
+          <div class="card-desc">Árboles débiles sumados en cascada para corregir residuos. Demo: Ajuste secuencial de curva 2D.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
+      </a>
+      <a href="13_ml_bias_variance.html" class="module-card card-ml">
+        <div class="card-num">13</div>
+        <div class="card-body">
+          <div class="card-title">Biasâ€“Variance, Overfitting &amp; Regularización</div>
+          <div class="card-desc">Trade-off bias/varianza, L1 (Lasso), L2 (Ridge), cross-validation. Demo: deslizá la complejidad del modelo.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">estadística</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       ÁREA 8 — REINFORCEMENT LEARNING
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="track">
+    <div class="track-label rl-label" style="color: #1976d2;">â— Área 3 — Reinforcement Learning</div>
+    <div class="track-header">
+      <div class="track-title">Aprendizaje por Refuerzo</div>
+      <div class="track-desc">Recompensas, castigos y Ecuación de Bellman. Entrenando agentes que toman decisiones.</div>
+    </div>
+    <div class="modules-grid">
+      <a href="14_rl_qlearning.html" class="module-card" style="border-left-color: #1976d2;">
+        <div class="card-num">14</div>
+        <div class="card-body">
+          <div class="card-title">Q-Learning &amp; Procesos de Decisión de Markov</div>
+          <div class="card-desc">Exploración vs Explotación, Ecuación de Bellman, Tabla Q. Demo: Entrena un agente para resolver un laberinto en vivo.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive" style="color:#1976d2; border-color:rgba(25,118,210,0.2); background:rgba(25,118,210,0.05);">interactivo</span><span class="tag tag-math" style="color:#1976d2; border-color:rgba(25,118,210,0.2); background:rgba(25,118,210,0.05);">algoritmos</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       ÁREA 3 — REDES NEURONALES
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="track">
+    <div class="track-label nn-label">â— Área 4 — Redes Neuronales</div>
+    <div class="track-header">
+      <div class="track-title">Del Perceptrón a las MLP</div>
+      <div class="track-desc">De la neurona biológica al backpropagation. El bloque constructivo de todo lo que sigue.</div>
+    </div>
+    <div class="modules-grid">
+      <a href="15_nn_perceptron.html" class="module-card card-nn">
+        <div class="card-num">15</div>
+        <div class="card-body">
+          <div class="card-title">El Perceptrón &amp; Funciones de Activación</div>
+          <div class="card-desc">Pesos, bias, step / sigmoid / ReLU / tanh. Demo: perceptrón que aprende AND y OR, visualización de pesos.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
+      </a>
+      <a href="16_nn_mlp.html" class="module-card card-nn">
+        <div class="card-num">16</div>
+        <div class="card-body">
+          <div class="card-title">MLP &amp; Forward Propagation</div>
+          <div class="card-desc">Capas ocultas, transformaciones afines, composición de funciones. Demo: propagá un input capa a capa.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">álgebra lineal</span></div>
+      </a>
+      <a href="17_nn_backprop.html" class="module-card card-nn">
+        <div class="card-num">17</div>
+        <div class="card-body">
+          <div class="card-title">Backpropagation &amp; Regla de la Cadena</div>
+          <div class="card-desc">Grafo computacional, gradientes, chain rule, $\partial L/\partial w$. Demo: flujo de gradientes hacia atrás.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">cálculo</span></div>
+      </a>
+      <a href="18_nn_optimizadores.html" class="module-card card-nn">
+        <div class="card-num">18</div>
+        <div class="card-body">
+          <div class="card-title">Optimizadores: SGD, Momentum &amp; Adam</div>
+          <div class="card-desc">Superficies de pérdida, saddle points, momentos de primer y segundo orden. Demo: compará optimizadores en vivo.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">optimización</span></div>
+      </a>
+      <a href="19_nn_saddle.html" class="module-card card-nn">
+        <div class="card-num">19</div>
+        <div class="card-body">
+          <div class="card-title">Paisajes de Pérdida &amp; Saddle Points</div>
+          <div class="card-desc">Mesetas multidimensionales. Demo: Contornos 2D donde SGD se atasca y Adam escapa.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       ÁREA 4 — DEEP LEARNING
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="track">
+    <div class="track-label dl-label">â— Área 5 — Deep Learning</div>
+    <div class="track-header">
+      <div class="track-title">Arquitecturas Profundas</div>
+      <div class="track-desc">CNNs, RNNs, embeddings y atención. Cómo las redes profundas procesan imágenes, texto y secuencias.</div>
+    </div>
+    <div class="modules-grid">
+      <a href="20_dl_cnn.html" class="module-card card-dl">
+        <div class="card-num">20</div>
+        <div class="card-body">
+          <div class="card-title">Redes Convolucionales (CNN)</div>
+          <div class="card-desc">Convolución discreta, pooling, receptive field, feature maps. Demo: kernel que detecta bordes en una imagen.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
+      </a>
+      <a href="21_dl_rnn_lstm.html" class="module-card card-dl">
+        <div class="card-num">21</div>
+        <div class="card-body">
+          <div class="card-title">RNN, LSTM &amp; GRU</div>
+          <div class="card-desc">Memoria recurrente, vanishing gradients, puertas de olvido/entrada/salida. Demo: predicción de serie temporal.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">álgebra</span></div>
+      </a>
+      <a href="22_dl_embeddings.html" class="module-card card-dl">
+        <div class="card-num">22</div>
+        <div class="card-body">
+          <div class="card-title">Embeddings &amp; Representaciones Vectoriales</div>
+          <div class="card-desc">Word2Vec, similitud coseno, espacio latente, analogías. Demo: explorá relaciones semánticas en 2D.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
+      </a>
+      <a href="23_dl_atencion.html" class="module-card card-dl">
+        <div class="card-num">23</div>
+        <div class="card-body">
+          <div class="card-title">Mecanismo de Atención</div>
+          <div class="card-desc">Queries, keys, values, scaled dot-product, softmax. El puente directo al Transformer.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">álgebra</span></div>
+      </a>
+      <a href="24_dl_gans.html" class="module-card card-dl">
+        <div class="card-num">24</div>
+        <div class="card-body">
+          <div class="card-title">Modelado Generativo: Autoencoders &amp; GANs</div>
+          <div class="card-desc">Espacio latente, cuellos de botella, decodificación. Demo: Controla un espacio latente de rostros (5x5).</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       ÁREA 5 — LLMs
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="track">
+    <div class="track-label llm-label">â— Área 6 — LLMs</div>
+    <div class="track-header">
+      <div class="track-title">Grandes Modelos de Lenguaje</div>
+      <div class="track-desc">La arquitectura Transformer completa, tokenización, pretraining, RLHF y el estado del arte.</div>
+    </div>
+    <div class="modules-grid">
+      <a href="25_llm_transformer.html" class="module-card card-llm">
+        <div class="card-num">25</div>
+        <div class="card-body">
+          <div class="card-title">La Arquitectura Transformer</div>
+          <div class="card-desc">Multi-head self-attention, positional encoding, encoder/decoder, layer norm. Demo: flujo de un token.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">álgebra</span></div>
+      </a>
+      <a href="26_llm_tokenizacion.html" class="module-card card-llm">
+        <div class="card-num">26</div>
+        <div class="card-body">
+          <div class="card-title">Tokenización &amp; Vocabulario</div>
+          <div class="card-desc">BPE, WordPiece, SentencePiece, vocabulario de 50K tokens. Demo: tokenizá texto y ve los IDs en tiempo real.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-code">código</span></div>
+      </a>
+      <a href="27_llm_pretraining.html" class="module-card card-llm">
+        <div class="card-num">27</div>
+        <div class="card-body">
+          <div class="card-title">Pretraining, Fine-tuning &amp; RLHF</div>
+          <div class="card-desc">Modelado de lenguaje causal, instruction tuning, reward model, PPO. El pipeline completo de GPT/Claude.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">probabilidad</span></div>
+      </a>
+      <a href="28_llm_generacion.html" class="module-card card-llm">
+        <div class="card-num">28</div>
+        <div class="card-body">
+          <div class="card-title">Generación: Temperature, Top-p &amp; Beam Search</div>
+          <div class="card-desc">Distribuciones sobre vocabulario, sampling, greedy vs. estocástico. Demo: generá con distintos parámetros.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">probabilidad</span></div>
+      </a>
+      <a href="29_llm_escala.html" class="module-card card-llm">
+        <div class="card-num">29</div>
+        <div class="card-body">
+          <div class="card-title">Leyes de Escala &amp; Capacidades Emergentes</div>
+          <div class="card-desc">Chinchilla scaling laws, in-context learning, chain-of-thought. Demo: curvas de pérdida interactivas.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">estadística</span></div>
+      </a>
+      <a href="30_llm_arquitecturas.html" class="module-card card-llm">
+        <div class="card-num">30</div>
+        <div class="card-body">
+          <div class="card-title">Arquitecturas Actuales: GPT, Llama, Claude</div>
+          <div class="card-desc">KV-cache, Flash Attention, GQA, MoE, RoPE. Comparativa técnica del estado del arte.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-code">técnico</span></div>
+      </a>
+      <a href="31_llm_rag.html" class="module-card card-llm">
+        <div class="card-num">31</div>
+        <div class="card-body">
+          <div class="card-title">RAG (Retrieval-Augmented Generation)</div>
+          <div class="card-desc">Bases de datos vectoriales, similitud semántica, inyección de contexto. Demo: Pipeline RAG en tiempo real.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
+      </a>
+      <a href="32_llm_agentes_herramientas.html" class="module-card card-llm">
+        <div class="card-num">32</div>
+        <div class="card-body">
+          <div class="card-title">LLM Agénticos: Tool Use, Planning y Orquestación</div>
+          <div class="card-desc">De chatbots a agentes: planificación, uso de herramientas y control de errores con un modelo formal costo-riesgo.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">agentes</span><span class="tag tag-code">tool-use</span></div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       ÁREA 6 — ALGORITMOS GENÉTICOS
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="track">
+    <div class="track-label ga-label">â— Área 7 — Algoritmos Genéticos</div>
+    <div class="track-header">
+      <div class="track-title">Computación Evolutiva</div>
+      <div class="track-desc">Optimización inspirada en la selección natural. Poblaciones, mutación, cruce y fitness. Sin gradientes.</div>
+    </div>
+    <div class="modules-grid">
+      <a href="33_ga_fundamentos.html" class="module-card card-ga">
+        <div class="card-num">33</div>
+        <div class="card-body">
+          <div class="card-title">Fundamentos: Cromosomas, Fitness &amp; Selección</div>
+          <div class="card-desc">Representación binaria y real, función de aptitud, ruleta y torneo. Demo: evolución en tiempo real sobre una función.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-bio">evolutivo</span></div>
+      </a>
+      <a href="34_ga_operadores.html" class="module-card card-ga">
+        <div class="card-num">34</div>
+        <div class="card-body">
+          <div class="card-title">Operadores: Cruce, Mutación &amp; Elitismo</div>
+          <div class="card-desc">Single/multi-point crossover, tasa de mutación, elitismo. Demo: observá cómo los genes se mezclan generación a generación.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-bio">evolutivo</span></div>
+      </a>
+      <a href="35_ga_aplicaciones.html" class="module-card card-ga">
+        <div class="card-num">35</div>
+        <div class="card-body">
+          <div class="card-title">Aplicaciones: TSP, Neuroevolución &amp; NEAT</div>
+          <div class="card-desc">Traveling Salesman Problem, evolución de pesos neurales, topología adaptativa. Demo: GA resolviendo el TSP.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-bio">aplicado</span></div>
+      </a>
+      <a href="36_ga_vs_gradiente.html" class="module-card card-ga">
+        <div class="card-num">36</div>
+        <div class="card-body">
+          <div class="card-title">GA vs. Gradiente &amp; Espacios No Diferenciables</div>
+          <div class="card-desc">Cuándo usar evolución vs. backprop, paisajes de fitness rugosos, black-box optimization.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-math">comparativa</span><span class="tag tag-bio">teoría</span></div>
+      </a>
+      <a href="37_ga_neat.html" class="module-card card-ga">
+        <div class="card-num">37</div>
+        <div class="card-body">
+          <div class="card-title">Neuroevolución: Topologías NEAT</div>
+          <div class="card-desc">Redes neuronales que crecen nodos y conexiones. Demo: Evolución estructural de una red.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-bio">evolutivo</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       ÁREA 7 — COMPUTACIÓN CUÁNTICA
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <div class="track">
+    <div class="track-label qc-label">â— Área 8 — Computación Cuántica</div>
+    <div class="track-header">
+      <div class="track-title">Quantum Computing &amp; QML</div>
+      <div class="track-desc">Qubits, puertas cuánticas, algoritmos cuánticos y su intersección con el machine learning.</div>
+    </div>
+    <div class="modules-grid">
+      <a href="38_qc_fundamentos.html" class="module-card card-qc">
+        <div class="card-num">38</div>
+        <div class="card-body">
+          <div class="card-title">Qubits, Superposición &amp; Entrelazamiento</div>
+          <div class="card-desc">Esfera de Bloch, braket notation $|\psi\rangle$, superposición y entrelazamiento EPR. Demo: qubit interactivo en esfera de Bloch.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-quantum">cuántico</span></div>
+      </a>
+      <a href="39_qc_puertas.html" class="module-card card-qc">
+        <div class="card-num">39</div>
+        <div class="card-body">
+          <div class="card-title">Puertas Cuánticas &amp; Circuitos</div>
+          <div class="card-desc">Hadamard, CNOT, Pauli X/Y/Z, matrices unitarias, reversibilidad. Demo: constructor de circuitos cuánticos.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">álgebra</span></div>
+      </a>
+      <a href="40_qc_entrelazamiento.html" class="module-card card-qc">
+        <div class="card-num">40</div>
+        <div class="card-body">
+          <div class="card-title">Entrelazamiento &amp; Estados de Bell</div>
+          <div class="card-desc">Sistemas multi-qubit, puertas CNOT y acción a distancia. Demo: Circuito cuántico de 2 Qubits.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-quantum">cuántico</span></div>
+      </a>
+      <a href="41_qc_algoritmos.html" class="module-card card-qc">
+        <div class="card-num">41</div>
+        <div class="card-body">
+          <div class="card-title">Algoritmos Cuánticos: Grover &amp; Shor</div>
+          <div class="card-desc">Búsqueda cuántica $O(\sqrt{N})$, factorización en tiempo polinomial, QFT. Implicaciones para criptografía.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-quantum">cuántico</span><span class="tag tag-math">algoritmos</span></div>
+      </a>
+      <a href="42_qc_qml.html" class="module-card card-qc">
+        <div class="card-num">42</div>
+        <div class="card-body">
+          <div class="card-title">Quantum Machine Learning (QML)</div>
+          <div class="card-desc">Variational quantum circuits, quantum kernels, VQE, QAOA. La frontera entre QC y ML clásico.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-quantum">cuántico</span><span class="tag tag-math">avanzado</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       ÁREA 9 — NEUROCIENCIA COMPUTACIONAL
+  ══════════════════════════════════════ -->
+  <div class="track">
+    <div class="track-label bio-label" style="color: #9c27b0;">● Área 9 — Neurociencia Computacional</div>
+    <div class="track-header">
+      <div class="track-title">IA Bioinspirada</div>
+      <div class="track-desc">Modelos que replican la arquitectura real del cerebro humano. Redes pulsantes, tálamo e hipocampo.</div>
+    </div>
+    <div class="modules-grid">
+      <a href="43_bio_snn.html" class="module-card" style="border-left-color: #9c27b0;">
+        <div class="card-num">43</div>
+        <div class="card-body">
+          <div class="card-title">Redes Neuronales Pulsantes (SNN)</div>
+          <div class="card-desc">El modelo LIF (Leaky Integrate-and-Fire). Demo: Inyecta corriente a una neurona y observa los "spikes".</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">interactivo</span><span class="tag tag-bio" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">bio</span></div>
+      </a>
+      <a href="44_bio_corteza.html" class="module-card" style="border-left-color: #9c27b0;">
+        <div class="card-num">44</div>
+        <div class="card-body">
+          <div class="card-title">Jerarquía Cortical y Microcolumnas</div>
+          <div class="card-desc">Capas L4, L2/3, L5 y flujo V1→IT→PFC. Demo: Flujo jerárquico visual.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">visual</span><span class="tag tag-bio" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">bio</span></div>
+      </a>
+      <a href="45_bio_talamo.html" class="module-card" style="border-left-color: #9c27b0;">
+        <div class="card-num">45</div>
+        <div class="card-body">
+          <div class="card-title">Tálamo y Atención Selectiva</div>
+          <div class="card-desc">Núcleos LGN y TRN como filtro de información. Demo: Gating atencional de estímulos sensoriales.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">interactivo</span><span class="tag tag-bio" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">bio</span></div>
+      </a>
+      <a href="46_bio_hipocampo.html" class="module-card" style="border-left-color: #9c27b0;">
+        <div class="card-num">46</div>
+        <div class="card-body">
+          <div class="card-title">Hipocampo y Memoria Episódica</div>
+          <div class="card-desc">Separación (DG) y Completación (CA3) de patrones. Demo: Recuperación de memoria con claves parciales.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-interactive" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">interactivo</span><span class="tag tag-bio" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">bio</span></div>
+      </a>
+      <a href="47_bio_neocortex.html" class="module-card" style="border-left-color: #9c27b0;">
+        <div class="card-num">47</div>
+        <div class="card-body">
+          <div class="card-title">Neocórtex y Consolidación (Sueño)</div>
+          <div class="card-desc">Transferencia de memorias del Hipocampo al Neocórtex a largo plazo (Replay nocturno). Demo: Consolidación offline a base de datos.</div>
+        </div>
+        <div class="card-tags"><span class="tag tag-visual" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">visual</span><span class="tag tag-bio" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">bio</span></div>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+  <!-- ── FOOTER ── -->
+  <footer class="page-footer">
+    <p>47 módulos · cada HTML es autocontenido y funciona offline</p>
+    <a href="01_gofai_sistemas_expertos.html">Comenzar con Módulo 01 →</a>
+  </footer>
+
+</div>
+</body>
+</html>
+
+

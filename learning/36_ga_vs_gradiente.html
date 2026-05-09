@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — GA vs Gradiente</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* GA Theme */
+      --accent:         #2e7d7d; 
+      --accent-hover:   #1f5c5c;
+      --accent-bg:      rgba(46,125,125,0.08);
+      --accent-border:  rgba(46,125,125,0.25);
+      --tag-ga:         #2e7d7d;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-ga { color:var(--tag-ga); border-color:var(--tag-ga); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* TABLE */
+    table { width:100%; max-width:700px; border-collapse:collapse; font-size:0.875rem; margin:1.5rem 0; background: var(--bg-raised); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); }
+    th { font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); text-align:left; padding:0.8rem 1.2rem; border-bottom:1px solid var(--border-default); background: var(--bg-overlay); }
+    td { padding:0.8rem 1.2rem; border-bottom:1px solid var(--border-subtle); color:var(--text-secondary); vertical-align:top; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:var(--accent-bg); }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .demo-layout .canvas-wrapper { flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.5rem; background: var(--bg-surface); }
+    .demo-layout canvas { width: 100%; height: auto; border-radius: var(--radius-sm); }
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+    
+    .btn-red { background: #d32f2f; border-color: #d32f2f; color: #fff; }
+    .btn-red:hover { background: #b71c1c; border-color: #b71c1c; color: #fff; }
+
+    .demo-controls-bar { display: flex; gap: 1.5rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); justify-content: center; flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 7 — Genéticos</a><span class="sep">›</span>
+    <span class="current">Módulo 36 · GA vs Gradiente</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-ga">● GA · Módulo 36</span>
+    <h1 class="module-title">GA vs Gradiente &<br>Espacios No Diferenciables</h1>
+    <p class="module-subtitle">Dos filosofías opuestas para optimizar. ¿Cuándo usar el cálculo infinitesimal y cuándo confiar en el caos darwiniano?</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Genéticos</span>
+      <span><strong>Duración</strong> ~10 min</span>
+      <span><strong>Prerrequisitos</strong> Backpropagation, GA</span>
+    </div>
+  </header>
+
+  <section class="section fade-up d1">
+    <div class="section-label">El Paisaje de Fitness</div>
+    <h2 class="section-title">El problema del Terreno</h2>
+    <p>Piensa en la optimización como un excursionista vendado buscando el punto más bajo (o alto) de una montaña.</p>
+    <p>El <strong>Descenso de Gradiente</strong> (Backpropagation) siente la pendiente debajo de sus pies y da un paso cuesta abajo. Es increíblemente rápido, pero si la montaña tiene muchos pozos falsos (mínimos locales) o "escalones" planos (donde no hay pendiente), el excursionista se atascará para siempre.</p>
+    <p>Los <strong>Algoritmos Genéticos</strong> son como lanzar 1,000 paracaidistas ciegos sobre la cordillera. Los que caen más alto sobreviven y se agrupan. No les importa si el terreno es empinado o plano, y rara vez se atascan en un pozo falso porque abarcan todo el mapa a la vez.</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Escape de Mínimos Locales</h2>
+    <p>En este terreno rugoso, el objetivo es encontrar el <strong>valle más profundo (Mínimo Global)</strong>.</p>
+    <p>Prueba usar el <strong>Gradiente</strong>: lanzará una única bola en un punto al azar que rodará cuesta abajo. Frecuentemente se quedará atascada en un mínimo local. Luego prueba usar <strong>GA</strong>: lanzará una población que mutará hasta descubrir el fondo real.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Paisaje de Pérdida Rugoso</span>
+        <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted);" id="lbl-status">Esperando...</span>
+      </div>
+
+      <div class="demo-layout">
+        <div class="canvas-wrapper">
+          <canvas id="canvas-comp" width="600" height="250"></canvas>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <button id="btn-grad" class="btn btn-red">▶ Lanzar Gradiente (Rojo)</button>
+        <button id="btn-ga" class="btn-primary">▶ Lanzar Genético (Verde)</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section fade-up d3">
+    <div class="section-label">Comparativa Directa</div>
+    <h2 class="section-title">Cuándo elegir cada uno</h2>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Característica</th>
+          <th>Descenso de Gradiente (DL)</th>
+          <th>Algoritmos Genéticos (GA)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Función Objetivo</strong></td>
+          <td>Debe ser suave y diferenciable (matemática continua).</td>
+          <td>Puede ser discontinua, binaria, cajas negras (Black-box).</td>
+        </tr>
+        <tr>
+          <td><strong>Velocidad</strong></td>
+          <td>Extremadamente rápido y eficiente.</td>
+          <td>Lento, requiere miles de evaluaciones completas.</td>
+        </tr>
+        <tr>
+          <td><strong>Escalabilidad</strong></td>
+          <td>Puede optimizar Billones de parámetros (GPT-4).</td>
+          <td>Solo funciona bien para miles o decenas de miles de parámetros.</td>
+        </tr>
+        <tr>
+          <td><strong>Mínimos Locales</strong></td>
+          <td>Vulnerable (aunque el momentum ayuda).</td>
+          <td>Muy robusto, explora globalmente por la mutación.</td>
+        </tr>
+        <tr>
+          <td><strong>Casos de Uso Ideales</strong></td>
+          <td>Imágenes, Texto, Reconocimiento de Voz, Transformers.</td>
+          <td>Logística, Topologías de Red (NEAT), Juegos sin reglas matemáticas.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section fade-up d4">
+    <div class="section-label">Conclusión</div>
+    <h2 class="section-title">La Supremacía del Gradiente</h2>
+    <p>En el Machine Learning moderno, el Descenso de Gradiente ganó la guerra sin discusión. Las arquitecturas modernas (CNN, Transformers) están diseñadas específicamente para ser 100% diferenciables, porque el gradiente te dice <em>exactamente</em> cómo cambiar cada peso para mejorar, en lugar de adivinar al azar como lo hace una mutación.</p>
+    <p>Sin embargo, en robótica industrial, problemas de enrutamiento y búsquedas de arquitectura neuronal, los GAs siguen siendo insustituibles.</p>
+  </section>
+
+  <nav class="module-nav">
+    <a href="35_ga_aplicaciones.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="37_ga_neat.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: GRADIENT VS GA SIMULATOR
+══════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('canvas-comp');
+  const ctx = canvas.getContext('2d');
+  const lblStatus = document.getElementById('lbl-status');
+  
+  let animId = null;
+  let mode = null; // 'grad' or 'ga'
+  
+  // The rugged landscape function (minimization problem)
+  // Domain: 0 to 100
+  function f(x) {
+    let nx = x / 100; // 0 to 1
+    // Parabola base + multiple sine waves
+    let base = 8 * Math.pow(nx - 0.7, 2); // global min around 70
+    let noise = 0.5 * Math.sin(nx * Math.PI * 14) + 0.3 * Math.cos(nx * Math.PI * 27);
+    return base + noise + 1; // shift up
+  }
+
+  // Numerical derivative
+  function df(x) {
+    const h = 0.01;
+    return (f(x + h) - f(x - h)) / (2 * h);
+  }
+
+  // --- GRADIENT STATE ---
+  let gradX = 0;
+  let gradVelocity = 0;
+  let gradStuckCount = 0;
+
+  // --- GA STATE ---
+  let pop = [];
+  let generation = 0;
+
+  function initGrad() {
+    cancelAnimationFrame(animId);
+    mode = 'grad';
+    gradX = Math.random() * 40 + 5; // Spawn somewhere on the left
+    gradVelocity = 0;
+    gradStuckCount = 0;
+    lblStatus.textContent = "Gradiente: Descendiendo...";
+    loop();
+  }
+
+  function initGA() {
+    cancelAnimationFrame(animId);
+    mode = 'ga';
+    pop = [];
+    generation = 0;
+    for(let i=0; i<20; i++) {
+      pop.push(Math.random() * 100);
+    }
+    lblStatus.textContent = "Genético: Generación 0";
+    loop();
+  }
+
+  function loop() {
+    update();
+    draw();
+    animId = requestAnimationFrame(loop);
+  }
+
+  function update() {
+    if (mode === 'grad') {
+      // Gradient Descent with simple momentum
+      let grad = df(gradX);
+      const lr = 2.0;
+      const momentum = 0.5; // low momentum to easily get stuck
+      
+      gradVelocity = momentum * gradVelocity - lr * grad;
+      gradX += gradVelocity;
+      
+      // bounds
+      gradX = Math.max(0, Math.min(100, gradX));
+      
+      // Check if stuck
+      if (Math.abs(gradVelocity) < 0.001) {
+        gradStuckCount++;
+      } else {
+        gradStuckCount = 0;
+      }
+      
+      if (gradStuckCount > 30) {
+        // Stop
+        if (gradX > 60 && gradX < 80) {
+          lblStatus.textContent = "Gradiente: ¡Encontró el Mínimo Global!";
+        } else {
+          lblStatus.textContent = "Gradiente: ¡Atascado en Mínimo Local!";
+        }
+        cancelAnimationFrame(animId);
+      }
+
+    } else if (mode === 'ga') {
+      // Slow down generation rate for visual
+      if (generation > 50) {
+        lblStatus.textContent = "Genético: Convergencia en Mínimo Global";
+        cancelAnimationFrame(animId);
+        return;
+      }
+      
+      // Evaluate
+      let scored = pop.map(x => ({ x, score: f(x) })); // Minimization!
+      scored.sort((a,b) => a.score - b.score);
+      
+      // Elitism
+      let nextPop = [scored[0].x, scored[1].x];
+      
+      // Roulette / Tournament (simplified)
+      while(nextPop.length < 20) {
+        // Pick best of 3 random
+        let p1 = pop[Math.floor(Math.random()*20)];
+        let p2 = pop[Math.floor(Math.random()*20)];
+        let p3 = pop[Math.floor(Math.random()*20)];
+        
+        let parent = p1;
+        if (f(p2) < f(parent)) parent = p2;
+        if (f(p3) < f(parent)) parent = p3;
+        
+        // Mutate
+        let child = parent + (Math.random() - 0.5) * 15; // wide mutation
+        child = Math.max(0, Math.min(100, child));
+        nextPop.push(child);
+      }
+      
+      pop = nextPop;
+      generation++;
+      lblStatus.textContent = `Genético: Generación ${generation}`;
+    }
+  }
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = 250;
+    draw();
+  }
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Landscape
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim();
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    const maxY = 4; // visual scaling
+    
+    for (let x = 0; x <= 100; x++) {
+      const px = (x / 100) * W;
+      const y = f(x);
+      const py = H - (y / maxY) * H * 0.9 - 10;
+      
+      if (x === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Fill under landscape
+    ctx.lineTo(W, H); ctx.lineTo(0, H);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-overlay').trim();
+    ctx.fill();
+
+    // Draw entities
+    if (mode === 'grad') {
+      const px = (gradX / 100) * W;
+      const py = H - (f(gradX) / maxY) * H * 0.9 - 10;
+      
+      ctx.beginPath();
+      ctx.arc(px, py, 7, 0, Math.PI*2);
+      ctx.fillStyle = '#d32f2f'; // Red
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (mode === 'ga') {
+      const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      pop.forEach(x => {
+        const px = (x / 100) * W;
+        const py = H - (f(x) / maxY) * H * 0.9 - 10;
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI*2);
+        ctx.fillStyle = accent; // Greenish
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+    }
+  }
+
+  document.getElementById('btn-grad').addEventListener('click', initGrad);
+  document.getElementById('btn-ga').addEventListener('click', initGA);
+
+  window.addEventListener('resize', resize);
+  resize();
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Pretraining & RLHF</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* LLM Theme */
+      --accent:         #7b52a8; 
+      --accent-hover:   #644287;
+      --accent-bg:      rgba(123,82,168,0.08);
+      --accent-border:  rgba(123,82,168,0.25);
+      --tag-llm:        #7b52a8;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-llm { color:var(--tag-llm); border-color:var(--tag-llm); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; flex-direction: column; gap: 1rem; }
+    
+    /* Pipeline UI */
+    .pipeline-tabs { display:flex; border-bottom: 1px solid var(--border-subtle); }
+    .tab { flex:1; text-align:center; padding: 0.75rem; font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; background: var(--accent-bg); }
+
+    .chat-box { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; min-height: 150px; font-family: var(--font-sans); }
+    .chat-prompt { font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px dashed var(--border-default); }
+    .chat-response { color: var(--text-secondary); line-height: 1.6; }
+    .response-meta { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-faint); margin-top: 1rem; text-transform: uppercase; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 6 — LLMs</a><span class="sep">›</span>
+    <span class="current">Módulo 27 · Pretraining</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-llm">● LLM · Módulo 27</span>
+    <h1 class="module-title">Pretraining, Fine-tuning & RLHF</h1>
+    <p class="module-subtitle">El ciclo de vida completo de un LLM moderno. Cómo pasamos de un "completador de texto" estadístico bruto a un Asistente pulido y seguro.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> LLMs</span>
+      <span><strong>Duración</strong> ~25 min</span>
+      <span><strong>Prerrequisitos</strong> Transformer</span>
+    </div>
+  </header>
+
+  <section class="section fade-up d1">
+    <div class="section-label">Fase 1: Pretraining</div>
+    <h2 class="section-title">El Modelo Base (Pretraining)</h2>
+    <p>Entrenamos al Transformer con una tarea absurdamente simple: <strong>Predecir el próximo token</strong>. Le damos 10 billones de páginas de internet, Wikipedia y código. Al obligarlo a predecir la siguiente palabra millones de veces (minimizando el Cross-Entropy Loss), el modelo se ve forzado a aprender sintaxis, lógica, física, programación y hechos del mundo para mejorar sus predicciones.</p>
+    <p>El resultado es el "Modelo Base". Es extremadamente inteligente, pero <strong>no es un asistente</strong>. Si le decís "Escribe un poema", puede responder completando el texto con "y una canción" o "¿Qué es un poema?", porque así es como se ve el texto en internet.</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">Fase 2 y 3: Alineación</div>
+    <h2 class="section-title">Supervised Fine-Tuning (SFT) & RLHF</h2>
+    <p>Para convertir al modelo base en ChatGPT, usamos <strong>SFT (Instruction Tuning)</strong>. Contratamos humanos para escribir miles de pares perfectos de (Instrucción $\to$ Respuesta). El modelo aprende el "formato" de ser un asistente útil.</p>
+    <p>Finalmente, aplicamos <strong>RLHF (Reinforcement Learning from Human Feedback)</strong>. El modelo genera 4 respuestas diferentes, y un humano las rankea de mejor a peor. Entrenamos un "Reward Model" que aprende los gustos humanos (sin toxicidad, seguro, útil) y usamos algoritmos de RL (como PPO) para que el LLM maximice esa recompensa matemática.</p>
+  </section>
+
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">El Pipeline de Alineación</h2>
+    <p>Observá cómo cambia la respuesta generada ante el mismo prompt según la fase de entrenamiento en la que se encuentre el modelo.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Simulador de Respuestas</span>
+      </div>
+
+      <div class="demo-layout">
+        <div class="pipeline-tabs">
+          <div class="tab active" data-stage="base">1. Base Model</div>
+          <div class="tab" data-stage="sft">2. SFT (Asistente)</div>
+          <div class="tab" data-stage="rlhf">3. RLHF (Alineado)</div>
+        </div>
+        
+        <div class="chat-box">
+          <div class="chat-prompt">User: Explícame cómo hackear la cuenta de Facebook de mi vecino.</div>
+          <div class="chat-response" id="chat-res">
+            ...cómo hackear la cuenta de Instagram de tu ex. Las 10 mejores herramientas de hacking en 2021. Foros de Kali Linux. (El modelo simplemente continúa el texto como si fuera un foro de internet).
+          </div>
+          <div class="response-meta" id="chat-meta">Completación Causal Estadística (Internet bruto)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="26_llm_tokenizacion.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="28_llm_generacion.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: PIPELINE SIMULATOR
+══════════════════════════════════════════════ */
+(function() {
+  const tabs = document.querySelectorAll('.tab');
+  const responseBox = document.getElementById('chat-res');
+  const metaBox = document.getElementById('chat-meta');
+
+  const content = {
+    base: {
+      text: "...cómo hackear la cuenta de Instagram de tu ex. Las 10 mejores herramientas de hacking en 2021. Foros de Kali Linux. ¿Alguien tiene un tutorial para usar Phishing?",
+      meta: "Completación Causal Estadística (Internet bruto)"
+    },
+    sft: {
+      text: "Para hackear una cuenta de Facebook, el método más común es usar un ataque de Phishing. Tienes que crear una página falsa idéntica al login de Facebook, enviarle el link a tu vecino y esperar a que introduzca sus credenciales. Otra opción es un Keylogger...",
+      meta: "Asistente Útil (Pero sin filtros éticos ni seguridad)"
+    },
+    rlhf: {
+      text: "Lo siento, pero no puedo ayudarte con eso. Como modelo de IA, estoy programado para ser útil e inofensivo, y no puedo proporcionar instrucciones, métodos o asistencia para acceder sin autorización a las cuentas de terceros, ya que es ilegal y viola la privacidad.",
+      meta: "Asistente Seguro y Alineado (RL PPO Maximizing Human Reward)"
+    }
+  };
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Remove active from all
+      tabs.forEach(t => t.classList.remove('active'));
+      // Add active to current
+      tab.classList.add('active');
+      
+      // Update content
+      const stage = tab.getAttribute('data-stage');
+      
+      // Typewriter effect
+      responseBox.textContent = '';
+      metaBox.textContent = content[stage].meta;
+      
+      let i = 0;
+      const textToType = content[stage].text;
+      
+      function typeChar() {
+        if (i < textToType.length) {
+          responseBox.textContent += textToType.charAt(i);
+          i++;
+          setTimeout(typeChar, 10); // fast typing
+        }
+      }
+      typeChar();
+    });
+  });
+
+})();
+</script>
+</body>
+</html>

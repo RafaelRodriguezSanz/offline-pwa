@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Puertas Cuánticas</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* QC Theme */
+      --accent:         #1a5fa0; 
+      --accent-hover:   #134575;
+      --accent-bg:      rgba(26,95,160,0.08);
+      --accent-border:  rgba(26,95,160,0.25);
+      --tag-qc:         #1a5fa0;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-qc { color:var(--tag-qc); border-color:var(--tag-qc); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* MATH */
+    .math-block { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:1.4rem 2rem; margin:1.5rem 0; overflow-x:auto; text-align:center; box-shadow:var(--shadow-sm); }
+    .math-block .math-label { font-family:var(--font-mono); font-size:0.66rem; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.75rem; text-align:left; }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; flex-direction: column; gap: 1.5rem; }
+    
+    .circuit-line { display: flex; align-items: center; gap: 10px; background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 1rem; border-radius: var(--radius-md); overflow-x: auto; min-height: 80px;}
+    .circuit-qubit-lbl { font-family: var(--font-mono); font-size: 0.9rem; font-weight: bold; color: var(--text-secondary); margin-right: 10px; }
+    .gate { width: 40px; height: 40px; background: var(--bg-raised); border: 2px solid var(--accent); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: bold; color: var(--accent); position: relative; z-index: 2; box-shadow: var(--shadow-sm); }
+    .wire { flex: 1; height: 2px; background: var(--border-strong); position: absolute; left: 0; right: 0; z-index: 1; }
+    .circuit-wrapper { position: relative; display: flex; align-items: center; gap: 15px; flex: 1; }
+
+    .state-vector { font-family: var(--font-mono); background: var(--bg-raised); border: 1px solid var(--border-default); padding: 1rem; border-radius: var(--radius-sm); font-size: 0.9rem; text-align: center; }
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .demo-controls-bar { display: flex; gap: 0.5rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 8 — Cuántica</a><span class="sep">›</span>
+    <span class="current">Módulo 39 · Puertas Cuánticas</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-qc">● QC · Módulo 39</span>
+    <h1 class="module-title">Puertas Cuánticas & Circuitos</h1>
+    <p class="module-subtitle">No hay compuertas AND u OR. En la cuántica todo son multiplicaciones de matrices unitarias reversibles.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Cuántica</span>
+      <span><strong>Duración</strong> ~20 min</span>
+      <span><strong>Prerrequisitos</strong> Vectores y Matrices</span>
+    </div>
+  </header>
+
+  <section class="section fade-up d1">
+    <div class="section-label">Matemática Unitaria</div>
+    <h2 class="section-title">El fin de la Destrucción de Información</h2>
+    <p>En una computadora normal, si aplicas un AND(1, 0) = 0. Luego, viendo el resultado '0', no puedes saber cuáles fueron los inputs. Se destruyó información (lo cual genera calor, límite de Landauer).</p>
+    <p>En computación cuántica, las operaciones sobre el vector de estado se realizan multiplicándolo por matrices "Unitarias". Una propiedad fundamental de las matrices unitarias es que siempre son reversibles. La información nunca se pierde.</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">Puertas Fundamentales</div>
+    <h2 class="section-title">H, X y Z</h2>
+    <ul>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem"><strong>Puerta Pauli-X:</strong> El equivalente al NOT clásico. Da vuelta la esfera 180° sobre el eje X. Convierte $|0\rangle \to |1\rangle$.</li>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem"><strong>Puerta Hadamard (H):</strong> La puerta más importante. Toma un estado base (ej. $|0\rangle$) y lo pone en superposición perfecta (50% de probabilidad de ser 0 y 50% de ser 1).</li>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem"><strong>Puerta Pauli-Z:</strong> Un cambio de fase. No altera las probabilidades de medición, pero le da un signo negativo a la parte de $|1\rangle$. Crucial para las interferencias algorítmicas.</li>
+    </ul>
+  </section>
+
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Constructor de Circuito</h2>
+    <p>Comienza con un qubit en estado $|0\rangle$. Agrega puertas en secuencia y observa cómo se actualiza la matemática del vector de estado. (Intenta agregar 'H' para crear superposición, y luego otra 'H' para ver cómo es reversible).</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Simulador de 1 Qubit</span>
+        <button id="btn-reset">↺ Borrar</button>
+      </div>
+
+      <div class="demo-layout">
+        <div class="circuit-line">
+          <div class="circuit-qubit-lbl">q_0 |0⟩</div>
+          <div class="circuit-wrapper" id="circuit-wire">
+            <div class="wire"></div>
+            <!-- Gates will be appended here -->
+          </div>
+        </div>
+        
+        <div class="state-vector" id="state-display">
+          $|\psi\rangle = 1.00|0\rangle + 0.00|1\rangle$
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); margin-right:1rem;">Agregar Puerta:</span>
+        <button class="btn-primary" onclick="addGate('H')">H (Hadamard)</button>
+        <button class="btn-primary" onclick="addGate('X')">X (NOT)</button>
+        <button class="btn-primary" onclick="addGate('Z')">Z (Fase)</button>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="38_qc_fundamentos.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="40_qc_entrelazamiento.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: QUANTUM CIRCUIT (1 QUBIT)
+══════════════════════════════════════════════ */
+// Using simple math for 1 qubit. State vector: [alpha, beta]
+let state = [1, 0]; 
+const wire = document.getElementById('circuit-wire');
+const display = document.getElementById('state-display');
+
+// Matrices
+const matX = [[0, 1], [1, 0]];
+const matZ = [[1, 0], [0, -1]];
+const s2 = 1 / Math.sqrt(2);
+const matH = [[s2, s2], [s2, -s2]];
+
+function multiply(mat, vec) {
+  return [
+    mat[0][0]*vec[0] + mat[0][1]*vec[1],
+    mat[1][0]*vec[0] + mat[1][1]*vec[1]
+  ];
+}
+
+window.addGate = function(type) {
+  // Add visual
+  const g = document.createElement('div');
+  g.className = 'gate';
+  g.textContent = type;
+  wire.appendChild(g);
+  
+  // Math
+  if(type === 'X') state = multiply(matX, state);
+  if(type === 'Z') state = multiply(matZ, state);
+  if(type === 'H') state = multiply(matH, state);
+  
+  updateDisplay();
+};
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  wire.innerHTML = '<div class="wire"></div>';
+  state = [1, 0];
+  updateDisplay();
+});
+
+function updateDisplay() {
+  const a = state[0];
+  const b = state[1];
+  
+  // Format nicely (handle -0 and tiny floating errors)
+  const formatA = Math.abs(a) < 1e-10 ? "0.00" : a.toFixed(2);
+  let formatB = Math.abs(b) < 1e-10 ? "0.00" : b.toFixed(2);
+  
+  let sign = "+";
+  if (formatB.startsWith("-")) {
+    sign = "-";
+    formatB = formatB.substring(1);
+  }
+  
+  // We use KaTeX re-render (hacky way for dynamic katex without heavy re-parsing)
+  // Instead of full katex render, just use simple text structure because it's fast
+  display.innerHTML = `|ψ⟩ = ${formatA}|0⟩ ${sign} ${formatB}|1⟩`;
+}
+
+// Init
+updateDisplay();
+
+</script>
+</body>
+</html>

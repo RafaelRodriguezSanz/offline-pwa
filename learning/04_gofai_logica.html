@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Módulo 03: Lógica de Primer Orden</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+  <style>
+    :root {
+      --bg-base:#f5f0eb; --bg-surface:#faf7f4; --bg-raised:#ffffff; --bg-overlay:#ede8e1;
+      --border-subtle:#e8e1d9; --border-default:#d9d0c7; --border-strong:#bfb5ab;
+      --text-primary:#1a1714; --text-secondary:#4a4540; --text-muted:#8c847c; --text-faint:#b8b0a8;
+      --accent:#c96442; --accent-hover:#b05838; --accent-bg:rgba(201,100,66,0.07); --accent-border:rgba(201,100,66,0.2);
+      --tag-gofai:#2a6496; --tag-ml:#3a7d44; --tag-nn:#c47c15; --tag-llm:#7b52a8;
+      --code-bg:#f0ebe4; --code-border:#ddd6ce; --code-text:#3a3530;
+      --shadow-sm:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:'Crimson Pro',Georgia,serif;
+      --font-mono:'Geist Mono','Fira Code',monospace;
+      --font-sans:'Geist',system-ui,sans-serif;
+      --transition:0.18s ease;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{font-size:16px;scroll-behavior:smooth;}
+    body{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-sans);font-size:0.9375rem;line-height:1.7;-webkit-font-smoothing:antialiased;}
+    ::selection{background:rgba(201,100,66,0.12);}
+    .page-wrapper{max-width:900px;margin:0 auto;padding:0 1.5rem 5rem;}
+
+    .topbar{display:flex;align-items:center;gap:0.5rem;padding:1.25rem 0 1rem;font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);letter-spacing:0.04em;border-bottom:1px solid var(--border-subtle);margin-bottom:2.5rem;}
+    .topbar a{color:var(--text-muted);text-decoration:none;transition:color var(--transition);font-size:1.1rem;}
+    .topbar a:hover{color:var(--text-secondary);}
+    .topbar .sep{color:var(--border-strong);}
+    .topbar .current{color:var(--text-secondary);}
+
+    .module-header{margin-bottom:2.5rem;}
+    .module-badge{display:inline-flex;align-items:center;gap:0.4rem;font-family:var(--font-mono);font-size:0.67rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.28em 0.75em;border-radius:999px;border:1px solid;margin-bottom:1rem;color:var(--tag-gofai);border-color:var(--tag-gofai);background:rgba(42,100,150,0.06);}
+    .module-title{font-family:var(--font-serif);font-size:clamp(1.75rem,4vw,2.6rem);line-height:1.2;margin-bottom:0.75rem;font-weight:400;letter-spacing:-0.01em;}
+    .module-subtitle{font-size:0.9375rem;color:var(--text-secondary);max-width:60ch;line-height:1.65;}
+    .module-meta{display:flex;gap:1.5rem;margin-top:1.25rem;flex-wrap:wrap;}
+    .module-meta span{font-family:var(--font-mono);font-size:0.68rem;color:var(--text-muted);letter-spacing:0.04em;}
+    .module-meta span strong{color:var(--text-secondary);font-weight:500;}
+
+    .section{margin-bottom:3rem;}
+    .section-label{font-family:var(--font-mono);font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:0.75rem;display:flex;align-items:center;gap:0.75rem;}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--border-subtle);}
+    .section-title{font-family:var(--font-serif);font-size:1.45rem;font-weight:400;margin-bottom:0.75rem;}
+
+    p{color:var(--text-secondary);margin-bottom:1rem;max-width:72ch;}
+    strong{color:var(--text-primary);font-weight:600;}
+    em{font-style:italic;}
+
+    .callout{border-left:2px solid;padding:0.9rem 1.2rem;border-radius:0 var(--radius-md) var(--radius-md) 0;margin:1.5rem 0;background:var(--bg-raised);box-shadow:var(--shadow-sm);}
+    .callout-key {border-color:var(--accent);background:var(--accent-bg);}
+    .callout-info{border-color:var(--tag-gofai);background:rgba(42,100,150,0.04);}
+    .callout-tip {border-color:var(--tag-ml);background:rgba(58,125,68,0.04);}
+    .callout-warn{border-color:var(--tag-nn);background:rgba(196,124,21,0.05);}
+    .callout-purple{border-color:var(--tag-llm);background:rgba(123,82,168,0.04);}
+    .callout-label{font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem;}
+    .callout-key    .callout-label{color:var(--accent);}
+    .callout-info   .callout-label{color:var(--tag-gofai);}
+    .callout-tip    .callout-label{color:var(--tag-ml);}
+    .callout-warn   .callout-label{color:var(--tag-nn);}
+    .callout-purple .callout-label{color:var(--tag-llm);}
+    .callout p{margin-bottom:0;}
+
+    pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:var(--radius-md);padding:1.2rem 1.4rem;overflow-x:auto;margin:1.5rem 0;font-family:var(--font-mono);font-size:0.8rem;line-height:1.65;color:var(--code-text);box-shadow:var(--shadow-sm);}
+    .code-header{display:flex;align-items:center;justify-content:space-between;background:var(--bg-overlay);border:1px solid var(--border-default);border-bottom:none;border-radius:var(--radius-md) var(--radius-md) 0 0;padding:0.45rem 1rem;font-family:var(--font-mono);font-size:0.68rem;color:var(--text-muted);margin-top:1.5rem;}
+    .code-header+pre{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;}
+    code{font-family:var(--font-mono);font-size:0.84em;background:var(--code-bg);padding:0.13em 0.42em;border-radius:4px;color:var(--accent);border:1px solid var(--code-border);}
+    pre code{background:none;padding:0;border:none;color:inherit;font-size:inherit;}
+
+    .math-block{background:var(--bg-raised);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:1.4rem 2rem;margin:1.5rem 0;overflow-x:auto;text-align:center;box-shadow:var(--shadow-sm);}
+    .math-block .math-label{font-family:var(--font-mono);font-size:0.66rem;color:var(--text-faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.75rem;text-align:left;}
+
+    table{width:100%;border-collapse:collapse;font-size:0.875rem;margin:1.5rem 0;}
+    th{font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:0.55rem 1rem;border-bottom:1px solid var(--border-default);}
+    td{padding:0.6rem 1rem;border-bottom:1px solid var(--border-subtle);color:var(--text-secondary);vertical-align:top;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:var(--bg-overlay);}
+
+    hr{border:none;border-top:1px solid var(--border-subtle);margin:2rem 0;}
+
+    /* ── SYNTAX HIGHLIGHT HELPERS ── */
+    .hl-pred   { color:#2a6496; }
+    .hl-var    { color:#7b52a8; }
+    .hl-const  { color:#c47c15; }
+    .hl-op     { color:#c96442; }
+    .hl-quant  { color:#3a7d44; font-style:italic; }
+    .hl-comment{ color:#a0a0a0; }
+    .hl-kw     { color:#2a6496; }
+
+    /* ── LOGIC FORMULA DISPLAY ── */
+    .formula-row {
+      display:flex; align-items:center; gap:1rem; flex-wrap:wrap;
+      background:var(--bg-raised); border:1px solid var(--border-subtle);
+      border-radius:var(--radius-md); padding:0.85rem 1.1rem; margin:0.4rem 0;
+      box-shadow:var(--shadow-sm); font-family:var(--font-mono); font-size:0.82rem;
+    }
+    .formula-row .tag {
+      font-size:0.62rem; letter-spacing:0.07em; text-transform:uppercase;
+      padding:0.2em 0.55em; border-radius:999px; border:1px solid; white-space:nowrap;
+    }
+    .tag-fact  { color:var(--tag-ml);    border-color:var(--tag-ml);    background:rgba(58,125,68,0.07);  }
+    .tag-rule  { color:var(--tag-gofai); border-color:var(--tag-gofai); background:rgba(42,100,150,0.07); }
+    .tag-query { color:var(--accent);    border-color:var(--accent);    background:var(--accent-bg);      }
+    .formula-row .expr { color:var(--text-primary); flex:1; }
+    .formula-row .desc { color:var(--text-faint); font-size:0.72rem; }
+
+    /* ── UNIFICATION DEMO ── */
+    .demo-container{background:var(--bg-raised);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:1.5rem;margin:1.5rem 0;box-shadow:var(--shadow-md);}
+    .demo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.75rem;}
+    .demo-title{font-family:var(--font-mono);font-size:0.73rem;color:var(--text-secondary);letter-spacing:0.04em;display:flex;align-items:center;gap:0.5rem;}
+    .demo-title::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent);}
+
+    .unif-grid {
+      display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.25rem;
+    }
+    @media(max-width:560px){ .unif-grid{grid-template-columns:1fr;} }
+
+    .unif-term {
+      background:var(--bg-surface); border:1px solid var(--border-default);
+      border-radius:var(--radius-md); padding:0.9rem 1rem;
+    }
+    .unif-term label {
+      font-family:var(--font-mono); font-size:0.64rem; letter-spacing:0.09em;
+      text-transform:uppercase; color:var(--text-faint); display:block; margin-bottom:0.4rem;
+    }
+    .unif-term input {
+      width:100%; font-family:var(--font-mono); font-size:0.85rem;
+      background:var(--bg-raised); border:1px solid var(--border-default);
+      border-radius:var(--radius-sm); padding:0.45rem 0.7rem; color:var(--text-primary);
+      outline:none; transition:border-color var(--transition);
+    }
+    .unif-term input:focus{ border-color:var(--tag-gofai); }
+
+    .unif-result {
+      font-family:var(--font-mono); font-size:0.82rem; line-height:1.8;
+      background:var(--bg-surface); border:1px solid var(--border-subtle);
+      border-radius:var(--radius-md); padding:1rem 1.1rem; min-height:6rem;
+    }
+    .unif-ok   { color:var(--tag-ml); }
+    .unif-fail { color:var(--accent); }
+    .unif-step { color:var(--tag-gofai); }
+    .unif-sub  { color:var(--tag-llm); }
+
+    /* ── PROLOG REPL ── */
+    .prolog-wrap {
+      background:var(--code-bg); border:1px solid var(--code-border);
+      border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-md); margin:1.5rem 0;
+    }
+    .prolog-topbar {
+      background:var(--bg-overlay); border-bottom:1px solid var(--code-border);
+      padding:0.5rem 1rem; display:flex; align-items:center; justify-content:space-between;
+    }
+    .prolog-topbar-label {
+      font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.06em;
+      display:flex; align-items:center; gap:0.5rem;
+    }
+    .prolog-topbar-label::before{ content:'●'; color:var(--tag-ml); font-size:0.55rem; }
+
+    .kb-section {
+      padding:0.9rem 1.1rem; border-bottom:1px solid var(--code-border);
+      font-family:var(--font-mono); font-size:0.78rem; line-height:1.75;
+    }
+    .kb-label { font-size:0.63rem; letter-spacing:0.09em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.5rem; }
+    .kb-facts  { margin-bottom:0.75rem; }
+
+    .repl-output {
+      padding:0.75rem 1.1rem; min-height:120px; max-height:220px; overflow-y:auto;
+      font-family:var(--font-mono); font-size:0.78rem; line-height:1.8; color:var(--code-text);
+    }
+    .repl-line-query   { color:var(--tag-gofai); }
+    .repl-line-ok      { color:var(--tag-ml); }
+    .repl-line-fail    { color:var(--accent); }
+    .repl-line-binding { color:var(--tag-llm); padding-left:1.2rem; }
+    .repl-line-info    { color:var(--text-faint); }
+
+    .repl-input-row {
+      display:flex; align-items:center; border-top:1px solid var(--code-border);
+      padding:0.6rem 1rem; gap:0.5rem;
+    }
+    .repl-prompt { font-family:var(--font-mono); font-size:0.82rem; color:var(--tag-gofai); flex-shrink:0; }
+    .repl-input {
+      flex:1; font-family:var(--font-mono); font-size:0.82rem;
+      background:transparent; border:none; outline:none; color:var(--text-primary);
+    }
+    .repl-run { font-family:var(--font-mono); font-size:0.7rem; padding:0.3em 0.8em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-muted); cursor:pointer; transition:all var(--transition); box-shadow:var(--shadow-sm); }
+    .repl-run:hover{ border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+
+    .preset-btns { display:flex; flex-wrap:wrap; gap:0.4rem; padding:0.6rem 1rem; border-top:1px solid var(--code-border); background:var(--bg-overlay); }
+    .preset-btn  { font-family:var(--font-mono); font-size:0.68rem; padding:0.28em 0.7em; border-radius:999px; border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-muted); cursor:pointer; transition:all var(--transition); }
+    .preset-btn:hover { border-color:var(--tag-gofai); color:var(--tag-gofai); background:rgba(42,100,150,0.06); }
+
+    /* ── RESOLUTION TREE ── */
+    .res-tree {
+      background:var(--bg-raised); border:1px solid var(--border-default);
+      border-radius:var(--radius-lg); padding:1.25rem 1.5rem; margin:1.5rem 0;
+      box-shadow:var(--shadow-md); overflow-x:auto;
+    }
+    #res-canvas { display:block; }
+
+    /* ── CONTROLS ── */
+    button,.btn{font-family:var(--font-mono);font-size:0.73rem;letter-spacing:0.03em;padding:0.42em 0.95em;border-radius:var(--radius-sm);border:1px solid var(--border-default);background:var(--bg-raised);color:var(--text-secondary);cursor:pointer;transition:all var(--transition);display:inline-flex;align-items:center;gap:0.4em;box-shadow:var(--shadow-sm);}
+    button:hover,.btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg);}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:#fff;}
+
+    .module-nav{display:flex;justify-content:space-between;align-items:center;padding:1.5rem 0;border-top:1px solid var(--border-subtle);margin-top:3rem;}
+    .module-nav a{font-family:var(--font-mono);font-size:0.73rem;color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:0.5rem;transition:color var(--transition);}
+    .module-nav a:hover{color:var(--text-primary);}
+
+    ::-webkit-scrollbar{width:5px;height:5px;}
+    ::-webkit-scrollbar-track{background:var(--bg-base);}
+    ::-webkit-scrollbar-thumb{background:var(--border-default);border-radius:999px;}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+    .fade-up{animation:fadeUp 0.4s ease forwards;}
+    .d1{animation-delay:0.05s;opacity:0;}.d2{animation-delay:0.14s;opacity:0;}.d3{animation-delay:0.23s;opacity:0;}.d4{animation-delay:0.32s;opacity:0;}.d5{animation-delay:0.40s;opacity:0;}
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <nav class="topbar">
+    <a href="../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="#">GOFAI</a><span class="sep">›</span>
+    <span class="current">Módulo 04 · Lógica</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge">● GOFAI · Módulo 4</span>
+    <h1 class="module-title">Lógica de Primer Orden<br>&amp; Resolución</h1>
+    <p class="module-subtitle">El lenguaje formal que usó la IA clásica para representar el conocimiento del mundo. Variables, cuantificadores, unificación y el algoritmo de resolución que hace posible Prolog.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> GOFAI</span>
+      <span><strong>Duración</strong> ~35 min</span>
+      <span><strong>Prerrequisitos</strong> Módulo 01 · Sistemas Expertos</span>
+      <span><strong>Año clave</strong> Robinson, 1965</span>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════
+       1. DE LA LÓGICA PROPOSICIONAL A FOL
+  ══════════════════════════ -->
+  <section class="section fade-up d1">
+    <div class="section-label">Motivación</div>
+    <h2 class="section-title">¿Por qué la lógica proposicional no alcanza?</h2>
+
+    <p>La <strong>lógica proposicional</strong> solo maneja hechos atómicos verdaderos o falsos: <em>"Sócrates es mortal"</em>. No puede expresar relaciones generales como <em>"todos los humanos son mortales"</em> sin enumerar cada caso. La <strong>Lógica de Primer Orden</strong> (FOL, First-Order Logic) introduce <strong>variables</strong>, <strong>predicados</strong> y <strong>cuantificadores</strong> para hablar de objetos y sus relaciones de forma general.</p>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Salto fundamental</div>
+      <p>Proposicional: <code>mortal_socrates = true</code> — hay que listar cada individuo.<br>
+      Primer Orden: $\forall x \; \text{Humano}(x) \implies \text{Mortal}(x)$ — una sola regla cubre todos los individuos posibles.</p>
+    </div>
+
+    <table>
+      <thead><tr><th>Característica</th><th>Proposicional</th><th>Primer Orden</th></tr></thead>
+      <tbody>
+        <tr><td>Objetos individuales</td><td style="color:var(--accent)">✗</td><td style="color:var(--tag-ml)">✓ Constantes</td></tr>
+        <tr><td>Variables sobre objetos</td><td style="color:var(--accent)">✗</td><td style="color:var(--tag-ml)">✓ $x, y, z$</td></tr>
+        <tr><td>Relaciones entre objetos</td><td style="color:var(--accent)">✗</td><td style="color:var(--tag-ml)">✓ Predicados $n$-arios</td></tr>
+        <tr><td>Cuantificación universal</td><td style="color:var(--accent)">✗</td><td style="color:var(--tag-ml)">✓ $\forall$</td></tr>
+        <tr><td>Cuantificación existencial</td><td style="color:var(--accent)">✗</td><td style="color:var(--tag-ml)">✓ $\exists$</td></tr>
+        <tr><td>Decidibilidad</td><td style="color:var(--tag-ml)">✓ Siempre</td><td style="color:var(--tag-nn)">Semidecidible</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ══════════════════════════
+       2. SINTAXIS DE FOL
+  ══════════════════════════ -->
+  <section class="section fade-up d2">
+    <div class="section-label">Sintaxis</div>
+    <h2 class="section-title">Los Componentes de FOL</h2>
+
+    <p>Una fórmula en Lógica de Primer Orden se construye a partir de <strong>términos</strong> y <strong>fórmulas atómicas</strong>, conectadas con operadores lógicos y cuantificadores.</p>
+
+    <div class="math-block">
+      <div class="math-label">Gramática (simplificada)</div>
+      $$\text{Término} ::= \text{constante} \mid \text{variable} \mid \text{función}(\text{término}_1, \ldots, \text{término}_n)$$
+      $$\text{Átomo} ::= \text{predicado}(\text{término}_1, \ldots, \text{término}_n)$$
+      $$\text{Fórmula} ::= \text{Átomo} \mid \lnot F \mid F_1 \land F_2 \mid F_1 \lor F_2 \mid F_1 \implies F_2 \mid \forall x\, F \mid \exists x\, F$$
+    </div>
+
+    <p>Los elementos clave son:</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin:1.25rem 0;">
+      <div class="formula-row"><span class="tag tag-fact">Constante</span><span class="expr"><span class="hl-const">socrates</span>, <span class="hl-const">platón</span>, <span class="hl-const">atenas</span></span><span class="desc">Individuos específicos</span></div>
+      <div class="formula-row"><span class="tag tag-rule">Variable</span><span class="expr"><span class="hl-var">X</span>, <span class="hl-var">Y</span>, <span class="hl-var">Z</span></span><span class="desc">Objetos genéricos</span></div>
+      <div class="formula-row"><span class="tag tag-fact">Predicado</span><span class="expr"><span class="hl-pred">Humano</span>(<span class="hl-var">X</span>)</span><span class="desc">Propiedad o relación</span></div>
+      <div class="formula-row"><span class="tag tag-rule">Función</span><span class="expr"><span class="hl-pred">padre_de</span>(<span class="hl-var">X</span>)</span><span class="desc">Mapea objetos a objetos</span></div>
+      <div class="formula-row"><span class="tag tag-query">∀ Universal</span><span class="expr"><span class="hl-quant">∀x</span> <span class="hl-pred">Humano</span>(<span class="hl-var">x</span>) <span class="hl-op">→</span> <span class="hl-pred">Mortal</span>(<span class="hl-var">x</span>)</span><span class="desc">Para todo x</span></div>
+      <div class="formula-row"><span class="tag tag-query">∃ Existencial</span><span class="expr"><span class="hl-quant">∃x</span> <span class="hl-pred">Filósofo</span>(<span class="hl-var">x</span>) <span class="hl-op">∧</span> <span class="hl-pred">Ateniense</span>(<span class="hl-var">x</span>)</span><span class="desc">Existe al menos un x</span></div>
+    </div>
+
+    <p>El argumento clásico de Sócrates escrito en FOL completo:</p>
+
+    <div class="math-block">
+      <div class="math-label">El silogismo de Sócrates en FOL</div>
+      $$\forall x \; [\text{Humano}(x) \implies \text{Mortal}(x)]$$
+      $$\text{Humano}(\text{sócrates})$$
+      $$\therefore \; \text{Mortal}(\text{sócrates})$$
+    </div>
+  </section>
+
+  <!-- ══════════════════════════
+       3. UNIFICACIÓN
+  ══════════════════════════ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Algoritmo central</div>
+    <h2 class="section-title">Unificación — El Motor de FOL</h2>
+
+    <p>La <strong>unificación</strong> es el proceso de encontrar una <em>sustitución</em> $\theta$ que haga que dos expresiones sean idénticas. Es el corazón del motor de inferencia: para aplicar una regla, hay que unificar su cabeza con el hecho en cuestión.</p>
+
+    <div class="math-block">
+      <div class="math-label">Definición de unificador</div>
+      $$\text{UNIFICAR}(p, q) = \theta \quad \text{tal que} \quad p\theta = q\theta$$
+      $$\text{donde } \theta = \{V_1 / t_1,\; V_2 / t_2,\; \ldots\} \text{ es una sustitución de variables por términos}$$
+    </div>
+
+    <p>El <strong>Unificador Más General</strong> (MGU) es la sustitución más simple posible — la que no compromete más variables de lo necesario.</p>
+
+    <div class="callout callout-info">
+      <div class="callout-label">Reglas de unificación (algoritmo de Robinson)</div>
+      <p>
+        <strong>1. Constante = Constante:</strong> unifica solo si son idénticas.<br>
+        <strong>2. Variable = Término:</strong> sustituir variable por término (si la variable no aparece en el término — <em>occur check</em>).<br>
+        <strong>3. Función = Función:</strong> unificar nombre y cada argumento recursivamente.<br>
+        <strong>4. Cualquier otra combinación:</strong> falla.
+      </p>
+    </div>
+
+    <h2 class="section-title" style="margin-top:2rem">Demo: Unificador Interactivo</h2>
+    <p>Ingresá dos términos en notación <code>predicado(arg1, arg2)</code>. Usá letras mayúsculas para variables. El motor calculará la sustitución $\theta$ paso a paso.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Algoritmo de Unificación de Robinson</span>
+        <button onclick="clearUnif()">↺ Limpiar</button>
+      </div>
+
+      <div class="unif-grid">
+        <div class="unif-term">
+          <label>Término 1</label>
+          <input id="term1" type="text" value="ama(X, julia)" placeholder="ej: padre(X, Y)" spellcheck="false"/>
+        </div>
+        <div class="unif-term">
+          <label>Término 2</label>
+          <input id="term2" type="text" value="ama(juan, Y)" placeholder="ej: padre(a, b)" spellcheck="false"/>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+        <button class="btn-primary" onclick="runUnify()">⚙ Unificar</button>
+      </div>
+
+      <div style="font-family:var(--font-mono);font-size:0.64rem;color:var(--text-faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem;">Resultado</div>
+      <div class="unif-result" id="unif-result">
+        <span style="color:var(--text-faint)">Presioná Unificar para ver el proceso paso a paso.</span>
+      </div>
+
+      <div style="margin-top:0.85rem;">
+        <div style="font-family:var(--font-mono);font-size:0.64rem;color:var(--text-faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;">Ejemplos rápidos</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
+          <button class="preset-btn" onclick="setTerms('f(X, b)', 'f(a, Y')">f(X,b) y f(a,Y)</button>
+          <button class="preset-btn" onclick="setTerms('padre(X, Y)', 'padre(adan, set)')">padre(X,Y) y padre(adan,set)</button>
+          <button class="preset-btn" onclick="setTerms('g(X, X)', 'g(a, b)')">g(X,X) y g(a,b) → falla</button>
+          <button class="preset-btn" onclick="setTerms('p(f(X), X)', 'p(f(b), b)')">p(f(X),X) y p(f(b),b)</button>
+          <button class="preset-btn" onclick="setTerms('likes(X, X)', 'likes(juan, juan)')">likes(X,X) y likes(juan,juan)</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-warn">
+      <div class="callout-label">Occur Check</div>
+      <p>El <em>occur check</em> impide sustituir una variable $X$ por un término que la contenga, como $X = f(X)$, lo que crearía una estructura infinita. Prolog estándar <strong>omite</strong> el occur check por eficiencia, lo que puede producir resultados incorrectos en casos patológicos. ISO Prolog provee <code>unify_with_occurs_check/2</code> para el caso estricto.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════
+       4. RESOLUCIÓN
+  ══════════════════════════ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Inferencia</div>
+    <h2 class="section-title">Resolución — De Cláusulas a Pruebas</h2>
+
+    <p>El <strong>principio de resolución</strong> de Robinson (1965) es una regla de inferencia que opera sobre cláusulas en <em>Forma Normal Conjuntiva</em> (CNF). Dadas dos cláusulas que contienen un literal y su negación, la resolución produce una nueva cláusula que las combina.</p>
+
+    <div class="math-block">
+      <div class="math-label">Regla de resolución</div>
+      $$\frac{(L \lor \alpha) \quad (\lnot L \lor \beta)}{(\alpha \lor \beta)}$$
+      $$\text{donde } L \text{ es un literal y } \alpha, \beta \text{ son disyunciones de literales}$$
+    </div>
+
+    <p>Para <strong>probar</strong> que una fórmula $\phi$ se deduce de una base de conocimiento $KB$, usamos <em>refutación</em>: agregamos $\lnot\phi$ a $KB$ y mostramos que el conjunto es <strong>insatisfacible</strong> (podemos derivar la cláusula vacía $\square$).</p>
+
+    <div class="math-block">
+      <div class="math-label">Prueba por refutación</div>
+      $$KB \models \phi \iff KB \cup \{\lnot\phi\} \text{ es insatisfacible}$$
+      $$KB \cup \{\lnot\phi\} \vdash_{Res} \square \implies KB \models \phi$$
+    </div>
+
+    <p>Ejemplo paso a paso: queremos probar que <em>Sócrates es mortal</em>.</p>
+
+    <div class="res-tree">
+      <div style="font-family:var(--font-mono);font-size:0.64rem;color:var(--text-faint);letter-spacing:0.09em;text-transform:uppercase;margin-bottom:1rem;">Árbol de resolución</div>
+      <canvas id="res-canvas" width="720" height="260"></canvas>
+    </div>
+
+    <div class="code-header"><span>resolución manual</span></div>
+<pre><code><span class="hl-comment">// Cláusulas iniciales (KB + negación de la meta):</span>
+<span class="hl-kw">C1:</span> ¬Humano(X)  ∨  Mortal(X)      <span class="hl-comment">// "todo humano es mortal"</span>
+<span class="hl-kw">C2:</span>  Humano(sócrates)              <span class="hl-comment">// hecho</span>
+<span class="hl-kw">C3:</span> ¬Mortal(sócrates)             <span class="hl-comment">// negación de la meta</span>
+
+<span class="hl-comment">// Paso 1: resolver C1 y C2 con θ = {X/sócrates}</span>
+<span class="hl-kw">C4:</span> Mortal(sócrates)              <span class="hl-comment">// resolvente</span>
+
+<span class="hl-comment">// Paso 2: resolver C4 y C3</span>
+<span class="hl-kw">C5:</span> □                             <span class="hl-comment">// cláusula vacía → refutación exitosa</span>
+
+<span class="hl-comment">// Conclusión: KB ⊨ Mortal(sócrates)  ✓</span></code></pre>
+  </section>
+
+  <!-- ══════════════════════════
+       5. PROLOG REPL
+  ══════════════════════════ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Demo interactiva</div>
+    <h2 class="section-title">Prolog — Motor de Inferencia en el Navegador</h2>
+
+    <p>Prolog (<em>PROgramming in LOGic</em>) implementa backward chaining sobre cláusulas de Horn. La base de conocimiento ya está cargada — escribí consultas en el prompt <code>?-</code> para interrogar al motor.</p>
+
+    <div class="prolog-wrap">
+      <div class="prolog-topbar">
+        <span class="prolog-topbar-label">Motor Prolog — Base de conocimiento cargada</span>
+        <button class="repl-run" onclick="clearRepl()">↺ Limpiar</button>
+      </div>
+
+      <!-- KB display -->
+      <div class="kb-section">
+        <div class="kb-label">Base de conocimiento</div>
+        <div class="kb-facts">
+          <span style="color:var(--tag-ml)">% Hechos</span><br>
+          <span class="hl-pred">humano</span>(<span class="hl-const">socrates</span>). &nbsp;
+          <span class="hl-pred">humano</span>(<span class="hl-const">platon</span>). &nbsp;
+          <span class="hl-pred">humano</span>(<span class="hl-const">aristoteles</span>).<br>
+          <span class="hl-pred">filosofo</span>(<span class="hl-const">socrates</span>). &nbsp;
+          <span class="hl-pred">filosofo</span>(<span class="hl-const">platon</span>).<br>
+          <span class="hl-pred">maestro</span>(<span class="hl-const">socrates</span>, <span class="hl-const">platon</span>). &nbsp;
+          <span class="hl-pred">maestro</span>(<span class="hl-const">platon</span>, <span class="hl-const">aristoteles</span>).<br>
+          <span class="hl-pred">ateniense</span>(<span class="hl-const">socrates</span>). &nbsp;
+          <span class="hl-pred">ateniense</span>(<span class="hl-const">platon</span>).
+        </div>
+        <div>
+          <span style="color:var(--tag-gofai)">% Reglas</span><br>
+          <span class="hl-pred">mortal</span>(<span class="hl-var">X</span>) :- <span class="hl-pred">humano</span>(<span class="hl-var">X</span>).<br>
+          <span class="hl-pred">discipulo</span>(<span class="hl-var">X</span>, <span class="hl-var">Z</span>) :- <span class="hl-pred">maestro</span>(<span class="hl-var">Y</span>, <span class="hl-var">X</span>), <span class="hl-pred">maestro</span>(<span class="hl-var">Z</span>, <span class="hl-var">Y</span>).<br>
+          <span class="hl-pred">linaje</span>(<span class="hl-var">X</span>, <span class="hl-var">Y</span>) :- <span class="hl-pred">maestro</span>(<span class="hl-var">X</span>, <span class="hl-var">Y</span>).<br>
+          <span class="hl-pred">linaje</span>(<span class="hl-var">X</span>, <span class="hl-var">Y</span>) :- <span class="hl-pred">maestro</span>(<span class="hl-var">X</span>, <span class="hl-var">Z</span>), <span class="hl-pred">linaje</span>(<span class="hl-var">Z</span>, <span class="hl-var">Y</span>).
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div class="repl-output" id="repl-output">
+        <div class="repl-line-info">% Motor listo. Escribí una consulta y presioná Enter o el botón Consultar.</div>
+        <div class="repl-line-info">% Ejemplo: mortal(X). — ¿quiénes son mortales?</div>
+      </div>
+
+      <!-- Input -->
+      <div class="repl-input-row">
+        <span class="repl-prompt">?-</span>
+        <input class="repl-input" id="repl-input" type="text" placeholder="mortal(socrates)." spellcheck="false" autocomplete="off"/>
+        <button class="repl-run btn-primary" onclick="runQuery()">Consultar</button>
+      </div>
+
+      <!-- Presets -->
+      <div class="preset-btns">
+        <button class="preset-btn" onclick="setQuery('mortal(socrates).')">mortal(socrates)?</button>
+        <button class="preset-btn" onclick="setQuery('mortal(X).')">¿quiénes son mortales?</button>
+        <button class="preset-btn" onclick="setQuery('filosofo(X), ateniense(X).')">filósofo ateniense?</button>
+        <button class="preset-btn" onclick="setQuery('maestro(socrates, X).')">alumnos de Sócrates?</button>
+        <button class="preset-btn" onclick="setQuery('linaje(socrates, aristoteles).')">¿Sócrates en linaje de Aristóteles?</button>
+        <button class="preset-btn" onclick="setQuery('discipulo(aristoteles, X).')">¿abuelo-maestro de Aristóteles?</button>
+        <button class="preset-btn" onclick="setQuery('mortal(zeus).')">¿Zeus es mortal? (falla)</button>
+      </div>
+    </div>
+
+    <div class="callout callout-purple">
+      <div class="callout-label">Cláusulas de Horn</div>
+      <p>Prolog trabaja con un subconjunto de FOL llamado <strong>cláusulas de Horn</strong>: cláusulas con <em>a lo sumo un literal positivo</em>. La forma <code>cabeza :- cuerpo</code> es una cláusula de Horn. Este subconjunto es <strong>decidible</strong> y el backward chaining sobre él es completo para refutación — eso es lo que hace Prolog eficiente.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════
+       6. CNF & FORMA NORMAL
+  ══════════════════════════ -->
+  <section class="section fade-up d5">
+    <div class="section-label">Transformación</div>
+    <h2 class="section-title">Forma Normal Conjuntiva (CNF)</h2>
+
+    <p>Para aplicar resolución, toda fórmula debe estar en <strong>CNF</strong>: una conjunción de disyunciones de literales. Cualquier fórmula FOL puede convertirse a CNF en siete pasos.</p>
+
+    <div class="math-block">
+      <div class="math-label">Pipeline de conversión a CNF</div>
+      $$\underbrace{\forall x\; [A(x) \implies B(x)]}_{\text{1. Original}}
+      \xrightarrow{\text{elim. } \implies}
+      \underbrace{\forall x\; [\lnot A(x) \lor B(x)]}_{\text{2. Sin implicaciones}}
+      \xrightarrow{\text{mover } \lnot}
+      \underbrace{\forall x\; [\lnot A(x) \lor B(x)]}_{\text{3. NNF}}$$
+      $$\xrightarrow{\text{Skolem}}
+      \underbrace{\lnot A(x) \lor B(x)}_{\text{4. Sin }\exists}
+      \xrightarrow{\text{dist. } \lor/\land}
+      \underbrace{(\lnot A(x) \lor B(x))}_{\text{5. CNF}}$$
+    </div>
+
+    <p>La <strong>skolemización</strong> elimina los cuantificadores existenciales reemplazando $\exists y$ con una función de Skolem $f(x_1,\ldots,x_n)$ donde $x_i$ son las variables universales en cuyo alcance aparece $y$.</p>
+
+    <div class="callout callout-tip">
+      <div class="callout-label">Conexión con LLMs</div>
+      <p>Aunque los LLMs modernos no usan FOL explícita, la idea de representar conocimiento en embeddings y razonar sobre él tiene raíces directas en FOL. Los <strong>Neural Theorem Provers</strong> combinan redes neuronales con unificación suave. Y el <em>chain-of-thought prompting</em> es, en esencia, inducir al modelo a simular un proceso de inferencia paso a paso — el mismo ideal de GOFAI, pero aprendido en lugar de codificado.</p>
+    </div>
+
+    <hr>
+
+    <h2 class="section-title">Completitud y Limitaciones</h2>
+
+    <p>El procedimiento de resolución es <strong>refutación-completo</strong>: si $KB \models \phi$, eventualmente lo demostrará. Pero FOL completa es solo <em>semidecidible</em>: si $KB \not\models \phi$, el procedimiento puede no terminar nunca.</p>
+
+    <div class="math-block">
+      <div class="math-label">Teorema de Church (1936) &amp; Turing (1936)</div>
+      $$\text{El problema de validez en FOL es} \textbf{ indecidible}$$
+      $$\nexists \text{ algoritmo que termine siempre y decida si } KB \models \phi$$
+    </div>
+
+    <p>Esta limitación teórica, combinada con la explosión combinatoria en espacios de búsqueda grandes, fue la segunda razón por la que GOFAI cedió terreno a los métodos estadísticos. En el módulo siguiente veremos cómo las <strong>Redes Bayesianas</strong> manejan la incertidumbre que FOL no puede representar limpiamente.</p>
+  </section>
+
+  <nav class="module-nav">
+    <a href="03_gofai_minimax.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="05_gofai_csp.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════ -->
+<script>
+/* ════════════════════════════════
+   UNIFICATION ENGINE
+════════════════════════════════ */
+
+function setTerms(a, b) {
+  document.getElementById('term1').value = a;
+  document.getElementById('term2').value = b;
+  runUnify();
+}
+
+function clearUnif() {
+  document.getElementById('term1').value = '';
+  document.getElementById('term2').value = '';
+  document.getElementById('unif-result').innerHTML = '<span style="color:var(--text-faint)">Ingresá dos términos y presioná Unificar.</span>';
+}
+
+// ── Tokenizer ──
+function tokenize(s) {
+  s = s.trim();
+  const tokens = [];
+  let i = 0;
+  while (i < s.length) {
+    if (/\s/.test(s[i])) { i++; continue; }
+    if (s[i] === '(' || s[i] === ')' || s[i] === ',') { tokens.push(s[i]); i++; continue; }
+    let w = '';
+    while (i < s.length && /[a-zA-Z0-9_]/.test(s[i])) w += s[i++];
+    if (w) tokens.push(w);
+    else { tokens.push(s[i]); i++; }
+  }
+  return tokens;
+}
+
+// ── Parser → AST ──
+// Term = { type:'const'|'var'|'func', name, args? }
+function parseTerm(tokens, pos) {
+  const tok = tokens[pos];
+  if (!tok) return null;
+
+  const isVar = /^[A-Z_]/.test(tok);
+  const hasArgs = tokens[pos+1] === '(';
+
+  if (hasArgs) {
+    // function / predicate
+    const name = tok; pos += 2; // skip name + '('
+    const args = [];
+    if (tokens[pos] !== ')') {
+      const r = parseTerm(tokens, pos); args.push(r.node); pos = r.pos;
+      while (tokens[pos] === ',') { pos++; const r2 = parseTerm(tokens, pos); args.push(r2.node); pos = r2.pos; }
+    }
+    pos++; // skip ')'
+    return { node:{ type:'func', name, args }, pos };
+  } else {
+    pos++;
+    return { node:{ type: isVar ? 'var' : 'const', name: tok }, pos };
+  }
+}
+
+function parse(s) {
+  try {
+    const tokens = tokenize(s);
+    const r = parseTerm(tokens, 0);
+    return r ? r.node : null;
+  } catch(e) { return null; }
+}
+
+// ── Apply substitution ──
+function applySubst(term, subst) {
+  if (!term) return term;
+  if (term.type === 'const') return term;
+  if (term.type === 'var') {
+    if (subst[term.name]) return applySubst(subst[term.name], subst);
+    return term;
+  }
+  // func
+  return { type:'func', name:term.name, args: term.args.map(a => applySubst(a, subst)) };
+}
+
+// ── Occur check ──
+function occurs(varName, term, subst) {
+  term = applySubst(term, subst);
+  if (term.type === 'var') return term.name === varName;
+  if (term.type === 'const') return false;
+  return term.args.some(a => occurs(varName, a, subst));
+}
+
+// ── Term to string ──
+function termStr(t) {
+  if (!t) return '?';
+  if (t.type === 'var' || t.type === 'const') return t.name;
+  return `${t.name}(${t.args.map(termStr).join(', ')})`;
+}
+
+// ── Unification (with steps log) ──
+function unify(t1, t2, subst, steps) {
+  t1 = applySubst(t1, subst);
+  t2 = applySubst(t2, subst);
+
+  if (t1.type === 'var' && t2.type === 'var' && t1.name === t2.name) {
+    steps.push({ type:'trivial', msg:`${t1.name} = ${t2.name} — misma variable, trivialmente unificable` });
+    return subst;
+  }
+  if (t1.type === 'var') {
+    if (occurs(t1.name, t2, subst)) {
+      steps.push({ type:'fail', msg:`Occur check fallido: ${t1.name} aparece en ${termStr(t2)}` });
+      return null;
+    }
+    steps.push({ type:'bind', msg:`Ligar ${t1.name} → ${termStr(t2)}` });
+    return { ...subst, [t1.name]: t2 };
+  }
+  if (t2.type === 'var') {
+    if (occurs(t2.name, t1, subst)) {
+      steps.push({ type:'fail', msg:`Occur check fallido: ${t2.name} aparece en ${termStr(t1)}` });
+      return null;
+    }
+    steps.push({ type:'bind', msg:`Ligar ${t2.name} → ${termStr(t1)}` });
+    return { ...subst, [t2.name]: t1 };
+  }
+  if (t1.type === 'const' && t2.type === 'const') {
+    if (t1.name === t2.name) {
+      steps.push({ type:'ok', msg:`Constantes iguales: ${t1.name} = ${t2.name} ✓` });
+      return subst;
+    } else {
+      steps.push({ type:'fail', msg:`Constantes distintas: ${t1.name} ≠ ${t2.name} — falla` });
+      return null;
+    }
+  }
+  if (t1.type === 'func' && t2.type === 'func') {
+    if (t1.name !== t2.name) {
+      steps.push({ type:'fail', msg:`Functores distintos: ${t1.name} ≠ ${t2.name} — falla` });
+      return null;
+    }
+    if (t1.args.length !== t2.args.length) {
+      steps.push({ type:'fail', msg:`Aridad distinta: ${t1.name}/${t1.args.length} ≠ ${t2.name}/${t2.args.length}` });
+      return null;
+    }
+    steps.push({ type:'step', msg:`Descomponer: ${termStr(t1)} y ${termStr(t2)} — mismo functor, unificar argumentos` });
+    let s = subst;
+    for (let i = 0; i < t1.args.length; i++) {
+      s = unify(t1.args[i], t2.args[i], s, steps);
+      if (!s) return null;
+    }
+    return s;
+  }
+  steps.push({ type:'fail', msg:`No unificable: ${termStr(t1)} y ${termStr(t2)}` });
+  return null;
+}
+
+function runUnify() {
+  const s1 = document.getElementById('term1').value.trim();
+  const s2 = document.getElementById('term2').value.trim();
+  const el  = document.getElementById('unif-result');
+
+  if (!s1 || !s2) { el.innerHTML = '<span style="color:var(--text-faint)">Ingresá ambos términos.</span>'; return; }
+
+  const t1 = parse(s1), t2 = parse(s2);
+  if (!t1 || !t2) { el.innerHTML = '<span class="unif-fail">⚠ No se pudo parsear. Revisá la sintaxis: pred(arg1, Arg2).</span>'; return; }
+
+  const steps = [];
+  steps.push({ type:'step', msg:`Unificar: ${termStr(t1)}  y  ${termStr(t2)}` });
+
+  const result = unify(t1, t2, {}, steps);
+
+  let html = '';
+  steps.forEach(s => {
+    const cls = s.type==='fail' ? 'unif-fail' : s.type==='bind' ? 'unif-sub' : s.type==='trivial'||s.type==='ok' ? 'unif-ok' : 'unif-step';
+    html += `<div class="${cls}">${s.msg}</div>`;
+  });
+
+  if (result !== null) {
+    const bindings = Object.entries(result);
+    if (bindings.length === 0) {
+      html += `<div class="unif-ok" style="margin-top:0.5rem;font-weight:600">✓ Unificación exitosa — θ = {} (sin sustituciones)</div>`;
+    } else {
+      html += `<div class="unif-ok" style="margin-top:0.5rem;font-weight:600">✓ MGU encontrado:</div>`;
+      bindings.forEach(([v,t]) => {
+        html += `<div class="unif-sub" style="padding-left:1rem">θ(${v}) = ${termStr(t)}</div>`;
+      });
+      // show result
+      const r1 = applySubst(t1, result);
+      const r2 = applySubst(t2, result);
+      html += `<div class="unif-ok" style="margin-top:0.35rem">Resultado: ${termStr(r1)}</div>`;
+    }
+  } else {
+    html += `<div class="unif-fail" style="margin-top:0.5rem;font-weight:600">✗ Unificación fallida — los términos no son unificables</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+// Run on Enter
+['term1','term2'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') runUnify(); });
+});
+
+/* ════════════════════════════════
+   PROLOG ENGINE (Backward Chaining)
+════════════════════════════════ */
+
+// Knowledge base
+const KB = [
+  // Facts
+  { head:{ pred:'humano',    args:['socrates']},          body:[] },
+  { head:{ pred:'humano',    args:['platon']},             body:[] },
+  { head:{ pred:'humano',    args:['aristoteles']},        body:[] },
+  { head:{ pred:'filosofo',  args:['socrates']},           body:[] },
+  { head:{ pred:'filosofo',  args:['platon']},             body:[] },
+  { head:{ pred:'maestro',   args:['socrates','platon']},  body:[] },
+  { head:{ pred:'maestro',   args:['platon','aristoteles']},body:[] },
+  { head:{ pred:'ateniense', args:['socrates']},           body:[] },
+  { head:{ pred:'ateniense', args:['platon']},             body:[] },
+  // Rules
+  { head:{ pred:'mortal',    args:['_X1']},                body:[{ pred:'humano', args:['_X1']}] },
+  { head:{ pred:'discipulo', args:['_X2','_Z1']},          body:[{ pred:'maestro', args:['_Y1','_X2']}, { pred:'maestro', args:['_Z1','_Y1']}] },
+  { head:{ pred:'linaje',    args:['_X3','_Y2']},          body:[{ pred:'maestro', args:['_X3','_Y2']}] },
+  { head:{ pred:'linaje',    args:['_X4','_Y3']},          body:[{ pred:'maestro', args:['_X4','_Z2']}, { pred:'linaje', args:['_Z2','_Y3']}] },
+];
+
+// Simple Prolog interpreter
+// Terms are strings: uppercase or _uppercase = variable, lowercase = constant
+function isVar(s) { return /^[A-Z_]/.test(s); }
+
+function cloneSubst(s) { return Object.assign({}, s); }
+
+function walkVar(v, subst) {
+  while (isVar(v) && subst[v] !== undefined) v = subst[v];
+  return v;
+}
+
+function unifyTerms(t1, t2, subst) {
+  t1 = walkVar(t1, subst);
+  t2 = walkVar(t2, subst);
+  if (t1 === t2) return subst;
+  if (isVar(t1)) { const s = cloneSubst(subst); s[t1] = t2; return s; }
+  if (isVar(t2)) { const s = cloneSubst(subst); s[t2] = t1; return s; }
+  return null;
+}
+
+function unifyGoal(goal, head, subst) {
+  if (goal.pred !== head.pred) return null;
+  if (goal.args.length !== head.args.length) return null;
+  let s = subst;
+  for (let i = 0; i < goal.args.length; i++) {
+    const a = walkVar(goal.args[i], s);
+    const b = walkVar(head.args[i], s);
+    s = unifyTerms(a, b, s);
+    if (!s) return null;
+  }
+  return s;
+}
+
+let ruleCounter = 0;
+function freshVars(clause) {
+  const id = ruleCounter++;
+  const rename = t => isVar(t) ? `${t}_r${id}` : t;
+  return {
+    head: { pred: clause.head.pred, args: clause.head.args.map(rename) },
+    body: clause.body.map(g => ({ pred: g.pred, args: g.args.map(rename) }))
+  };
+}
+
+function resolve(goals, subst, depth, solutions, maxSol) {
+  if (solutions.length >= maxSol) return;
+  if (depth > 20) return; // depth limit
+
+  if (goals.length === 0) {
+    solutions.push(cloneSubst(subst));
+    return;
+  }
+
+  const [goal, ...rest] = goals;
+  const gPred = walkVar(goal.pred, subst);
+
+  for (const clause of KB) {
+    if (clause.head.pred !== gPred) continue;
+    const fresh = freshVars(clause);
+    const s2 = unifyGoal(goal, fresh.head, subst);
+    if (!s2) continue;
+    const newGoals = [...fresh.body.map(g => ({
+      pred: walkVar(g.pred, s2),
+      args: g.args
+    })), ...rest];
+    resolve(newGoals, s2, depth+1, solutions, maxSol);
+    if (solutions.length >= maxSol) return;
+  }
+}
+
+function applySubstToGoal(goal, subst) {
+  return { pred: goal.pred, args: goal.args.map(a => walkVar(a, subst)) };
+}
+
+function parseQuery(q) {
+  // Parse comma-separated goals like: mortal(X), filosofo(X).
+  q = q.trim().replace(/\.$/, '');
+  const goals = [];
+  // split on top-level commas
+  let depth = 0, cur = '';
+  for (const ch of q) {
+    if (ch === '(') { depth++; cur += ch; }
+    else if (ch === ')') { depth--; cur += ch; }
+    else if (ch === ',' && depth === 0) { goals.push(cur.trim()); cur = ''; }
+    else cur += ch;
+  }
+  if (cur.trim()) goals.push(cur.trim());
+
+  return goals.map(g => {
+    const m = g.match(/^([a-z_]+)\((.+)\)$/s);
+    if (!m) { // atom without args
+      const m2 = g.match(/^([a-z_]+)$/);
+      if (m2) return { pred: m2[1], args:[] };
+      return null;
+    }
+    const args = [];
+    let dep=0, a='';
+    for (const ch of m[2]) {
+      if (ch==='(') { dep++; a+=ch; }
+      else if (ch===')') { dep--; a+=ch; }
+      else if (ch===',' && dep===0) { args.push(a.trim()); a=''; }
+      else a+=ch;
+    }
+    if (a.trim()) args.push(a.trim());
+    return { pred: m[1], args };
+  }).filter(Boolean);
+}
+
+function goalStr(g, subst) {
+  const args = g.args.map(a => walkVar(a, subst));
+  return args.length === 0 ? g.pred : `${g.pred}(${args.join(', ')})`;
+}
+
+function setQuery(q) {
+  document.getElementById('repl-input').value = q;
+  runQuery();
+}
+
+function clearRepl() {
+  const out = document.getElementById('repl-output');
+  out.innerHTML = '<div class="repl-line-info">% Motor reiniciado.</div>';
+}
+
+function runQuery() {
+  const input = document.getElementById('repl-input');
+  const out   = document.getElementById('repl-output');
+  const q = input.value.trim();
+  if (!q) return;
+
+  const queryLine = document.createElement('div');
+  queryLine.className = 'repl-line-query';
+  queryLine.textContent = `?- ${q}`;
+  out.appendChild(queryLine);
+
+  const goals = parseQuery(q);
+  if (!goals || goals.length === 0) {
+    const err = document.createElement('div');
+    err.className = 'repl-line-fail';
+    err.textContent = 'ERROR: no se pudo parsear la consulta.';
+    out.appendChild(err);
+    out.scrollTop = out.scrollHeight;
+    input.value = '';
+    return;
+  }
+
+  ruleCounter = 0;
+  const solutions = [];
+  resolve(goals, {}, 0, solutions, 8);
+
+  if (solutions.length === 0) {
+    const fl = document.createElement('div');
+    fl.className = 'repl-line-fail';
+    fl.textContent = 'false.';
+    out.appendChild(fl);
+  } else {
+    solutions.forEach((subst, i) => {
+      // find user vars (uppercase, no _r suffix)
+      const userVars = [...new Set(goals.flatMap(g => g.args.filter(a => isVar(a) && !a.includes('_r'))))];
+      if (userVars.length === 0) {
+        const ok = document.createElement('div');
+        ok.className = 'repl-line-ok';
+        ok.textContent = 'true.';
+        out.appendChild(ok);
+      } else {
+        const ok = document.createElement('div');
+        ok.className = 'repl-line-ok';
+        ok.textContent = `% Solución ${i+1}`;
+        out.appendChild(ok);
+        userVars.forEach(v => {
+          const val = walkVar(v, subst);
+          const bd = document.createElement('div');
+          bd.className = 'repl-line-binding';
+          bd.textContent = `${v} = ${val}`;
+          out.appendChild(bd);
+        });
+      }
+    });
+    if (solutions.length === 8) {
+      const more = document.createElement('div');
+      more.className = 'repl-line-info';
+      more.textContent = '% (mostrando hasta 8 soluciones)';
+      out.appendChild(more);
+    }
+  }
+
+  out.scrollTop = out.scrollHeight;
+  input.value = '';
+}
+
+document.getElementById('repl-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runQuery();
+});
+
+/* ════════════════════════════════
+   RESOLUTION TREE CANVAS
+════════════════════════════════ */
+(function drawResTree() {
+  const canvas = document.getElementById('res-canvas');
+  const W = canvas.parentElement.offsetWidth - 48;
+  canvas.width = Math.max(W, 400);
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = 260;
+
+  const NODE_W = 180, NODE_H = 36, CORNER = 8;
+
+  const nodes = [
+    { id:'c1', x:0.08, y:0.08, label:'C1: ¬Humano(X) ∨ Mortal(X)', color:'#2a6496', type:'premise' },
+    { id:'c2', x:0.50, y:0.08, label:'C2: Humano(sócrates)',         color:'#3a7d44', type:'premise' },
+    { id:'c3', x:0.82, y:0.08, label:'C3: ¬Mortal(sócrates)',        color:'#c96442', type:'negation' },
+    { id:'c4', x:0.28, y:0.50, label:'C4: Mortal(sócrates)',         color:'#7b52a8', type:'derived', theta:'θ={X/sócrates}' },
+    { id:'c5', x:0.55, y:0.88, label:'C5:  □  (vacía)',              color:'#c47c15', type:'empty' },
+  ];
+
+  const edges = [
+    { from:'c1', to:'c4' }, { from:'c2', to:'c4' },
+    { from:'c4', to:'c5' }, { from:'c3', to:'c5' },
+  ];
+
+  function nx(n){ return n.x * w; }
+  function ny(n){ return n.y * h; }
+
+  // Draw edges
+  ctx.lineWidth = 1.5;
+  edges.forEach(e => {
+    const a = nodes.find(n=>n.id===e.from);
+    const b = nodes.find(n=>n.id===e.to);
+    ctx.strokeStyle = '#d9d0c7';
+    ctx.beginPath();
+    ctx.moveTo(nx(a), ny(a) + NODE_H/2);
+    ctx.bezierCurveTo(nx(a), ny(a)+NODE_H/2+30, nx(b), ny(b)-NODE_H/2-30, nx(b), ny(b)-NODE_H/2);
+    ctx.stroke();
+  });
+
+  // Draw nodes
+  nodes.forEach(n => {
+    const x = nx(n) - NODE_W/2, y = ny(n) - NODE_H/2;
+    // bg
+    ctx.fillStyle = n.type==='empty' ? '#fff9f0' : '#ffffff';
+    ctx.strokeStyle = n.color;
+    ctx.lineWidth = n.type==='empty' ? 2 : 1.5;
+    ctx.beginPath();
+    ctx.roundRect(x, y, NODE_W, NODE_H, CORNER);
+    ctx.fill(); ctx.stroke();
+
+    // text
+    ctx.fillStyle = n.color;
+    ctx.font = `${n.type==='empty'?'600 ':' '}11px Geist Mono, monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, nx(n), ny(n));
+
+    // theta label
+    if (n.theta) {
+      ctx.fillStyle = '#7b52a8';
+      ctx.font = '9.5px Geist Mono, monospace';
+      ctx.fillText(n.theta, nx(n), ny(n) + NODE_H/2 + 10);
+    }
+  });
+
+  // Labels
+  ctx.fillStyle = '#b8b0a8';
+  ctx.font = '9px Geist Mono, monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('Paso 1: Resolver C1+C2', nodes[3].x*w - NODE_W/2, nodes[3].y*h + NODE_H/2 + (nodes[3].theta?22:12));
+  ctx.fillText('Paso 2: Resolver C4+C3 → refutación', nodes[4].x*w - NODE_W/2, nodes[4].y*h + NODE_H/2 + 12);
+})();
+
+// Initial unify demo
+runUnify();
+</script>
+</body>
+</html>
