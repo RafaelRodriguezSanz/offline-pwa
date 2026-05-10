@@ -5,7 +5,7 @@
  * loads instantly and works fully offline after the first visit.
  */
 
-const CACHE_NAME = "localsync-v21";
+const CACHE_NAME = "localsync-v22";
 
 // ... (existing comments) ...
 
@@ -117,37 +117,24 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // Pass through non-GET requests (e.g. Drive API POSTs)
+  // Pass through non-GET requests
   if (event.request.method !== "GET") return;
 
-  // Pass through Drive / Google API calls — they need fresh network responses
-  if (
-    url.hostname.includes("googleapis.com") ||
-    url.hostname.includes("accounts.google.com")
-  ) {
-    // Network-first for external APIs (fall back to cache if offline)
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // Cache-first for all app assets
+  // Network-first for everything (fall back to cache if offline)
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-
-      // Not in cache yet — fetch from network and cache for next time
-      return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type === "error") {
-          return response;
+    fetch(event.request)
+      .then((response) => {
+        // If successful response, clone and update cache
+        if (response && response.status === 200 && response.type === "basic") {
+          const toCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, toCache));
         }
-        const toCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, toCache));
         return response;
-      });
-    })
+      })
+      .catch(() => {
+        // If network fails (offline), try to serve from cache
+        return caches.match(event.request);
+      })
   );
 });
 

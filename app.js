@@ -130,6 +130,39 @@ function setupNavigation() {
   menuClose.addEventListener("click", () => toggleMenu(false));
   navOverlay.addEventListener("click", () => toggleMenu(false));
 
+  // Force Update Logic
+  const forceUpdateBtn = document.getElementById("btn-force-update");
+  if (forceUpdateBtn) {
+    forceUpdateBtn.addEventListener("click", async () => {
+      const confirmUpdate = confirm("¿Forzar actualización? Se borrará el caché y se recargará la app desde el servidor. (Tus datos en IndexedDB están seguros)");
+      if (!confirmUpdate) return;
+
+      try {
+        // 1. Unregister Service Workers
+        if ("serviceWorker" in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (let registration of registrations) {
+            await registration.unregister();
+          }
+        }
+
+        // 2. Clear Caches
+        if ("caches" in window) {
+          const cacheNames = await caches.keys();
+          for (let cacheName of cacheNames) {
+            await caches.delete(cacheName);
+          }
+        }
+
+        // 3. Hard reload
+        window.location.reload(true);
+      } catch (e) {
+        console.error("Error during force update:", e);
+        alert("Error al actualizar. Intenta recargar manualmente.");
+      }
+    });
+  }
+
   navItems.forEach(item => {
     item.addEventListener("click", async () => {
       const targetId = item.getAttribute("data-target");
