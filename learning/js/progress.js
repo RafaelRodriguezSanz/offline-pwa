@@ -4,12 +4,23 @@
  */
 
 const DB_NAME = "appDB";
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 const STORE_NAME = "learning_progress";
 
 function openDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains("learning_progress")) {
+        db.createObjectStore("learning_progress", { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains("metadata")) {
+        db.createObjectStore("metadata", { keyPath: "key" });
+      }
+    };
+
     request.onsuccess = () => resolve(request.result);
     request.onerror   = () => reject(request.error);
   });
@@ -49,13 +60,23 @@ async function updateUI() {
     return acc;
   }, {});
 
-  // Update cards
+  // Update cards (for styling like line-through)
   document.querySelectorAll(".module-card").forEach(card => {
     const id = card.getAttribute("data-module-id");
     if (progressMap[id]) {
       card.classList.add("is-read");
     } else {
       card.classList.remove("is-read");
+    }
+  });
+
+  // Update toggles (for sliding state)
+  document.querySelectorAll(".card-read-toggle").forEach(toggle => {
+    const id = toggle.getAttribute("data-module-id");
+    if (progressMap[id]) {
+      toggle.classList.add("active");
+    } else {
+      toggle.classList.remove("active");
     }
   });
 
@@ -72,7 +93,7 @@ async function updateUI() {
     if (text) text.textContent = `${percent}%`;
   });
   
-  // Update overall hero stats if they exist
+  // Update overall hero stats
   const allCards = document.querySelectorAll(".module-card");
   const allRead = document.querySelectorAll(".module-card.is-read");
   const overallStat = document.querySelector(".hero-stats .stat:first-child .stat-n");
@@ -84,12 +105,13 @@ async function updateUI() {
 function setupToggles() {
   document.querySelectorAll(".card-read-toggle").forEach(toggle => {
     toggle.addEventListener("click", async (e) => {
+      // Since it's outside the <a>, we don't strictly need preventDefault/stopPropagation
+      // but we keep them for good measure and to handle potential wrapper clicks
       e.preventDefault();
       e.stopPropagation();
       
-      const card = toggle.closest(".module-card");
-      const id = card.getAttribute("data-module-id");
-      const newState = !card.classList.contains("is-read");
+      const id = toggle.getAttribute("data-module-id");
+      const newState = !toggle.classList.contains("active");
       
       await saveModuleProgress(id, newState);
       updateUI();
