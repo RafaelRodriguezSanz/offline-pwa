@@ -3,7 +3,7 @@
  */
 
 export const DB_NAME    = "appDB";
-export const DB_VERSION = 5;
+export const DB_VERSION = 6;
 
 export function openDB() {
   return new Promise((resolve, reject) => {
@@ -48,6 +48,10 @@ export function openDB() {
         const tasksStore = db.createObjectStore("tasks", { keyPath: "id", autoIncrement: true });
         tasksStore.createIndex("col", "col", { unique: false });
         tasksStore.createIndex("createdAt", "createdAt", { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains("learning_progress")) {
+        db.createObjectStore("learning_progress", { keyPath: "id" });
       }
     };
 

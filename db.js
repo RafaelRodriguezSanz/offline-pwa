@@ -66,7 +66,7 @@ export async function markUnsyncedChanges() {
  */
 export async function getAllDataForSync() {
   const db = await openDB();
-  const STORES = ["items", "water", "books", "reading_log", "exercises", "tasks"];
+  const STORES = ["items", "water", "books", "reading_log", "exercises", "tasks", "learning_progress"];
   
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORES, "readonly");
@@ -90,7 +90,7 @@ export async function getAllDataForSync() {
  */
 export async function importAllData(data) {
   const db = await openDB();
-  const STORES = ["items", "water", "books", "reading_log", "exercises", "tasks"];
+  const STORES = ["items", "water", "books", "reading_log", "exercises", "tasks", "learning_progress"];
   const tx = db.transaction(STORES, "readwrite");
 
   for (const storeName of STORES) {
