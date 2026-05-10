@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Módulo 01: Sistemas Expertos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      --accent:         #c96442;
+      --accent-hover:   #b05838;
+      --accent-bg:      rgba(201,100,66,0.07);
+      --accent-border:  rgba(201,100,66,0.2);
+      --tag-gofai:      #2a6496;
+      --tag-ml:         #3a7d44;
+      --tag-nn:         #c47c15;
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:'Crimson Pro',Georgia,serif;
+      --font-mono:'Geist Mono','Fira Code',monospace;
+      --font-sans:'Geist',system-ui,sans-serif;
+      --transition:0.18s ease;
+    }
+
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{font-size:16px;scroll-behavior:smooth;}
+    body{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-sans);font-size:0.9375rem;line-height:1.7;-webkit-font-smoothing:antialiased;}
+    ::selection{background:rgba(201,100,66,0.12);}
+    .page-wrapper{max-width:860px;margin:0 auto;padding:0 1.5rem 5rem;}
+
+    .topbar{display:flex;align-items:center;gap:0.5rem;padding:1.25rem 0 1rem;font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);letter-spacing:0.04em;border-bottom:1px solid var(--border-subtle);margin-bottom:2.5rem;}
+    .topbar a{color:var(--text-muted);text-decoration:none;transition:color var(--transition);font-size:1.1rem;}
+    .topbar a:hover{color:var(--text-secondary);}
+    .topbar .sep{color:var(--border-strong);}
+    .topbar .current{color:var(--text-secondary);}
+
+    .module-header{margin-bottom:2.5rem;}
+    .module-badge{display:inline-flex;align-items:center;gap:0.4rem;font-family:var(--font-mono);font-size:0.67rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.28em 0.75em;border-radius:999px;border:1px solid;margin-bottom:1rem;color:var(--tag-gofai);border-color:var(--tag-gofai);background:rgba(42,100,150,0.06);}
+    .module-title{font-family:var(--font-serif);font-size:clamp(1.75rem,4vw,2.6rem);line-height:1.2;margin-bottom:0.75rem;font-weight:400;letter-spacing:-0.01em;}
+    .module-subtitle{font-size:0.9375rem;color:var(--text-secondary);max-width:60ch;line-height:1.65;}
+    .module-meta{display:flex;gap:1.5rem;margin-top:1.25rem;flex-wrap:wrap;}
+    .module-meta span{font-family:var(--font-mono);font-size:0.68rem;color:var(--text-muted);letter-spacing:0.04em;}
+    .module-meta span strong{color:var(--text-secondary);font-weight:500;}
+
+    .section{margin-bottom:3rem;}
+    .section-label{font-family:var(--font-mono);font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:0.75rem;display:flex;align-items:center;gap:0.75rem;}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--border-subtle);}
+    .section-title{font-family:var(--font-serif);font-size:1.45rem;font-weight:400;margin-bottom:0.75rem;}
+
+    p{color:var(--text-secondary);margin-bottom:1rem;max-width:70ch;}
+    strong{color:var(--text-primary);font-weight:600;}
+    em{font-style:italic;}
+
+    .callout{border-left:2px solid;padding:0.9rem 1.2rem;border-radius:0 var(--radius-md) var(--radius-md) 0;margin:1.5rem 0;background:var(--bg-raised);box-shadow:var(--shadow-sm);}
+    .callout-key {border-color:var(--accent);background:var(--accent-bg);}
+    .callout-info{border-color:var(--tag-gofai);background:rgba(42,100,150,0.04);}
+    .callout-label{font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem;}
+    .callout-key  .callout-label{color:var(--accent);}
+    .callout-info .callout-label{color:var(--tag-gofai);}
+    .callout p{margin-bottom:0;}
+
+    pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:var(--radius-md);padding:1.2rem 1.4rem;overflow-x:auto;margin:1.5rem 0;font-family:var(--font-mono);font-size:0.8rem;line-height:1.65;color:var(--code-text);box-shadow:var(--shadow-sm);}
+    .code-header{display:flex;align-items:center;justify-content:space-between;background:var(--bg-overlay);border:1px solid var(--border-default);border-bottom:none;border-radius:var(--radius-md) var(--radius-md) 0 0;padding:0.45rem 1rem;font-family:var(--font-mono);font-size:0.68rem;color:var(--text-muted);margin-top:1.5rem;}
+    .code-header+pre{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;}
+    code{font-family:var(--font-mono);font-size:0.84em;background:var(--code-bg);padding:0.13em 0.42em;border-radius:4px;color:var(--accent);border:1px solid var(--code-border);}
+    pre code{background:none;padding:0;border:none;color:inherit;font-size:inherit;}
+
+    .math-block{background:var(--bg-raised);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:1.4rem 2rem;margin:1.5rem 0;overflow-x:auto;text-align:center;box-shadow:var(--shadow-sm);}
+    .math-block .math-label{font-family:var(--font-mono);font-size:0.66rem;color:var(--text-faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.75rem;text-align:left;}
+
+    table{width:100%;border-collapse:collapse;font-size:0.875rem;margin:1.5rem 0;}
+    th{font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:0.55rem 1rem;border-bottom:1px solid var(--border-default);}
+    td{padding:0.6rem 1rem;border-bottom:1px solid var(--border-subtle);color:var(--text-secondary);vertical-align:top;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:var(--bg-overlay);}
+
+    /* ── DEMO ── */
+    .demo-container{background:var(--bg-raised);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:1.5rem;margin:1.5rem 0;box-shadow:var(--shadow-md);}
+    .demo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;}
+    .demo-title{font-family:var(--font-mono);font-size:0.73rem;color:var(--text-secondary);letter-spacing:0.04em;display:flex;align-items:center;gap:0.5rem;}
+    .demo-title::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent);}
+
+    .symptom-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:0.4rem;margin-bottom:1.25rem;}
+    .symptom-btn{display:flex;align-items:center;gap:0.55rem;padding:0.55rem 0.8rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);cursor:pointer;font-family:var(--font-sans);font-size:0.8rem;color:var(--text-muted);transition:all 0.14s ease;text-align:left;}
+    .symptom-btn .dot{width:7px;height:7px;border-radius:50%;background:var(--border-default);flex-shrink:0;transition:all 0.14s;}
+    .symptom-btn.active{border-color:var(--tag-gofai);background:rgba(42,100,150,0.06);color:var(--text-primary);}
+    .symptom-btn.active .dot{background:var(--tag-gofai);box-shadow:0 0 5px rgba(42,100,150,0.4);}
+    .symptom-btn:hover:not(.active){border-color:var(--border-default);background:var(--bg-overlay);}
+
+    .inference-panel{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    @media(max-width:580px){.inference-panel{grid-template-columns:1fr;}}
+
+    .panel-box{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1rem;min-height:160px;}
+    .panel-box-label{font-family:var(--font-mono);font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:0.75rem;}
+
+    .trace-line{font-family:var(--font-mono);font-size:0.74rem;line-height:1.85;padding:0.05rem 0;}
+    .trace-check{color:#3a7d44;}
+    .trace-fail {color:var(--text-faint);}
+    .trace-rule {color:var(--tag-gofai);font-weight:500;}
+
+    .result-badge{display:inline-block;font-family:var(--font-mono);font-size:0.73rem;padding:0.3em 0.8em;border-radius:999px;border:1px solid;transition:all 0.25s;}
+    .result-none{color:var(--text-faint);border-color:var(--border-subtle);}
+    .result-active{color:var(--tag-ml);border-color:var(--tag-ml);background:rgba(58,125,68,0.07);}
+
+    .rule-list{display:flex;flex-direction:column;gap:0.35rem;}
+    .rule-item{font-family:var(--font-mono);font-size:0.78rem;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:0.6rem 1rem;color:var(--text-secondary);line-height:1.6;box-shadow:var(--shadow-sm);}
+    .kw-if  {color:var(--tag-gofai);}
+    .kw-then{color:var(--tag-ml);}
+    .kw-not {color:var(--tag-nn);}
+    .kw-and {color:var(--text-faint);}
+    .kw-fact{color:var(--text-primary);}
+
+    button,.btn{font-family:var(--font-mono);font-size:0.73rem;letter-spacing:0.03em;padding:0.42em 0.95em;border-radius:var(--radius-sm);border:1px solid var(--border-default);background:var(--bg-raised);color:var(--text-secondary);cursor:pointer;transition:all var(--transition);display:inline-flex;align-items:center;gap:0.4em;box-shadow:var(--shadow-sm);}
+    button:hover,.btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg);}
+
+    .module-nav{display:flex;justify-content:space-between;align-items:center;padding:1.5rem 0;border-top:1px solid var(--border-subtle);margin-top:3rem;}
+    .module-nav a{font-family:var(--font-mono);font-size:0.73rem;color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:0.5rem;transition:color var(--transition);}
+    .module-nav a:hover{color:var(--text-primary);}
+
+    hr{border:none;border-top:1px solid var(--border-subtle);margin:2rem 0;}
+    ::-webkit-scrollbar{width:6px;height:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg-base);}
+    ::-webkit-scrollbar-thumb{background:var(--border-default);border-radius:999px;}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+    .fade-up{animation:fadeUp 0.4s ease forwards;}
+    .d1{animation-delay:0.05s;opacity:0;}.d2{animation-delay:0.14s;opacity:0;}.d3{animation-delay:0.23s;opacity:0;}.d4{animation-delay:0.32s;opacity:0;}
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="#">GOFAI</a><span class="sep">›</span>
+    <span class="current">Módulo 01 · Sistemas Expertos</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge">● GOFAI · Módulo 1</span>
+    <h1 class="module-title">Sistemas Expertos<br>&amp; Motores de Inferencia</h1>
+    <p class="module-subtitle">Cómo los primeros programas de IA codificaban el conocimiento humano en reglas explícitas y las usaban para razonar, sin ningún tipo de aprendizaje automático.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> GOFAI</span>
+      <span><strong>Duración</strong> ~25 min</span>
+      <span><strong>Prerrequisitos</strong> Ninguno</span>
+      <span><strong>Período histórico</strong> 1965–1990</span>
+    </div>
+  </header>
+
+  <!-- 1. CONTEXTO -->
+  <section class="section fade-up d1">
+    <div class="section-label">Contexto histórico</div>
+    <h2 class="section-title">¿Qué es GOFAI?</h2>
+    <p><strong>GOFAI</strong> (<em>Good Old-Fashioned AI</em>) es el paradigma dominante de la IA entre los años 60 y 80. La idea central es simple pero ambiciosa:</p>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Hipótesis del símbolo físico</div>
+      <p>La inteligencia puede ser reducida a <strong>manipulación de símbolos</strong> según reglas formales. Si escribimos explícitamente el conocimiento de un experto, una computadora puede razonar como ese experto — sin aprender, solo <em>deduciendo</em>.</p>
+    </div>
+
+    <p>Un <strong>sistema experto</strong> tiene dos componentes: una <em>base de conocimiento</em> (reglas y hechos) y un <em>motor de inferencia</em> (mecanismo que aplica esas reglas). El conocimiento no se aprende, se codifica manualmente por un <em>knowledge engineer</em>.</p>
+
+    <table>
+      <thead><tr><th>Sistema</th><th>Año</th><th>Dominio</th><th>Hito</th></tr></thead>
+      <tbody>
+        <tr><td><code>DENDRAL</code></td><td>1965</td><td>Química</td><td>Primer sistema experto real</td></tr>
+        <tr><td><code>MYCIN</code></td><td>1972</td><td>Medicina</td><td>Diagnóstico de infecciones bacterianas</td></tr>
+        <tr><td><code>XCON</code></td><td>1978</td><td>Configuración</td><td>Configuró 80.000 pedidos/año para DEC</td></tr>
+        <tr><td><code>Deep Blue</code></td><td>1997</td><td>Ajedrez</td><td>Venció a Kasparov (reglas + búsqueda)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 2. FORMALISMO -->
+  <section class="section fade-up d2">
+    <div class="section-label">Formalismo</div>
+    <h2 class="section-title">Reglas de Producción</h2>
+
+    <p>El bloque básico es una <strong>regla de producción</strong>: una condición (<em>antecedente</em>) que, si se satisface, dispara una acción (<em>consecuente</em>).</p>
+
+    <div class="math-block">
+      <div class="math-label">Forma general de una regla de producción</div>
+      $$\text{IF} \quad c_1 \land c_2 \land \cdots \land c_n \quad \text{THEN} \quad a$$
+    </div>
+
+    <p>El motor de inferencia evalúa qué reglas tienen su antecedente satisfecho por los hechos actuales — la llamada <em>Working Memory</em> — y decide cuál disparar. Esto se denomina el <strong>ciclo recognise-act</strong>.</p>
+
+    <div class="math-block">
+      <div class="math-label">Modus Ponens — regla de inferencia subyacente</div>
+      $$\begin{aligned}
+      & P \implies Q \\
+      & P \\
+      \hline
+      \therefore & \ Q
+      \end{aligned}$$
+    </div>
+
+    <p>Existen dos estrategias de encadenamiento:</p>
+    <p><strong>Forward chaining</strong> — parte de los hechos conocidos y aplica reglas hasta llegar a una conclusión. Es <em>data-driven</em>. Útil cuando querés derivar todas las consecuencias posibles de lo que sabés.</p>
+    <p><strong>Backward chaining</strong> — parte de la meta y busca qué hechos la justificarían. Es <em>goal-driven</em>. Prolog usa esta estrategia. Más eficiente cuando la meta es específica.</p>
+
+    <div class="callout callout-info">
+      <div class="callout-label">Nota formal</div>
+      <p>El proceso de hacer coincidir una regla con los hechos se llama <strong>unificación</strong>. El algoritmo de unificación de Robinson (1965) es la base de Prolog. Cuando múltiples reglas aplican simultáneamente, el motor debe resolver el <em>conflict set</em> con una estrategia de prioridad.</p>
+    </div>
+
+    <div class="math-block">
+      <div class="math-label">Conjunto conflicto y selección de regla</div>
+      $$CS = \{ r_i \mid \text{antecedente}(r_i) \subseteq WM \}$$
+      $$r^* = \arg\max_{r \in CS} \; \text{priority}(r)$$
+      <div style="text-align:left; font-size:0.8rem; color:var(--text-secondary); margin-top:1.2rem; border-top:1px solid var(--border-subtle); padding-top:0.8rem;">
+        <p style="margin-bottom:0.4rem;">Donde:</p>
+        <ul style="list-style:none; padding-left:0.5rem; display:grid; gap:0.3rem;">
+          <li><strong>$CS$</strong> (Conflict Set) es el conjunto de todas las reglas cuyas condiciones se cumplen.</li>
+          <li><strong>$WM$</strong> (Working Memory) son los hechos conocidos actualmente.</li>
+          <li><strong>$r_i \subseteq WM$</strong> significa que los requisitos de la regla están contenidos en la memoria.</li>
+          <li><strong>$\arg\max$</strong> indica que seleccionamos la regla específica que tiene el valor de prioridad más alto.</li>
+          <li><strong>$r^*$</strong> es la regla ganadora que será ejecutada.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="code-header"><span>diagnostico.pl — Prolog (backward chaining)</span></div>
+<pre><code><span style="color:#6b93b8">% Hechos</span>
+tiene(pedro, fiebre).  tiene(pedro, tos).
+tiene(maria, congestion).  tiene(maria, estornudos).
+
+<span style="color:#6b93b8">% Reglas de producción</span>
+diagnostico(X, gripe) :-
+    tiene(X, fiebre), tiene(X, tos), tiene(X, dolor_muscular).
+
+diagnostico(X, resfriado) :-
+    tiene(X, congestion), tiene(X, estornudos),
+    \+ tiene(X, fiebre).   <span style="color:#a0a0a0">% \+ = negación por falla</span>
+
+diagnostico(X, covid) :-
+    tiene(X, fiebre), tiene(X, tos), tiene(X, perdida_olfato).
+
+<span style="color:#6b93b8">%% ?- diagnostico(pedro, D).
+%% D = resfriado (fiebre+tos pero no dolor muscular → ninguna regla completa)
+%% → El motor falla silenciosamente — limitación clave de GOFAI</span></code></pre>
+  </section>
+
+  <!-- 3. DEMO -->
+  <section class="section fade-up d3">
+    <div class="section-label">Demo interactiva</div>
+    <h2 class="section-title">Motor de Inferencia en Acción</h2>
+    <p>Activá los síntomas del paciente. El motor evalúa cada regla en orden y muestra su razonamiento completo — exactamente como lo haría un sistema experto real.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Forward Chaining · Sistema Experto Médico</span>
+        <button onclick="resetSymptoms()">↺ Reiniciar</button>
+      </div>
+
+      <div style="font-family:var(--font-mono);font-size:0.64rem;color:var(--text-faint);letter-spacing:0.09em;text-transform:uppercase;margin-bottom:0.55rem;">Síntomas del paciente</div>
+      <div class="symptom-grid" id="symptom-grid"></div>
+
+      <div class="inference-panel">
+        <div class="panel-box">
+          <div class="panel-box-label">Traza de inferencia</div>
+          <div id="inference-trace"></div>
+        </div>
+        <div class="panel-box">
+          <div class="panel-box-label">Diagnóstico</div>
+          <div id="diagnosis-result">
+            <div class="trace-line" style="color:var(--text-faint)">Sin síntomas activos.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. BASE DE CONOCIMIENTO -->
+  <section class="section fade-up d4">
+    <div class="section-label">Visualización</div>
+    <h2 class="section-title">La Base de Conocimiento</h2>
+    <p>Estas son las cinco reglas del sistema. Cada una con sus condiciones, negaciones opcionales y diagnóstico resultante.</p>
+    <div class="rule-list" id="rule-list"></div>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Limitación fundamental de GOFAI</div>
+      <p>Un sistema experto es exactamente tan bueno como las reglas que tiene. <strong>No generaliza</strong> más allá de lo codificado. Una combinación de síntomas no prevista produce silencio — no una estimación. Esta fragilidad fue la motivación principal para el desarrollo del <em>Machine Learning</em>.</p>
+    </div>
+
+    <hr>
+
+    <h2 class="section-title" style="margin-top:1.5rem">¿Por qué se abandonó GOFAI?</h2>
+    <p>A finales de los 80 se hizo evidente el llamado <strong>knowledge acquisition bottleneck</strong>: codificar el conocimiento experto manualmente era lento, costoso y no escalaba. Un dominio médico completo requeriría millones de reglas con interacciones imposibles de mantener.</p>
+    <p>Además, el mundo real está lleno de <em>incertidumbre</em>: los síntomas son probabilísticos, no booleanos. MYCIN intentó resolverlo con <em>certainty factors</em> ad-hoc, pero la teoría de probabilidad formal (Bayes) y eventualmente el aprendizaje estadístico resultaron ser la respuesta correcta.</p>
+  </section>
+
+  <nav class="module-nav">
+    <span aria-disabled="true">← Anterior</span>
+    <a href="index.html">Índice</a>
+    <a href="02_gofai_busqueda.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+const symptoms = [
+  {id:'fiebre',         label:'Fiebre alta'},
+  {id:'tos',            label:'Tos seca'},
+  {id:'dolor_muscular', label:'Dolor muscular'},
+  {id:'congestion',     label:'Congestión nasal'},
+  {id:'estornudos',     label:'Estornudos'},
+  {id:'perdida_olfato', label:'Pérdida de olfato'},
+  {id:'dificultad_resp',label:'Dificultad resp.'},
+  {id:'dolor_garganta', label:'Dolor de garganta'},
+  {id:'fatiga',         label:'Fatiga extrema'},
+];
+
+const rules = [
+  {name:'R1 · Gripe',      conditions:['fiebre','tos','dolor_muscular'],      not:[], diagnosis:'GRIPE',      color:'#c47c15', conf:0.85},
+  {name:'R2 · Resfriado',  conditions:['congestion','estornudos'],            not:['fiebre'], diagnosis:'RESFRIADO', color:'#3a7d44', conf:0.80},
+  {name:'R3 · COVID-19',   conditions:['fiebre','tos','perdida_olfato'],      not:[], diagnosis:'COVID-19',   color:'#c96442', conf:0.90},
+  {name:'R4 · Neumonía',   conditions:['fiebre','tos','dificultad_resp','fatiga'], not:[], diagnosis:'NEUMONÍA', color:'#7b52a8', conf:0.75},
+  {name:'R5 · Faringitis', conditions:['dolor_garganta','fiebre'],            not:['tos'], diagnosis:'FARINGITIS', color:'#2a6496', conf:0.70},
+];
+
+let active = new Set();
+
+function renderSymptoms() {
+  const g = document.getElementById('symptom-grid');
+  g.innerHTML = '';
+  symptoms.forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'symptom-btn' + (active.has(s.id) ? ' active' : '');
+    b.innerHTML = `<span class="dot"></span>${s.label}`;
+    b.onclick = () => { active.has(s.id) ? active.delete(s.id) : active.add(s.id); renderSymptoms(); runInference(); };
+    g.appendChild(b);
+  });
+}
+
+function resetSymptoms() { active.clear(); renderSymptoms(); runInference(); }
+
+function runInference() {
+  const traceEl  = document.getElementById('inference-trace');
+  const resultEl = document.getElementById('diagnosis-result');
+
+  if (active.size === 0) {
+    traceEl.innerHTML  = `<div class="trace-line" style="color:var(--text-faint)">Working Memory vacía.</div>`;
+    resultEl.innerHTML = `<div class="trace-line" style="color:var(--text-faint)">Sin síntomas activos.</div>`;
+    return;
+  }
+
+  let trace = `<div class="trace-line" style="color:var(--text-faint);margin-bottom:0.3rem">WM = {${[...active].join(', ')}}</div>`;
+  let matches = [];
+
+  rules.forEach(rule => {
+    trace += `<div class="trace-line trace-rule" style="margin-top:0.3rem">${rule.name}</div>`;
+    let ok = true;
+    rule.conditions.forEach(c => {
+      const met = active.has(c);
+      if (!met) ok = false;
+      trace += `<div class="trace-line ${met?'trace-check':'trace-fail'}" style="padding-left:0.9rem">${met?'✓':'✗'} ${c}</div>`;
+    });
+    rule.not.forEach(c => {
+      const absent = !active.has(c);
+      if (!absent) ok = false;
+      trace += `<div class="trace-line ${absent?'trace-check':'trace-fail'}" style="padding-left:0.9rem">${absent?'✓':'✗'} ¬${c}</div>`;
+    });
+    if (ok) {
+      matches.push(rule);
+      trace += `<div class="trace-line" style="padding-left:0.9rem;color:var(--tag-ml)">→ ACTIVA</div>`;
+    }
+  });
+
+  traceEl.innerHTML = trace;
+
+  if (matches.length === 0) {
+    resultEl.innerHTML = `
+      <div class="trace-line" style="color:var(--text-faint);margin-bottom:0.5rem">Ninguna regla satisfecha.</div>
+      <span class="result-badge result-none">SIN DIAGNÓSTICO</span>`;
+  } else {
+    matches.sort((a,b) => b.conf - a.conf);
+    let res = '';
+    matches.forEach(r => {
+      res += `<div style="margin-bottom:0.4rem">
+        <span class="result-badge result-active" style="border-color:${r.color};color:${r.color};background:${r.color}12">${r.diagnosis}</span>
+        <span style="font-family:var(--font-mono);font-size:0.67rem;color:var(--text-faint);margin-left:0.5rem">conf ${Math.round(r.conf*100)}%</span>
+      </div>`;
+    });
+    if (matches.length > 1) {
+      res += `<div class="trace-line" style="color:var(--tag-nn);font-family:var(--font-mono);font-size:0.7rem;margin-top:0.4rem">⚠ Conflicto: ${matches.length} reglas activas</div>`;
+    }
+    resultEl.innerHTML = res;
+  }
+}
+
+function renderRuleList() {
+  const el = document.getElementById('rule-list');
+  rules.forEach(rule => {
+    const conds = rule.conditions.map(c => `<span class="kw-fact">${c}</span>`).join(` <span class="kw-and">∧</span> `);
+    const nots  = rule.not.map(c => `<span class="kw-not">¬</span><span class="kw-fact">${c}</span>`).join(` <span class="kw-and">∧</span> `);
+    const full  = [conds, nots].filter(Boolean).join(` <span class="kw-and">∧</span> `);
+    el.innerHTML += `<div class="rule-item">
+      <span class="kw-if">IF</span> ${full}
+      <span class="kw-then"> → THEN</span>
+      <span class="kw-fact" style="color:${rule.color}"> ${rule.diagnosis}</span>
+      <span style="color:var(--text-faint);font-size:0.7em"> [conf: ${rule.conf}]</span>
+    </div>`;
+  });
+}
+
+renderSymptoms();
+runInference();
+renderRuleList();
+</script>
+</body>
+</html>
+

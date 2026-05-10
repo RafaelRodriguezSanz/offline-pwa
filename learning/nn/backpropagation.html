@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Backpropagation & Regla de la Cadena</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* Redes Neuronales Theme */
+      --accent:         #c47c15; 
+      --accent-hover:   #a36511;
+      --accent-bg:      rgba(196,124,21,0.08);
+      --accent-border:  rgba(196,124,21,0.25);
+      --tag-nn:         #c47c15;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+
+      --col-fwd: #2a6496; /* Blue for Forward */
+      --col-bwd: #c96442; /* Red for Backward */
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-nn { color:var(--tag-nn); border-color:var(--tag-nn); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* CALLOUTS */
+    .callout { border-left:2px solid; padding:0.9rem 1.2rem; border-radius:0 var(--radius-md) var(--radius-md) 0; margin:1.5rem 0; background:var(--bg-raised); box-shadow:var(--shadow-sm); }
+    .callout-key  { border-color:var(--accent);    background:var(--accent-bg); }
+    .callout-tip  { border-color:var(--tag-nn);    background:rgba(196,124,21,0.05); }
+    .callout-label { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.35rem; }
+    .callout-key  .callout-label { color:var(--accent); }
+    .callout-tip  .callout-label { color:var(--tag-nn); }
+    .callout p { margin-bottom:0; }
+
+    /* MATH */
+    .math-block { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:1.4rem 2rem; margin:1.5rem 0; overflow-x:auto; text-align:center; box-shadow:var(--shadow-sm); }
+    .math-block .math-label { font-family:var(--font-mono); font-size:0.66rem; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.75rem; text-align:left; }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .demo-layout .canvas-wrapper { flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.5rem; background: var(--bg-surface); }
+    .demo-layout canvas { width: 100%; height: auto; border-radius: var(--radius-sm); }
+    
+    /* CONTROLS */
+    .ctrl-group { display:flex; align-items:center; gap:0.6rem; }
+    .ctrl-label { font-family:var(--font-mono); font-size:0.67rem; color:var(--text-muted); letter-spacing:0.04em; }
+
+    input[type="range"] { -webkit-appearance:none; width:100px; height:3px; background:var(--border-default); border-radius:999px; outline:none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--accent); cursor:pointer; transition:box-shadow var(--transition); border: 2px solid #fff; box-shadow: var(--shadow-sm); }
+    input[type="range"]::-webkit-slider-thumb:hover { box-shadow:0 0 0 4px var(--accent-bg); }
+
+    .val-pill { font-family:var(--font-mono); font-size:0.67rem; background:var(--bg-overlay); border:1px solid var(--border-subtle); padding:0.12em 0.5em; border-radius:999px; color:var(--accent); min-width:2.5rem; text-align:center; }
+    
+    .demo-controls-bar { display: flex; gap: 1.5rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); justify-content: center; flex-wrap: wrap; }
+
+    /* Legend */
+    .legend-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; }
+    .dot-fwd { background:var(--col-fwd); }
+    .dot-bwd { background:var(--col-bwd); }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+    .d4 { animation-delay:0.32s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 4 — Redes Neuronales</a><span class="sep">›</span>
+    <span class="current">Módulo 17 · Backprop</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-nn">● NN · Módulo 17</span>
+    <h1 class="module-title">Backpropagation &<br>Regla de la Cadena</h1>
+    <p class="module-subtitle">El corazón del Deep Learning. Cómo calcular los gradientes exactos de millones de pesos eficientemente mediante grafos computacionales y cálculo diferencial.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Redes Neuronales</span>
+      <span><strong>Duración</strong> ~30 min</span>
+      <span><strong>Prerrequisitos</strong> MLP & Álgebra Básica</span>
+    </div>
+  </header>
+
+  <!-- ══ 1. EL PROBLEMA ══ -->
+  <section class="section fade-up d1">
+    <div class="section-label">Fundamentos</div>
+    <h2 class="section-title">El problema de la atribución de culpas</h2>
+    <p>En el módulo anterior vimos cómo propagar información hacia adelante (Forward Propagation) para obtener una predicción $\hat{y}$. Luego calculamos el error (o Loss) comparando $\hat{y}$ con la respuesta real $y$.</p>
+    <p>El problema es: si la red neuronal tiene un error de $2.5$, ¿de quién es la "culpa"? ¿Qué peso de la primera capa oculta causó ese error al final de la red? Para actualizar los pesos mediante Descenso del Gradiente, necesitamos saber exactamente la derivada de la función de pérdida con respecto a cada peso individual: $\frac{\partial L}{\partial w_i}$.</p>
+  </section>
+
+  <!-- ══ 2. MATEMÁTICAS ══ -->
+  <section class="section fade-up d2">
+    <div class="section-label">Matemáticas</div>
+    <h2 class="section-title">Grafo Computacional y la Regla de la Cadena</h2>
+    <p>Calcular estas derivadas analíticamente sería una pesadilla algebraica. La genialidad de <strong>Backpropagation</strong> (Rumelhart, Hinton & Williams, 1986) es ver a la red neuronal como un Grafo Computacional de operaciones atómicas simples (sumas, multiplicaciones, max).</p>
+    
+    <p>Aplicando la <strong>Regla de la Cadena</strong> de cálculo infinitesimal, podemos propagar las derivadas <em>hacia atrás</em>. Si sabemos cómo cambia la salida respecto a un nodo intermedio, y cómo cambia ese nodo intermedio respecto a su entrada, simplemente los multiplicamos.</p>
+
+    <div class="math-block">
+      <div class="math-label">La Regla de la Cadena (Chain Rule)</div>
+      $$\frac{\partial z}{\partial x} = \frac{\partial z}{\partial y} \cdot \frac{\partial y}{\partial x}$$
+    </div>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Gradientes Locales vs Globales</div>
+      <p>Durante el paso Forward, cada nodo calcula y guarda su "gradiente local" (e.g., la derivada de $y = x_1 + x_2$ respecto a $x_1$ es 1). Durante el Backward, el nodo recibe el "gradiente global" (la señal de error desde arriba), lo multiplica por su gradiente local, y lo envía a sus inputs (hijos). Es un proceso puramente mecánico y programable.</p>
+    </div>
+  </section>
+
+  <!-- ══ 3. DEMO INTERACTIVA ══ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Anatomía de Backprop</h2>
+    <p>Observá este grafo computacional simple que calcula la función $f(x,y,z) = (x+y) \times z$.</p>
+    <p>Cambiá los valores de entrada. Los números azules arriba de las conexiones muestran el valor <strong>Forward</strong> (el resultado de la función fluyendo hacia la derecha). Los números rojos abajo muestran el gradiente <strong>Backward</strong> (la derivada fluyendo hacia la izquierda).</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Grafo: $f = (x+y) \times z$</span>
+        <div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted);">
+          <span class="legend-dot dot-fwd"></span> Forward Value $\quad$
+          <span class="legend-dot dot-bwd"></span> Backward Gradient $\frac{\partial f}{\partial (\text{nodo})}$
+        </div>
+      </div>
+
+      <div class="demo-layout">
+        <div class="canvas-wrapper" style="width:100%; border:none; background:transparent; padding:0;">
+          <canvas id="canvas-graph" width="700" height="280" style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-md);"></canvas>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Input $x$</span>
+          <input type="range" id="sl-x" min="-5" max="5" step="1" value="-2">
+          <span class="val-pill" id="vl-x">-2</span>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Input $y$</span>
+          <input type="range" id="sl-y" min="-5" max="5" step="1" value="5">
+          <span class="val-pill" id="vl-y">5</span>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Input $z$</span>
+          <input type="range" id="sl-z" min="-5" max="5" step="1" value="-4">
+          <span class="val-pill" id="vl-z">-4</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 4. LA INTUICIÓN ══ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Intuición</div>
+    <h2 class="section-title">El significado de los gradientes</h2>
+    <p>Mirando los gradientes rojos de la demo, podés entender cómo afecta cada variable a la salida $f$. Por ejemplo, si el gradiente de $x$ es $-4$, significa que si aumentamos $x$ en una unidad (ej. de $-2$ a $-1$), la salida total $f$ <em>disminuirá</em> en 4. Esa es exactamente la información que necesita el modelo para saber hacia dónde actualizar el peso y reducir el error.</p>
+
+    <table style="margin-top:1.5rem;">
+      <thead>
+        <tr>
+          <th>Operación</th>
+          <th>Regla de Backprop</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Suma ($+$)</strong></td>
+          <td><strong>Distribuidor:</strong> Pasa el gradiente que recibe de arriba intacto (1.0) a todas sus entradas.</td>
+        </tr>
+        <tr>
+          <td><strong>Multiplicación ($\times$)</strong></td>
+          <td><strong>Intercambiador:</strong> Pasa el gradiente multiplicado por el valor de la <em>otra</em> entrada.</td>
+        </tr>
+        <tr>
+          <td><strong>Max (ReLU)</strong></td>
+          <td><strong>Interruptor:</strong> Pasa el gradiente intacto si $x > 0$, caso contrario pasa 0.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <nav class="module-nav">
+    <a href="16_nn_mlp.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="18_nn_optimizadores.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: BACKPROPAGATION COMPUTATIONAL GRAPH
+══════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('canvas-graph');
+  const ctx = canvas.getContext('2d');
+
+  let inputs = { x: -2, y: 5, z: -4 };
+  let nodes = {};
+
+  const COL_FWD = '#2a6496';
+  const COL_BWD = '#c96442';
+
+  function computeGraph() {
+    // Forward Pass
+    let x = inputs.x;
+    let y = inputs.y;
+    let z = inputs.z;
+
+    let q = x + y;
+    let f = q * z;
+
+    // Backward Pass
+    let df_df = 1.0;
+    
+    // f = q * z
+    let df_dq = z * df_df;
+    let df_dz = q * df_df;
+
+    // q = x + y
+    let df_dx = 1.0 * df_dq;
+    let df_dy = 1.0 * df_dq;
+
+    nodes = {
+      x: { val: x, grad: df_dx },
+      y: { val: y, grad: df_dy },
+      z: { val: z, grad: df_dz },
+      q: { val: q, grad: df_dq },
+      f: { val: f, grad: df_df }
+    };
+  }
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width - 2; // - borders
+    canvas.height = 280;
+    draw();
+  }
+
+  function drawNode(x, y, label, type) {
+    const r = 22;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = type === 'op' ? getComputedStyle(document.documentElement).getPropertyValue('--accent-bg').trim() : '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = type === 'op' ? getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() : getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim();
+    ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+    ctx.font = type === 'op' ? 'bold 18px "Geist Mono", monospace' : '14px "Geist Mono", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y);
+    return { x, y, r };
+  }
+
+  function drawEdge(n1, n2, val, grad) {
+    const startX = n1.x + n1.r;
+    const startY = n1.y;
+    const endX = n2.x - n2.r;
+    const endY = n2.y;
+
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim();
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    // bezier S curve
+    const cpX = (startX + endX) / 2;
+    ctx.bezierCurveTo(cpX, startY, cpX, endY, endX, endY);
+    ctx.stroke();
+
+    // Arrows
+    const mx = (startX + endX) / 2;
+    const my = (startY + endY) / 2;
+
+    // Forward value (Blue, top)
+    ctx.fillStyle = COL_FWD;
+    ctx.font = '12px "Geist Mono", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(val.toFixed(0), mx, my - 6);
+
+    // Backward grad (Red, bottom)
+    ctx.fillStyle = COL_BWD;
+    ctx.textBaseline = 'top';
+    ctx.fillText(grad.toFixed(0), mx, my + 6);
+  }
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    computeGraph();
+
+    // Positions
+    const X_IN = W * 0.15;
+    const X_MID = W * 0.45;
+    const X_OUT = W * 0.75;
+    const X_END = W * 0.95;
+
+    const Y_TOP = H * 0.25;
+    const Y_BOT = H * 0.55;
+    const Y_Z = H * 0.85;
+
+    // Draw Edges first
+    // Edge x -> +
+    const nX = {x: X_IN, y: Y_TOP, r: 22};
+    const nY = {x: X_IN, y: Y_BOT, r: 22};
+    const nZ = {x: X_MID, y: Y_Z, r: 22};
+    const nAdd = {x: X_MID, y: (Y_TOP + Y_BOT)/2, r: 22};
+    const nMul = {x: X_OUT, y: nAdd.y, r: 22};
+    const nEnd = {x: X_END, y: nAdd.y, r: 0}; // Output pin
+
+    drawEdge(nX, nAdd, nodes.x.val, nodes.x.grad);
+    drawEdge(nY, nAdd, nodes.y.val, nodes.y.grad);
+    
+    // Edge q -> *
+    drawEdge(nAdd, nMul, nodes.q.val, nodes.q.grad);
+    
+    // Edge z -> *
+    drawEdge(nZ, nMul, nodes.z.val, nodes.z.grad);
+
+    // Edge * -> Output
+    drawEdge(nMul, nEnd, nodes.f.val, nodes.f.grad);
+
+    // Draw Nodes
+    drawNode(nX.x, nX.y, 'x', 'var');
+    drawNode(nY.x, nY.y, 'y', 'var');
+    drawNode(nZ.x, nZ.y, 'z', 'var');
+    
+    drawNode(nAdd.x, nAdd.y, '+', 'op');
+    // Draw q label above add
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+    ctx.font = '11px "Geist Mono", monospace';
+    ctx.textAlign = 'center'; ctx.fillText('q', nAdd.x, nAdd.y - 32);
+
+    drawNode(nMul.x, nMul.y, '×', 'op');
+    // Draw f label above mul
+    ctx.fillText('f', nMul.x, nMul.y - 32);
+    ctx.fillText('Output', X_END - 15, nEnd.y - 20);
+  }
+
+  // Interactions
+  function updateData() {
+    inputs.x = parseInt(document.getElementById('sl-x').value);
+    inputs.y = parseInt(document.getElementById('sl-y').value);
+    inputs.z = parseInt(document.getElementById('sl-z').value);
+    draw();
+  }
+
+  ['sl-x', 'sl-y', 'sl-z'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function() {
+      document.getElementById('vl-' + id.split('-')[1]).textContent = this.value;
+      updateData();
+    });
+  });
+
+  // Init
+  window.addEventListener('resize', resize);
+  
+  setTimeout(() => {
+    resize();
+  }, 100);
+
+})();
+</script>
+</body>
+</html>
+

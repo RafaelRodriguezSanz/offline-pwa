@@ -5,7 +5,7 @@
  * loads instantly and works fully offline after the first visit.
  */
 
-const CACHE_NAME = "localsync-v22";
+const CACHE_NAME = "localsync-v23";
 
 // ... (existing comments) ...
 

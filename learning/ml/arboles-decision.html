@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Árboles de Decisión & Random Forest</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      --accent:         #3a7d44; /* Tag ML */
+      --accent-hover:   #2e6636;
+      --accent-bg:      rgba(58,125,68,0.07);
+      --accent-border:  rgba(58,125,68,0.2);
+      --tag-ml:         #3a7d44;
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+      
+      --col-a: #2a6496; /* Class A color */
+      --col-b: #c96442; /* Class B color */
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-ml { color:var(--tag-ml); border-color:var(--tag-ml); background:rgba(58,125,68,0.06); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* CALLOUTS */
+    .callout { border-left:2px solid; padding:0.9rem 1.2rem; border-radius:0 var(--radius-md) var(--radius-md) 0; margin:1.5rem 0; background:var(--bg-raised); box-shadow:var(--shadow-sm); }
+    .callout-key  { border-color:var(--accent);    background:var(--accent-bg); }
+    .callout-tip  { border-color:var(--tag-ml);    background:rgba(58,125,68,0.04); }
+    .callout-label { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.35rem; }
+    .callout-key  .callout-label { color:var(--accent); }
+    .callout-tip  .callout-label { color:var(--tag-ml); }
+    .callout p { margin-bottom:0; }
+
+    /* CODE */
+    pre { background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-md); padding:1.2rem 1.4rem; overflow-x:auto; margin:1.5rem 0; font-family:var(--font-mono); font-size:0.8rem; line-height:1.65; color:var(--code-text); box-shadow:var(--shadow-sm); }
+    .code-header { display:flex; align-items:center; justify-content:space-between; background:var(--bg-overlay); border:1px solid var(--border-default); border-bottom:none; border-radius:var(--radius-md) var(--radius-md) 0 0; padding:0.45rem 1rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); margin-top:1.5rem; }
+    .code-header + pre { margin-top:0; border-top-left-radius:0; border-top-right-radius:0; }
+    code { font-family:var(--font-mono); font-size:0.84em; background:var(--code-bg); padding:0.13em 0.42em; border-radius:4px; color:var(--accent); border:1px solid var(--code-border); }
+    pre code { background:none; padding:0; border:none; color:inherit; font-size:inherit; }
+
+    /* MATH */
+    .math-block { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:1.4rem 2rem; margin:1.5rem 0; overflow-x:auto; text-align:center; box-shadow:var(--shadow-sm); }
+    .math-block .math-label { font-family:var(--font-mono); font-size:0.66rem; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.75rem; text-align:left; }
+
+    /* TABLE */
+    table { width:100%; border-collapse:collapse; font-size:0.875rem; margin:1.5rem 0; }
+    th { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); text-align:left; padding:0.55rem 1rem; border-bottom:1px solid var(--border-default); }
+    td { padding:0.6rem 1rem; border-bottom:1px solid var(--border-subtle); color:var(--text-secondary); vertical-align:top; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:var(--bg-overlay); }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .demo-layout .canvas-wrapper { flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.5rem; background: var(--bg-surface); }
+    .demo-layout canvas { width: 100%; height: auto; border-radius: var(--radius-sm); }
+    .demo-layout .canvas-title { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .ctrl-group { display:flex; align-items:center; gap:0.6rem; }
+    .ctrl-label { font-family:var(--font-mono); font-size:0.67rem; color:var(--text-muted); letter-spacing:0.04em; }
+
+    input[type="range"] { -webkit-appearance:none; width:100px; height:3px; background:var(--border-default); border-radius:999px; outline:none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--accent); cursor:pointer; transition:box-shadow var(--transition); }
+    input[type="range"]::-webkit-slider-thumb:hover { box-shadow:0 0 0 4px var(--accent-bg); }
+
+    .val-pill { font-family:var(--font-mono); font-size:0.67rem; background:var(--bg-overlay); border:1px solid var(--border-subtle); padding:0.12em 0.5em; border-radius:999px; color:var(--accent); min-width:2rem; text-align:center; }
+    
+    .demo-controls-bar { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background:var(--border-default); border-radius:999px; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+    .d4 { animation-delay:0.32s; opacity:0; }
+    
+    .legend-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; }
+    .dot-a { background:var(--col-a); }
+    .dot-b { background:var(--col-b); }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 2 — Machine Learning</a><span class="sep">›</span>
+    <span class="current">Módulo 11 · Árboles</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-ml">● ML · Módulo 11</span>
+    <h1 class="module-title">Árboles de Decisión &<br>Random Forest</h1>
+    <p class="module-subtitle">Divide y vencerás. Cómo usar Entropía y Ganancia de Información para construir reglas interpretables, y cómo el Bagging crea los poderosos Random Forests.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Machine Learning</span>
+      <span><strong>Duración</strong> ~30 min</span>
+      <span><strong>Prerrequisitos</strong> Clasificación Básica</span>
+    </div>
+  </header>
+
+  <!-- ══ 1. CONCEPTO ══ -->
+  <section class="section fade-up d1">
+    <div class="section-label">Concepto</div>
+    <h2 class="section-title">El poder de las reglas simples</h2>
+    <p>A diferencia de la regresión logística o SVM, que buscan una única ecuación matemática para separar los datos (una línea o hiperplano), los <strong>Árboles de Decisión</strong> aprenden mediante una jerarquía de preguntas simples, estilo "Akinator" o el juego de las 20 preguntas.</p>
+    <p>Visualmente, un árbol de decisión divide el espacio de características mediante líneas ortogonales (perpendiculares a los ejes), formando rectángulos. Cada rectángulo corresponde a una "hoja" del árbol, y se le asigna la clase mayoritaria de los datos que cayeron en él.</p>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Interpretabilidad</div>
+      <p>La gran ventaja de un árbol individual es que es <strong>completamente interpretable</strong>. Puedes seguir el camino desde la raíz hasta una hoja y entender exactamente <em>por qué</em> el modelo tomó esa decisión (ej: "Edad > 30 y Salario < 50k").</p>
+    </div>
+  </section>
+
+  <!-- ══ 2. MATEMÁTICAS (ENTROPÍA) ══ -->
+  <section class="section fade-up d2">
+    <div class="section-label">Matemáticas</div>
+    <h2 class="section-title">¿Cómo elegir la mejor pregunta?</h2>
+    <p>Para construir el árbol, necesitamos una métrica que nos diga qué tan "pura" es una partición de los datos. Queremos divisiones que separen las clases lo mejor posible. Hay dos métricas principales: <strong>Entropía</strong> e <strong>Impureza de Gini</strong>.</p>
+
+    <div class="math-block">
+      <div class="math-label">Entropía (Teoría de la Información)</div>
+      $$H(S) = - \sum_{c \in C} p(c) \log_2 p(c)$$
+    </div>
+
+    <p>Donde $p(c)$ es la proporción de ejemplos de la clase $c$ en el conjunto $S$. Si un nodo es puro (todos los ejemplos son de una clase), la entropía es $0$. Si está perfectamente mezclado (50/50), la entropía es $1$ (máxima incertidumbre).</p>
+
+    <p>Para decidir dónde hacer el corte, evaluamos la <strong>Ganancia de Información (IG)</strong> para cada posible umbral. La ganancia es la reducción de entropía tras la división:</p>
+
+    <div class="math-block">
+      <div class="math-label">Ganancia de Información</div>
+      $$IG(S, A) = H(S) - \sum_{v \in Values(A)} \frac{|S_v|}{|S|} H(S_v)$$
+    </div>
+
+    <p>El algoritmo (usualmente CART o ID3) prueba todos los cortes posibles en todas las variables, y elige el que maximiza el $IG$. Luego, repite el proceso recursivamente para cada sub-nodo creado.</p>
+  </section>
+
+  <!-- ══ 3. DEMO INTERACTIVA ══ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Haciendo crecer el Árbol</h2>
+    <p>Observá cómo el algoritmo particiona el espacio paso a paso. Presioná <strong>"Paso (Dividir)"</strong> para agregar un nivel al árbol. Podés ajustar la profundidad máxima para evitar el sobreajuste (overfitting).</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Construcción del Árbol (CART)</span>
+        <div class="ctrl-group">
+          <button id="btn-tree-regen">Generar Datos</button>
+        </div>
+      </div>
+
+      <div class="demo-layout">
+        <div class="canvas-wrapper">
+          <div class="canvas-title">Espacio de Características (Splits)</div>
+          <canvas id="canvas-space" width="400" height="300"></canvas>
+          <div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.5rem;">
+            <span class="legend-dot dot-a"></span> Clase A (Rojo) &nbsp;
+            <span class="legend-dot dot-b"></span> Clase B (Azul)
+          </div>
+        </div>
+        <div class="canvas-wrapper">
+          <div class="canvas-title">Estructura del Árbol</div>
+          <canvas id="canvas-tree" width="400" height="300"></canvas>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <button class="btn-primary" id="btn-tree-step">▶ Paso (Dividir hojas)</button>
+        <button id="btn-tree-reset">↺ Reiniciar Árbol</button>
+        <div style="flex:1"></div>
+        <div class="ctrl-group">
+          <span class="ctrl-label" title="Profundidad Máxima">Max Depth</span>
+          <input type="range" id="sl-max-depth" min="1" max="8" step="1" value="4">
+          <span class="val-pill" id="vl-max-depth">4</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 4. OVERFITTING & RANDOM FOREST ══ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Ensembles</div>
+    <h2 class="section-title">El problema: Overfitting extremo</h2>
+    <p>Un árbol de decisión sin restricciones crecerá hasta que cada hoja contenga un solo punto (entropía 0). Esto crea un modelo que <strong>memoriza el ruido</strong> de los datos de entrenamiento (alto <em>variance</em>), produciendo fronteras de decisión extremadamente irregulares que no generalizan bien.</p>
+
+    <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin-top:1.5rem;margin-bottom:0.5rem;font-weight:500;">Random Forest al rescate</h3>
+    <p>Para solucionar esto, usamos la técnica de <strong>Bagging</strong> (Bootstrap Aggregating) combinada con selección aleatoria de features, creando un <strong>Random Forest</strong> (Bosque Aleatorio).</p>
+
+    <table style="margin-top:1rem;">
+      <thead>
+        <tr><th>Concepto</th><th>Cómo funciona en Random Forest</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Bootstrap (Bagging)</strong></td>
+          <td>En lugar de entrenar un árbol con todos los datos, entrenamos 100 árboles. Cada árbol recibe una muestra aleatoria <em>con reemplazo</em> del dataset original.</td>
+        </tr>
+        <tr>
+          <td><strong>Feature Randomness</strong></td>
+          <td>En cada split de cada nodo, no buscamos la mejor variable entre <em>todas</em>, sino entre un subconjunto aleatorio (ej: $\sqrt{d}$). Esto fuerza a que los árboles sean diversos.</td>
+        </tr>
+        <tr>
+          <td><strong>Aggregating (Votación)</strong></td>
+          <td>Para predecir, le preguntamos a los 100 árboles. En clasificación gana la clase más votada; en regresión se promedian los resultados.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-tip">
+      <div class="callout-label">La Sabiduría de las Multitudes</div>
+      <p>Un solo árbol sobreajusta. Pero si combinamos muchos árboles diversos e independientes, los errores de sobreajuste individuales se cancelan al promediar. Un Random Forest casi no sufre de sobreajuste y es uno de los algoritmos "out-of-the-box" más poderosos en ML tabular.</p>
+    </div>
+  </section>
+
+  <!-- ══ 5. FEATURE IMPORTANCE ══ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Interpretación</div>
+    <h2 class="section-title">Importancia de Características (Feature Importance)</h2>
+    <p>Aunque un Random Forest pierde la interpretabilidad directa de un solo árbol (no podés leer 100 árboles a la vez), ofrece algo igual de valioso: <strong>Feature Importance</strong>.</p>
+    <p>Podemos calcular qué tan importante es una variable sumando cuánta Ganancia de Información (o reducción de Gini) aportó esa variable en todas las veces que fue usada para dividir un nodo en todo el bosque. Esto permite hacer selección de variables y entender qué impulsa las predicciones.</p>
+
+    <div class="code-header"><span>random_forest.py</span><span>Scikit-Learn</span></div>
+    <pre><code>from sklearn.ensemble import RandomForestClassifier
+
+# Entrenar un bosque con 100 árboles
+rf = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
+rf.fit(X_train, y_train)
+
+# Ver cuáles son las variables más importantes
+importances = rf.feature_importances_
+for name, imp in zip(feature_names, importances):
+    print(f"{name}: {imp:.3f}")</code></pre>
+  </section>
+
+  <nav class="module-nav">
+    <a href="10_ml_naive_bayes.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="12_ml_boosting.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: ÁRBOL DE DECISIÓN INTERACTIVO (CART)
+══════════════════════════════════════════════ */
+(function() {
+  const canvasSpace = document.getElementById('canvas-space');
+  const ctxSpace = canvasSpace.getContext('2d');
+  const canvasTree = document.getElementById('canvas-tree');
+  const ctxTree = canvasTree.getContext('2d');
+
+  let points = [];
+  let root = null;
+  let maxDepth = 4;
+  
+  const COLORS = {
+    A: '#c96442', // Red-ish
+    B: '#2a6496', // Blue-ish
+    line: '#3a3530',
+    nodeBG: '#ffffff',
+    nodeBorder: '#bfb5ab'
+  };
+
+  // Setup canvas size
+  function resizeCanvas(c) {
+    const rect = c.parentElement.getBoundingClientRect();
+    c.width = rect.width - 16; // padding
+    c.height = 300;
+  }
+
+  // --- Data Generation ---
+  function generateData() {
+    points = [];
+    // Generate a checkerboard-like pattern to make the tree interesting
+    for (let i = 0; i < 150; i++) {
+      const x = Math.random();
+      const y = Math.random();
+      
+      let cls = 0;
+      if (x < 0.5 && y < 0.5) cls = 1;
+      else if (x >= 0.5 && y >= 0.5) cls = 1;
+      else cls = 0;
+
+      // Add noise
+      if (Math.random() < 0.15) cls = 1 - cls;
+
+      points.push({ x, y, cls });
+    }
+  }
+
+  // --- Tree Logic ---
+  class TreeNode {
+    constructor(points, depth, bounds) {
+      this.points = points;
+      this.depth = depth;
+      this.bounds = bounds; // { xMin, xMax, yMin, yMax }
+      this.feature = null; // 'x' or 'y'
+      this.threshold = null;
+      this.left = null;
+      this.right = null;
+      this.isLeaf = true;
+      
+      // Calculate class counts
+      let countA = 0, countB = 0;
+      for (const p of points) {
+        if (p.cls === 0) countA++; else countB++;
+      }
+      this.majorityClass = countA > countB ? 0 : 1;
+      this.gini = calculateGini(countA, countB);
+    }
+  }
+
+  function calculateGini(cA, cB) {
+    const total = cA + cB;
+    if (total === 0) return 0;
+    const pA = cA / total;
+    const pB = cB / total;
+    return 1 - (pA * pA + pB * pB);
+  }
+
+  function findBestSplit(points) {
+    let bestFeature = null;
+    let bestThreshold = null;
+    let bestGini = Infinity;
+
+    const total = points.length;
+    if (total <= 1) return null;
+
+    const features = ['x', 'y'];
+    for (const f of features) {
+      // Sort points by feature to test thresholds between adjacent points
+      const sorted = [...points].sort((a, b) => a[f] - b[f]);
+      
+      for (let i = 0; i < sorted.length - 1; i++) {
+        // Skip identical values
+        if (sorted[i][f] === sorted[i+1][f]) continue;
+        
+        const threshold = (sorted[i][f] + sorted[i+1][f]) / 2;
+        
+        let lA = 0, lB = 0, rA = 0, rB = 0;
+        for (const p of sorted) {
+          if (p[f] <= threshold) {
+            if (p.cls === 0) lA++; else lB++;
+          } else {
+            if (p.cls === 0) rA++; else rB++;
+          }
+        }
+
+        const lTotal = lA + lB;
+        const rTotal = rA + rB;
+        const giniLeft = calculateGini(lA, lB);
+        const giniRight = calculateGini(rA, rB);
+        
+        // Weighted Gini impurity
+        const weightedGini = (lTotal / total) * giniLeft + (rTotal / total) * giniRight;
+
+        if (weightedGini < bestGini) {
+          bestGini = weightedGini;
+          bestFeature = f;
+          bestThreshold = threshold;
+        }
+      }
+    }
+
+    // If no gain, don't split
+    const currentGini = calculateGini(
+      points.filter(p=>p.cls===0).length, 
+      points.filter(p=>p.cls===1).length
+    );
+    if (bestGini >= currentGini - 1e-5) return null;
+
+    return { feature: bestFeature, threshold: bestThreshold, gini: bestGini };
+  }
+
+  function splitNode(node) {
+    if (!node.isLeaf) return false; // Already split
+    if (node.gini === 0) return false; // Pure node
+    if (node.depth >= maxDepth) return false; // Max depth reached
+    if (node.points.length <= 1) return false; // Too few points
+
+    const split = findBestSplit(node.points);
+    if (!split) return false;
+
+    node.feature = split.feature;
+    node.threshold = split.threshold;
+    node.isLeaf = false;
+
+    const leftPts = [];
+    const rightPts = [];
+    for (const p of node.points) {
+      if (p[node.feature] <= node.threshold) leftPts.push(p);
+      else rightPts.push(p);
+    }
+
+    let bL = { ...node.bounds };
+    let bR = { ...node.bounds };
+    if (node.feature === 'x') {
+      bL.xMax = node.threshold;
+      bR.xMin = node.threshold;
+    } else {
+      bL.yMax = node.threshold;
+      bR.yMin = node.threshold;
+    }
+
+    node.left = new TreeNode(leftPts, node.depth + 1, bL);
+    node.right = new TreeNode(rightPts, node.depth + 1, bR);
+    return true;
+  }
+
+  function stepTree(node) {
+    if (!node) return false;
+    
+    // Breadth-first search to find the shallowest nodes to split
+    const queue = [node];
+    let splitOccurred = false;
+    
+    // We want to split ALL leaves at the current shallowest expandable depth
+    let targetDepth = -1;
+
+    while (queue.length > 0) {
+      const curr = queue.shift();
+      
+      if (curr.isLeaf) {
+        if (targetDepth === -1 || curr.depth === targetDepth) {
+          if (splitNode(curr)) {
+            splitOccurred = true;
+            targetDepth = curr.depth; // lock to this depth for this step
+          }
+        }
+      } else {
+        queue.push(curr.left);
+        queue.push(curr.right);
+      }
+    }
+    
+    return splitOccurred;
+  }
+
+  // --- Rendering ---
+  function drawSpace(node) {
+    const W = canvasSpace.width;
+    const H = canvasSpace.height;
+    
+    // Draw background regions recursively
+    function drawRegion(n) {
+      if (n.isLeaf) {
+        ctxSpace.fillStyle = n.majorityClass === 0 ? 'rgba(201,100,66,0.15)' : 'rgba(42,100,150,0.15)';
+        ctxSpace.fillRect(n.bounds.xMin * W, n.bounds.yMin * H, (n.bounds.xMax - n.bounds.xMin) * W, (n.bounds.yMax - n.bounds.yMin) * H);
+      } else {
+        drawRegion(n.left);
+        drawRegion(n.right);
+        
+        // Draw split line
+        ctxSpace.strokeStyle = COLORS.line;
+        ctxSpace.lineWidth = 1.5;
+        ctxSpace.beginPath();
+        if (n.feature === 'x') {
+          const x = n.threshold * W;
+          ctxSpace.moveTo(x, n.bounds.yMin * H);
+          ctxSpace.lineTo(x, n.bounds.yMax * H);
+        } else {
+          const y = n.threshold * H;
+          ctxSpace.moveTo(n.bounds.xMin * W, y);
+          ctxSpace.lineTo(n.bounds.xMax * W, y);
+        }
+        ctxSpace.stroke();
+      }
+    }
+    
+    ctxSpace.clearRect(0, 0, W, H);
+    if (root) drawRegion(root);
+
+    // Draw borders
+    ctxSpace.strokeStyle = '#bfb5ab';
+    ctxSpace.lineWidth = 1;
+    ctxSpace.strokeRect(0,0,W,H);
+
+    // Draw points
+    for (const p of points) {
+      ctxSpace.beginPath();
+      ctxSpace.arc(p.x * W, p.y * H, 4, 0, Math.PI * 2);
+      ctxSpace.fillStyle = p.cls === 0 ? COLORS.A : COLORS.B;
+      ctxSpace.fill();
+      ctxSpace.strokeStyle = '#fff';
+      ctxSpace.lineWidth = 1;
+      ctxSpace.stroke();
+    }
+  }
+
+  function drawTree() {
+    const W = canvasTree.width;
+    const H = canvasTree.height;
+    ctxTree.clearRect(0, 0, W, H);
+    if (!root) return;
+
+    const NODE_R = 12;
+    const LEVEL_H = 45;
+
+    // First pass to assign positions
+    function calcPositions(n, depth, left, right) {
+      if (!n) return;
+      n.visX = (left + right) / 2;
+      n.visY = 30 + depth * LEVEL_H;
+      
+      if (!n.isLeaf) {
+        calcPositions(n.left, depth + 1, left, n.visX);
+        calcPositions(n.right, depth + 1, n.visX, right);
+      }
+    }
+    calcPositions(root, 0, 0, W);
+
+    // Second pass to draw lines
+    ctxTree.strokeStyle = '#8c847c';
+    ctxTree.lineWidth = 1.5;
+    function drawLines(n) {
+      if (!n || n.isLeaf) return;
+      
+      ctxTree.beginPath();
+      ctxTree.moveTo(n.visX, n.visY + NODE_R);
+      ctxTree.lineTo(n.left.visX, n.left.visY - NODE_R);
+      ctxTree.stroke();
+
+      ctxTree.beginPath();
+      ctxTree.moveTo(n.visX, n.visY + NODE_R);
+      ctxTree.lineTo(n.right.visX, n.right.visY - NODE_R);
+      ctxTree.stroke();
+
+      drawLines(n.left);
+      drawLines(n.right);
+    }
+    drawLines(root);
+
+    // Third pass to draw nodes
+    function drawNodes(n) {
+      if (!n) return;
+
+      // Box or circle
+      ctxTree.beginPath();
+      if (n.isLeaf) {
+        // Square for leaf
+        ctxTree.rect(n.visX - NODE_R, n.visY - NODE_R, NODE_R*2, NODE_R*2);
+        ctxTree.fillStyle = n.majorityClass === 0 ? COLORS.A : COLORS.B;
+      } else {
+        // Circle for split
+        ctxTree.arc(n.visX, n.visY, NODE_R, 0, Math.PI * 2);
+        ctxTree.fillStyle = COLORS.nodeBG;
+      }
+      ctxTree.fill();
+      ctxTree.strokeStyle = COLORS.nodeBorder;
+      ctxTree.lineWidth = 1.5;
+      ctxTree.stroke();
+
+      // Label
+      if (!n.isLeaf) {
+        ctxTree.fillStyle = COLORS.line;
+        ctxTree.font = '9px "Geist Mono", monospace';
+        ctxTree.textAlign = 'center';
+        ctxTree.textBaseline = 'middle';
+        ctxTree.fillText(`${n.feature}`, n.visX, n.visY);
+      }
+
+      drawNodes(n.left);
+      drawNodes(n.right);
+    }
+    drawNodes(root);
+  }
+
+  function renderAll() {
+    drawSpace();
+    drawTree();
+  }
+
+  function resetTree() {
+    root = new TreeNode(points, 0, { xMin: 0, xMax: 1, yMin: 0, yMax: 1 });
+    renderAll();
+  }
+
+  // --- Interaction ---
+  document.getElementById('btn-tree-regen').addEventListener('click', () => {
+    generateData();
+    resetTree();
+  });
+
+  document.getElementById('btn-tree-reset').addEventListener('click', () => {
+    resetTree();
+  });
+
+  document.getElementById('btn-tree-step').addEventListener('click', () => {
+    if (!root) resetTree();
+    stepTree(root);
+    renderAll();
+  });
+
+  const slDepth = document.getElementById('sl-max-depth');
+  slDepth.addEventListener('input', function() {
+    document.getElementById('vl-max-depth').textContent = this.value;
+    maxDepth = parseInt(this.value);
+    // Auto re-grow tree up to new depth if it was already grown
+    // Simplest is to just reset it
+    resetTree();
+  });
+
+  // Init
+  window.addEventListener('resize', () => {
+    resizeCanvas(canvasSpace);
+    resizeCanvas(canvasTree);
+    renderAll();
+  });
+  
+  // Delay first draw slightly to ensure fonts/layout are ready
+  setTimeout(() => {
+    resizeCanvas(canvasSpace);
+    resizeCanvas(canvasTree);
+    generateData();
+    resetTree();
+  }, 100);
+
+})();
+</script>
+</body>
+</html>
+

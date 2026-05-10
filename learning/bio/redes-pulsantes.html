@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — SNNs y LIFColumn</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb; --bg-surface:     #faf7f4; --bg-raised:      #ffffff;
+      --border-subtle:  #e8e1d9; --border-default: #d9d0c7; --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714; --text-secondary: #4a4540; --text-muted:     #8c847c;
+      --accent:         #9c27b0; --accent-hover:   #7b1fa2; --accent-bg:      rgba(156,39,176,0.08);
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; padding: 0 1.5rem 5rem; max-width: 860px; margin: 0 auto;}
+    
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar .current { color:var(--text-secondary); }
+
+    .module-badge { display:inline-flex; font-family:var(--font-mono); font-size:0.67rem; padding:0.28em 0.75em; border-radius:999px; border:1px solid var(--accent); color:var(--accent); background:var(--accent-bg); margin-bottom:1rem; }
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; text-transform:uppercase; color:var(--text-muted); margin: 2rem 0 0.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom:0.5rem;}
+    h2 { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+    p, ul { color:var(--text-secondary); margin-bottom:1rem; }
+    ul { padding-left: 1.5rem; }
+    li { margin-bottom: 0.5rem; }
+    
+    code { font-family: var(--font-mono); font-size: 0.85em; background: rgba(0,0,0,0.05); padding: 0.1em 0.3em; border-radius: 3px; }
+
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:10px; padding:1.5rem; margin:1.5rem 0; box-shadow:0 4px 12px rgba(0,0,0,0.05); }
+    canvas { width: 100%; height: 250px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 6px; }
+    
+    button { font-family:var(--font-mono); font-size:0.73rem; padding:0.5em 1em; border-radius:6px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; }
+    
+    .module-nav { display:flex; justify-content:space-between; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a> › Área 9 › <span class="current">Módulo 43 · SNNs</span></nav>
+
+  <span class="module-badge">● BIO · Módulo 43</span>
+  <h1 class="module-title">Redes Neuronales Pulsantes<br>(Modelo LIF y Columnas)</h1>
+  <p class="module-subtitle">A diferencia del Deep Learning, el cerebro biológico (como se simula en el proyecto <code>my-brain</code>) procesa mediante picos de electricidad ("spikes") y se organiza en microcolumnas (L4, L2/3, L5).</p>
+
+  <div class="section-label">Implementación Tcnica: LIFColumn</div>
+  <h2>El Modelo Leaky Integrate-and-Fire</h2>
+  <p>En el código de <code>core/cortical_column.py</code>, la unidad básica no es un tensor estático, sino una clase <code>LIFColumn</code> simulada con el tiempo <code>dt</code>. Sus propiedades clave son:</p>
+  <ul>
+    <li><strong>Dinámica de Membrana:</strong> Un <code>v_rest</code> (-68mV), un umbral de disparo <code>v_thresh</code> (-50mV) y una fuga <code>tau</code>.</li>
+    <li><strong>Receptores Sinápticos:</strong> Corrientes modeladas según biología real (AMPA rápido, NMDA lento con bloqueo de Magnesio dependiente de voltaje, y GABA inhibitorio).</li>
+    <li><strong>Poblaciones E/I:</strong> 1080 neuronas divididas en Excitatorias (80%) e Inhibitorias (20%) por cada capa cortical (L4, L23, L5).</li>
+    <li><strong>Plasticidad:</strong> Reglas de aprendizaje de Oja y Homeostasis para balancear la excitación e inhibición global.</li>
+  </ul>
+
+  <div class="section-label">Demo Interactiva</div>
+  <h2>Dinámica de Voltaje y "Spiking"</h2>
+  <p>Mantén presionado el botón para inyectar corriente en el soma de la neurona LIF. Nota cómo, tras superar el umbral, dispara y entra en su período refractario (donde el voltaje cae a <code>v_reset</code>).</p>
+
+  <div class="demo-container">
+    <div style="display:flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.8rem; margin-bottom: 0.5rem;">
+      <span>LIF Oscilloscope</span>
+      <span id="lbl-status">Voltaje: -68.9 mV</span>
+    </div>
+    <canvas id="canvas-lif" width="800" height="250"></canvas>
+    <div style="text-align: center; margin-top: 1rem;">
+      <button id="btn-inject" style="user-select: none;">⚡ Inyectar Corriente (Input L4)</button>
+    </div>
+  </div>
+
+  <nav class="module-nav">
+    <a href="42_qc_qml.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="44_bio_corteza.html">Próximo →</a>
+  </nav>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas-lif');
+  const ctx = canvas.getContext('2d');
+  const btnInject = document.getElementById('btn-inject');
+  const lblStatus = document.getElementById('lbl-status');
+
+  const history = [];
+  const maxHistory = 400;
+
+  // my-brain LIF default values
+  const V_rest = -68.9;
+  const V_th = -50.0;
+  const V_spike = 20.0;
+  const V_reset = -65.0;
+  const tau = 25.6; 
+  const dt = 1.0;
+  
+  let V = V_rest;
+  let isInjecting = false;
+  let refractoryCounter = 0;
+  const refractoryPeriod = 2.0;
+
+  for(let i=0; i<maxHistory; i++) history.push(V_rest);
+
+  function update() {
+    if (refractoryCounter > 0) {
+      refractoryCounter -= dt;
+      V = V_reset;
+    } else {
+      let dv = -(V - V_rest) / tau;
+      if (isInjecting) dv += 4.5; // I_total input
+      V += dv * dt;
+
+      if (V >= V_th) {
+        V = V_spike;
+        refractoryCounter = refractoryPeriod;
+      }
+    }
+
+    history.push(V);
+    if(history.length > maxHistory) history.shift();
+    
+    let dispV = V === V_spike ? V_th : V; 
+    lblStatus.textContent = `Voltaje: ${dispV.toFixed(1)} mV`;
+  }
+
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    const mapY = (v) => H - (((v + 90) / 120) * H);
+
+    ctx.strokeStyle = 'rgba(211, 47, 47, 0.5)';
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.moveTo(0, mapY(V_th)); ctx.lineTo(W, mapY(V_th)); ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+    ctx.beginPath(); ctx.moveTo(0, mapY(V_rest)); ctx.lineTo(W, mapY(V_rest)); ctx.stroke();
+
+    ctx.setLineDash([]); ctx.strokeStyle = '#9c27b0'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    let stepX = W / maxHistory;
+    history.forEach((v, i) => { i === 0 ? ctx.moveTo(i*stepX, mapY(v)) : ctx.lineTo(i*stepX, mapY(v)); });
+    ctx.stroke();
+  }
+
+  function loop() { update(); draw(); requestAnimationFrame(loop); }
+  
+  btnInject.addEventListener('mousedown', () => isInjecting = true);
+  btnInject.addEventListener('mouseup', () => isInjecting = false);
+  btnInject.addEventListener('mouseleave', () => isInjecting = false);
+  btnInject.addEventListener('touchstart', (e) => { e.preventDefault(); isInjecting = true; });
+  btnInject.addEventListener('touchend', (e) => { e.preventDefault(); isInjecting = false; });
+  loop();
+})();
+</script>
+</body>
+</html>
+

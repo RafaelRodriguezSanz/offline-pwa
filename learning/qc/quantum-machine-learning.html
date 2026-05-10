@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>IA desde Cero — Template</title>
+  <title>IA desde Cero — Quantum Machine Learning</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,17 +27,14 @@
       --text-secondary: #4a4540;
       --text-muted:     #8c847c;
       --text-faint:     #b8b0a8;
-      --accent:         #c96442;
-      --accent-hover:   #b05838;
-      --accent-bg:      rgba(201,100,66,0.07);
-      --accent-border:  rgba(201,100,66,0.2);
-      --tag-gofai:      #2a6496;
-      --tag-ml:         #3a7d44;
-      --tag-nn:         #c47c15;
-      --tag-dl:         #c96442;
-      --tag-llm:        #7b52a8;
-      --tag-ga:         #2e7d7d;
+      
+      /* QC Theme */
+      --accent:         #1a5fa0; 
+      --accent-hover:   #134575;
+      --accent-bg:      rgba(26,95,160,0.08);
+      --accent-border:  rgba(26,95,160,0.25);
       --tag-qc:         #1a5fa0;
+      
       --code-bg:        #f0ebe4;
       --code-border:    #ddd6ce;
       --code-text:      #3a3530;
@@ -53,7 +50,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { font-size: 16px; scroll-behavior: smooth; }
     body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
-    ::selection { background: rgba(201,100,66,0.12); }
+    ::selection { background: var(--accent-bg); }
 
     .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
 
@@ -67,13 +64,7 @@
     /* HEADER */
     .module-header { margin-bottom:2.5rem; }
     .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
-    .badge-gofai { color:var(--tag-gofai); border-color:var(--tag-gofai); background:rgba(42,100,150,0.06); }
-    .badge-ml    { color:var(--tag-ml);    border-color:var(--tag-ml);    background:rgba(58,125,68,0.06);  }
-    .badge-nn    { color:var(--tag-nn);    border-color:var(--tag-nn);    background:rgba(196,124,21,0.07); }
-    .badge-dl    { color:var(--tag-dl);    border-color:var(--tag-dl);    background:rgba(201,100,66,0.07); }
-    .badge-llm   { color:var(--tag-llm);   border-color:var(--tag-llm);   background:rgba(123,82,168,0.06); }
-    .badge-ga    { color:var(--tag-ga);    border-color:var(--tag-ga);    background:rgba(46,125,125,0.06); }
-    .badge-qc    { color:var(--tag-qc);    border-color:var(--tag-qc);    background:rgba(26,95,160,0.06);  }
+    .badge-qc { color:var(--tag-qc); border-color:var(--tag-qc); background:var(--accent-bg); }
 
     .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
     .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
@@ -95,51 +86,28 @@
     /* CALLOUTS */
     .callout { border-left:2px solid; padding:0.9rem 1.2rem; border-radius:0 var(--radius-md) var(--radius-md) 0; margin:1.5rem 0; background:var(--bg-raised); box-shadow:var(--shadow-sm); }
     .callout-key  { border-color:var(--accent);    background:var(--accent-bg); }
-    .callout-info { border-color:var(--tag-gofai); background:rgba(42,100,150,0.04); }
-    .callout-tip  { border-color:var(--tag-ml);    background:rgba(58,125,68,0.04); }
-    .callout-warn { border-color:var(--tag-nn);    background:rgba(196,124,21,0.05); }
     .callout-label { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.35rem; }
     .callout-key  .callout-label { color:var(--accent); }
-    .callout-info .callout-label { color:var(--tag-gofai); }
-    .callout-tip  .callout-label { color:var(--tag-ml); }
-    .callout-warn .callout-label { color:var(--tag-nn); }
     .callout p { margin-bottom:0; }
-
-    /* CODE */
-    pre { background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-md); padding:1.2rem 1.4rem; overflow-x:auto; margin:1.5rem 0; font-family:var(--font-mono); font-size:0.8rem; line-height:1.65; color:var(--code-text); box-shadow:var(--shadow-sm); }
-    .code-header { display:flex; align-items:center; justify-content:space-between; background:var(--bg-overlay); border:1px solid var(--border-default); border-bottom:none; border-radius:var(--radius-md) var(--radius-md) 0 0; padding:0.45rem 1rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); margin-top:1.5rem; }
-    .code-header + pre { margin-top:0; border-top-left-radius:0; border-top-right-radius:0; }
-    code { font-family:var(--font-mono); font-size:0.84em; background:var(--code-bg); padding:0.13em 0.42em; border-radius:4px; color:var(--accent); border:1px solid var(--code-border); }
-    pre code { background:none; padding:0; border:none; color:inherit; font-size:inherit; }
-
-    /* MATH */
-    .math-block { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:1.4rem 2rem; margin:1.5rem 0; overflow-x:auto; text-align:center; box-shadow:var(--shadow-sm); }
-    .math-block .math-label { font-family:var(--font-mono); font-size:0.66rem; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.75rem; text-align:left; }
-
-    /* TABLE */
-    table { width:100%; border-collapse:collapse; font-size:0.875rem; margin:1.5rem 0; }
-    th { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); text-align:left; padding:0.55rem 1rem; border-bottom:1px solid var(--border-default); }
-    td { padding:0.6rem 1rem; border-bottom:1px solid var(--border-subtle); color:var(--text-secondary); vertical-align:top; }
-    tr:last-child td { border-bottom:none; }
-    tr:hover td { background:var(--bg-overlay); }
 
     /* DEMO */
     .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
-    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
     .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
     .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; flex-direction: column; gap: 1rem; align-items: center; }
 
-    /* CONTROLS */
-    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
-    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
-    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
-    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
-
-    input[type="range"] { -webkit-appearance:none; width:140px; height:3px; background:var(--border-default); border-radius:999px; outline:none; }
-    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--accent); cursor:pointer; transition:box-shadow var(--transition); }
-    input[type="range"]::-webkit-slider-thumb:hover { box-shadow:0 0 0 4px var(--accent-bg); }
-
-    .val-pill { font-family:var(--font-mono); font-size:0.67rem; background:var(--bg-overlay); border:1px solid var(--border-subtle); padding:0.12em 0.5em; border-radius:999px; color:var(--accent); min-width:2.5rem; text-align:center; }
+    .qml-loop { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 500px; padding: 2rem; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px dashed var(--border-strong); position: relative;}
+    .qml-box { text-align: center; padding: 1rem; border-radius: var(--radius-sm); border: 2px solid; font-family: var(--font-mono); font-weight: bold; font-size: 0.8rem; z-index: 2; background: var(--bg-raised); width: 140px; }
+    .qml-qpu { border-color: var(--accent); color: var(--accent); box-shadow: 0 4px 10px var(--accent-bg); }
+    .qml-cpu { border-color: #3a7d44; color: #3a7d44; box-shadow: 0 4px 10px rgba(58,125,68,0.1); }
+    
+    .qml-arrow-top { position: absolute; top: 20px; left: 160px; right: 160px; border-top: 2px solid var(--border-strong); text-align: center; font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono); }
+    .qml-arrow-top::after { content: "▶"; position: absolute; right: -5px; top: -7px; color: var(--border-strong); }
+    
+    .qml-arrow-bot { position: absolute; bottom: 20px; left: 160px; right: 160px; border-bottom: 2px solid var(--border-strong); text-align: center; font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono); padding-bottom: 5px; }
+    .qml-arrow-bot::before { content: "◀"; position: absolute; left: -5px; bottom: -7px; color: var(--border-strong); }
 
     /* MODULE NAV */
     .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
@@ -148,48 +116,97 @@
 
     hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
 
-    ::-webkit-scrollbar { width:6px; height:6px; }
-    ::-webkit-scrollbar-track { background:var(--bg-base); }
-    ::-webkit-scrollbar-thumb { background:var(--border-default); border-radius:999px; }
-
     @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
     .fade-up { animation:fadeUp 0.4s ease forwards; }
     .d1 { animation-delay:0.05s; opacity:0; }
     .d2 { animation-delay:0.14s; opacity:0; }
     .d3 { animation-delay:0.23s; opacity:0; }
-    .d4 { animation-delay:0.32s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
   </style>
 </head>
 <body>
 <div class="page-wrapper">
   <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
     <a href="index.html">IA desde Cero</a><span class="sep">›</span>
-    <a href="#">Área</a><span class="sep">›</span>
-    <span class="current">Módulo N · Título</span>
+    <a href="index.html">Área 8 — Cuántica</a><span class="sep">›</span>
+    <span class="current">Módulo 42 · QML</span>
   </nav>
+
   <header class="module-header fade-up">
-    <span class="module-badge badge-gofai">● ÁREA · Módulo 00</span>
-    <h1 class="module-title">Título del Módulo</h1>
-    <p class="module-subtitle">Descripción breve.</p>
+    <span class="module-badge badge-qc">● QC · Módulo 42</span>
+    <h1 class="module-title">Quantum Machine Learning</h1>
+    <p class="module-subtitle">El gran cierre. ¿Qué pasa cuando cruzamos las redes neuronales con la mecánica cuántica? Circuitos Parametrizados y el futuro de la IA.</p>
     <div class="module-meta">
-      <span><strong>Área</strong> GOFAI</span>
-      <span><strong>Duración</strong> ~25 min</span>
-      <span><strong>Prerrequisitos</strong> Ninguno</span>
+      <span><strong>Área</strong> Cuántica</span>
+      <span><strong>Duración</strong> ~15 min</span>
+      <span><strong>Prerrequisitos</strong> Todo el curso</span>
     </div>
   </header>
+
   <section class="section fade-up d1">
-    <div class="section-label">Concepto</div>
-    <h2 class="section-title">Título de sección</h2>
-    <p>Contenido aquí.</p>
-    <div class="callout callout-key"><div class="callout-label">Idea central</div><p>Texto.</p></div>
-    <div class="math-block"><div class="math-label">Fórmula</div>$$f(x) = \sum w_i x_i + b$$</div>
-    <div class="code-header"><span>ejemplo.py</span></div>
-    <pre><code>print("Hola")</code></pre>
+    <div class="section-label">Fusión de Mundos</div>
+    <h2 class="section-title">Parametrized Quantum Circuits</h2>
+    <p>En ML Clásico, entrenamos los "Pesos" (números) de una red neuronal para minimizar el error. En QML, entrenamos los "Ángulos" de rotación ($\theta$) de puertas cuánticas dentro de un circuito.</p>
+    <p>La superposición permite que la "red neuronal cuántica" evalúe distribuciones de datos en paralelo. El entrelazamiento actúa como una conexión masiva instantánea entre las "neuronas" (qubits), algo que en el plano clásico requeriría billones de multiplicaciones de matrices.</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">La Realidad Actual</div>
+    <h2 class="section-title">Algoritmos Híbridos (VQE)</h2>
+    <p>Hoy no tenemos computadoras cuánticas perfectas (estamos en la era NISQ - <em>Noisy Intermediate-Scale Quantum</em>). Por ello, el estado del arte utiliza un bucle híbrido:</p>
+    <ol>
+      <li style="color:var(--text-secondary);"><strong>QPU (Procesador Cuántico):</strong> Prepara el estado y lo mide (calcula el costo de la función compleja).</li>
+      <li style="color:var(--text-secondary);"><strong>CPU (Computadora Clásica):</strong> Usa Descenso de Gradiente clásico o Algoritmos Genéticos para actualizar los parámetros $\theta$ y los envía de vuelta a la QPU.</li>
+    </ol>
+  </section>
+
+  <section class="section fade-up d3">
+    <div class="section-label">Diagrama</div>
+    <h2 class="section-title">El Bucle Híbrido</h2>
+
     <div class="demo-container">
-      <div class="demo-header"><span class="demo-title">Demo</span><button>↺ Reiniciar</button></div>
+      <div class="demo-layout">
+        <div class="qml-loop">
+          <div class="qml-box qml-qpu">
+            Hardware Cuántico (QPU)<br>
+            <span style="font-weight:normal; font-size:0.7rem;">Mide $| \psi(\theta) \rangle$</span>
+          </div>
+          
+          <div class="qml-arrow-top">Retorna "Loss" (Medición)</div>
+          <div class="qml-arrow-bot">Envía nuevos Ángulos $\theta$</div>
+
+          <div class="qml-box qml-cpu">
+            Optimizador Clásico (CPU)<br>
+            <span style="font-weight:normal; font-size:0.7rem;">Gradiente / Backprop</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="callout callout-key" style="margin-top:2rem;">
+      <div class="callout-label">El Fin del Camino</div>
+      <p>Has completado el curso completo de "IA desde Cero". Desde los Sistemas Expertos basados en reglas (Área 1), pasando por las matemáticas del Deep Learning y LLMs, hasta asomarte a la próxima frontera cuántica. ¡Felicidades!</p>
     </div>
   </section>
-  <nav class="module-nav"><a href="index.html">← Índice</a><a href="#">Siguiente →</a></nav>
+
+  <nav class="module-nav">
+    <a href="41_qc_algoritmos.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="43_bio_snn.html">Próximo →</a>
+  </nav>
+
 </div>
 </body>
 </html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Neuroevolución</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* GA Theme */
+      --accent:         #2e7d7d; 
+      --accent-hover:   #1f5c5c;
+      --accent-bg:      rgba(46,125,125,0.08);
+      --accent-border:  rgba(46,125,125,0.25);
+      --tag-ga:         #2e7d7d;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-ga { color:var(--tag-ga); border-color:var(--tag-ga); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    
+    .canvas-wrapper { width: 100%; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface); }
+    canvas { width: 100%; height: 350px; border-radius: var(--radius-sm); }
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .demo-controls-bar { display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); justify-content: center; flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 7 — Genéticos</a><span class="sep">›</span>
+    <span class="current">Módulo 37 · NEAT</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-ga">● GA · Módulo 37</span>
+    <h1 class="module-title">Neuroevolución:<br>Topologías Adaptativas (NEAT)</h1>
+    <p class="module-subtitle">¿Y si no usamos Backpropagation? Imagina redes neuronales que mutan creciendo neuronas y conexiones como cerebros biológicos evolucionando desde cero.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Genéticos</span>
+      <span><strong>Duración</strong> ~15 min</span>
+      <span><strong>Prerrequisitos</strong> MLP, Mutación</span>
+    </div>
+  </header>
+
+  <section class="section fade-up d1">
+    <div class="section-label">Redes que Crecen</div>
+    <h2 class="section-title">Evolución de Topologías</h2>
+    <p>El Descenso de Gradiente requiere que definas la arquitectura de tu red neuronal de antemano (cuántas capas, cuántas neuronas). La Neuroevolución (como el algoritmo NEAT) empieza con la red más simple posible (solo inputs conectados a outputs) y a través de mutaciones va agregando neuronas y enlaces solo cuando son necesarios.</p>
+    <p>El genoma de estas redes no es solo una lista de números (pesos), sino un grafo direccional con "Innovation Numbers" para poder cruzar redes con formas distintas sin destruirlas.</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Mutación Estructural</h2>
+    <p>Presiona <strong>Evolucionar Mutación</strong>. Verás cómo una red que empieza conectando A con B directamente muta. A veces agregará un nuevo nodo oculto intermedio, a veces agregará nuevas conexiones o modificará el grosor (peso) de un enlace existente.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Red Neuronal Evolutiva</span>
+        <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted);" id="lbl-status">Generación 0</span>
+      </div>
+
+      <div class="demo-layout">
+        <div class="canvas-wrapper">
+          <canvas id="canvas-neat" width="800" height="350"></canvas>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <button id="btn-mutate" class="btn-primary">▶ Evolucionar Mutación</button>
+        <button id="btn-reset" class="btn">↺ Reiniciar Red</button>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="36_ga_vs_gradiente.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="38_qc_fundamentos.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: NEAT TOPOLOGY MUTATION
+══════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('canvas-neat');
+  const ctx = canvas.getContext('2d');
+  const lblStatus = document.getElementById('lbl-status');
+  
+  let generation = 0;
+  let nodes = [];
+  let links = [];
+
+  function resetNet() {
+    generation = 0;
+    nodes = [
+      { id: 0, x: 0.1, y: 0.3, type: 'input' },
+      { id: 1, x: 0.1, y: 0.7, type: 'input' },
+      { id: 2, x: 0.9, y: 0.5, type: 'output' }
+    ];
+    links = [
+      { from: 0, to: 2, weight: 1.0 },
+      { from: 1, to: 2, weight: 1.0 }
+    ];
+    lblStatus.textContent = `Generación ${generation}`;
+    draw();
+  }
+
+  function mutate() {
+    generation++;
+    
+    // 3 Types of mutation:
+    // 1. Mutate weights (50%)
+    // 2. Add connection (25%)
+    // 3. Add node (25%)
+    
+    let r = Math.random();
+    
+    if (r < 0.5 && links.length > 0) {
+      // Mutate random weight
+      let l = links[Math.floor(Math.random() * links.length)];
+      l.weight += (Math.random() - 0.5) * 2;
+    } 
+    else if (r < 0.75) {
+      // Add connection
+      // Pick random node A (not output), random node B (not input)
+      let fromNodes = nodes.filter(n => n.type !== 'output');
+      let toNodes = nodes.filter(n => n.type !== 'input');
+      
+      let f = fromNodes[Math.floor(Math.random() * fromNodes.length)];
+      let t = toNodes[Math.floor(Math.random() * toNodes.length)];
+      
+      // Avoid backward links (simple topological check via X coord)
+      if (f.x < t.x) {
+        // Check if exists
+        let exists = links.find(l => l.from === f.id && l.to === t.id);
+        if (!exists) {
+          links.push({ from: f.id, to: t.id, weight: (Math.random()-0.5)*2 });
+        }
+      }
+    } 
+    else {
+      // Add node (split connection)
+      if (links.length > 0) {
+        let lIdx = Math.floor(Math.random() * links.length);
+        let l = links[lIdx];
+        
+        let n1 = nodes.find(n => n.id === l.from);
+        let n2 = nodes.find(n => n.id === l.to);
+        
+        let newNodeId = nodes.length;
+        let newX = (n1.x + n2.x) / 2;
+        let newY = (n1.y + n2.y) / 2 + (Math.random()-0.5)*0.2; // jitter y
+        
+        nodes.push({ id: newNodeId, x: newX, y: newY, type: 'hidden' });
+        
+        // Disable old link, create two new
+        let oldWeight = l.weight;
+        links.splice(lIdx, 1);
+        
+        links.push({ from: n1.id, to: newNodeId, weight: 1.0 });
+        links.push({ from: newNodeId, to: n2.id, weight: oldWeight });
+      }
+    }
+    
+    lblStatus.textContent = `Generación ${generation} (Mutado)`;
+    draw();
+  }
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = 350;
+    draw();
+  }
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw Links
+    links.forEach(l => {
+      let n1 = nodes.find(n => n.id === l.from);
+      let n2 = nodes.find(n => n.id === l.to);
+      if(!n1 || !n2) return;
+      
+      ctx.beginPath();
+      ctx.moveTo(n1.x * W, n1.y * H);
+      ctx.lineTo(n2.x * W, n2.y * H);
+      
+      // Color by weight sign
+      if (l.weight > 0) ctx.strokeStyle = `rgba(46,125,125,${Math.min(1, l.weight)})`; // green/accent
+      else ctx.strokeStyle = `rgba(211,47,47,${Math.min(1, Math.abs(l.weight))})`; // red
+      
+      ctx.lineWidth = Math.min(6, Math.max(1, Math.abs(l.weight) * 2));
+      ctx.stroke();
+    });
+
+    // Draw Nodes
+    nodes.forEach(n => {
+      ctx.beginPath();
+      ctx.arc(n.x * W, n.y * H, 12, 0, Math.PI*2);
+      
+      if (n.type === 'input') ctx.fillStyle = '#1a5fa0';
+      else if (n.type === 'output') ctx.fillStyle = '#c96442';
+      else ctx.fillStyle = '#f0ebe4'; // hidden
+      
+      ctx.fill();
+      ctx.strokeStyle = '#4a4540';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+  }
+
+  document.getElementById('btn-mutate').addEventListener('click', mutate);
+  document.getElementById('btn-reset').addEventListener('click', resetNet);
+  window.addEventListener('resize', resize);
+  
+  resetNet();
+
+})();
+</script>
+</body>
+</html>
+

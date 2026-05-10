@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Entrelazamiento</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* QC Theme */
+      --accent:         #1a5fa0; 
+      --accent-hover:   #134575;
+      --accent-bg:      rgba(26,95,160,0.08);
+      --accent-border:  rgba(26,95,160,0.25);
+      --tag-qc:         #1a5fa0;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-qc { color:var(--tag-qc); border-color:var(--tag-qc); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; flex-direction: column; gap: 2rem; align-items: center; }
+    
+    .bloch-spheres { display: flex; gap: 3rem; }
+    .sphere-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; font-family: var(--font-mono); }
+    .sphere { width: 100px; height: 100px; border-radius: 50%; border: 2px dashed var(--border-strong); position: relative; background: var(--bg-surface); }
+    .state-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); position: absolute; transition: all 0.3s ease; box-shadow: 0 0 10px var(--accent); }
+    
+    /* 0 is top, 1 is bottom, superpos is middle */
+    .state-0 { top: -8px; left: 42px; }
+    .state-1 { bottom: -8px; left: 42px; }
+    .state-super { top: 42px; left: 42px; opacity: 0.5; width: 30px; height: 30px; left: 35px; top: 35px; background: repeating-radial-gradient(var(--accent) 0, transparent 4px);}
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .demo-controls-bar { display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); justify-content: center; flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 8 — Cuántica</a><span class="sep">›</span>
+    <span class="current">Módulo 40 · Entrelazamiento</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-qc">● QC · Módulo 40</span>
+    <h1 class="module-title">Entrelazamiento &<br>Estados de Bell</h1>
+    <p class="module-subtitle">Einstein lo llamó "acción espeluznante a distancia". Cuando dos qubits se enlazan, medir uno define instantáneamente al otro, sin importar si están a galaxias de distancia.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Cuántica</span>
+      <span><strong>Duración</strong> ~10 min</span>
+      <span><strong>Prerrequisitos</strong> Puertas Cuánticas</span>
+    </div>
+  </header>
+
+  <section class="section fade-up d1">
+    <div class="section-label">Puertas Multiqubit</div>
+    <h2 class="section-title">La Puerta CNOT</h2>
+    <p>Para crear entrelazamiento necesitamos la puerta <strong>CNOT (Controlled-NOT)</strong>. Toma dos qubits: uno de "Control" y uno "Objetivo" (Target).</p>
+    <p>Si el Control es $|1\rangle$, aplica un NOT (X) al Objetivo. Si el Control es $|0\rangle$, no hace nada. El truco ocurre cuando el Control está en <strong>Superposición</strong> (ej. tras una puerta Hadamard). Ahora el Objetivo debe ser y no ser modificado al mismo tiempo. Sus destinos quedan ligados matemáticamente.</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Colapso Sincronizado</h2>
+    <p>Haz clic en <strong>Crear Estado de Bell</strong>. Ambos qubits entrarán en una superposición entrelazada (nubes). Luego, haz clic en <strong>Medir Qubit 1</strong>. Observa cómo, al colapsar el Qubit 1 (a 0 o a 1), el Qubit 2 colapsa inmediatamente al mismo valor sin haber sido medido.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Laboratorio de Entrelazamiento</span>
+        <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted);" id="lbl-status">Estado: |00⟩</span>
+      </div>
+
+      <div class="demo-layout">
+        <div class="bloch-spheres">
+          <div class="sphere-wrap">
+            <div class="sphere"><div class="state-dot state-0" id="dot-q1"></div></div>
+            <span>Qubit 1</span>
+          </div>
+          <div class="sphere-wrap">
+            <div class="sphere"><div class="state-dot state-0" id="dot-q2"></div></div>
+            <span>Qubit 2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <button id="btn-bell" class="btn-primary">1. Crear Estado de Bell (H + CNOT)</button>
+        <button id="btn-measure" class="btn-primary" disabled>2. Medir Qubit 1</button>
+        <button id="btn-reset" class="btn">↻ Reiniciar a |00⟩</button>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="39_qc_puertas.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="41_qc_algoritmos.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: BELL STATE ENTANGLEMENT
+══════════════════════════════════════════════ */
+(function() {
+  const dot1 = document.getElementById('dot-q1');
+  const dot2 = document.getElementById('dot-q2');
+  const btnBell = document.getElementById('btn-bell');
+  const btnMeasure = document.getElementById('btn-measure');
+  const btnReset = document.getElementById('btn-reset');
+  const lblStatus = document.getElementById('lbl-status');
+
+  let state = "00"; // 00, bell, measured
+
+  btnReset.addEventListener('click', () => {
+    state = "00";
+    dot1.className = 'state-dot state-0';
+    dot2.className = 'state-dot state-0';
+    lblStatus.textContent = "Estado: |00⟩";
+    btnBell.disabled = false;
+    btnMeasure.disabled = true;
+  });
+
+  btnBell.addEventListener('click', () => {
+    state = "bell";
+    dot1.className = 'state-dot state-super';
+    dot2.className = 'state-dot state-super';
+    lblStatus.textContent = "Estado: 1/√2 (|00⟩ + |11⟩) [Entrelazado]";
+    btnBell.disabled = true;
+    btnMeasure.disabled = false;
+  });
+
+  btnMeasure.addEventListener('click', () => {
+    if (state !== "bell") return;
+    
+    // Collapse to 00 or 11 with 50% prob
+    let r = Math.random() < 0.5 ? 0 : 1;
+    
+    if (r === 0) {
+      dot1.className = 'state-dot state-0';
+      dot2.className = 'state-dot state-0';
+      lblStatus.textContent = "Medición: |00⟩ (Colapso simultáneo)";
+    } else {
+      dot1.className = 'state-dot state-1';
+      dot2.className = 'state-dot state-1';
+      lblStatus.textContent = "Medición: |11⟩ (Colapso simultáneo)";
+    }
+    
+    btnMeasure.disabled = true;
+  });
+
+})();
+</script>
+</body>
+</html>
+
