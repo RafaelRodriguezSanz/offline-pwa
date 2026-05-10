@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Módulo 02: Búsqueda en Grafos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+  <style>
+    :root {
+      --bg-base:#f5f0eb; --bg-surface:#faf7f4; --bg-raised:#ffffff; --bg-overlay:#ede8e1;
+      --border-subtle:#e8e1d9; --border-default:#d9d0c7; --border-strong:#bfb5ab;
+      --text-primary:#1a1714; --text-secondary:#4a4540; --text-muted:#8c847c; --text-faint:#b8b0a8;
+      --accent:#c96442; --accent-hover:#b05838; --accent-bg:rgba(201,100,66,0.07); --accent-border:rgba(201,100,66,0.2);
+      --tag-gofai:#2a6496; --tag-ml:#3a7d44; --tag-nn:#c47c15;
+      --code-bg:#f0ebe4; --code-border:#ddd6ce; --code-text:#3a3530;
+      --shadow-sm:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:'Crimson Pro',Georgia,serif;
+      --font-mono:'Geist Mono','Fira Code',monospace;
+      --font-sans:'Geist',system-ui,sans-serif;
+      --transition:0.18s ease;
+
+      /* algo colors */
+      --bfs-color:#2a6496;
+      --dfs-color:#7b52a8;
+      --astar-color:#3a7d44;
+
+      --cell-wall:#c8bfb4;
+      --cell-open:#faf7f4;
+      --cell-visited-bfs:rgba(42,100,150,0.18);
+      --cell-visited-dfs:rgba(123,82,168,0.18);
+      --cell-visited-astar:rgba(58,125,68,0.18);
+      --cell-frontier:rgba(201,100,66,0.22);
+      --cell-path:#c96442;
+      --cell-start:#3a7d44;
+      --cell-end:#c96442;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{font-size:16px;scroll-behavior:smooth;}
+    body{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-sans);font-size:0.9375rem;line-height:1.7;-webkit-font-smoothing:antialiased;}
+    ::selection{background:rgba(201,100,66,0.12);}
+    .page-wrapper{max-width:900px;margin:0 auto;padding:0 1.5rem 5rem;}
+
+    /* TOPBAR */
+    .topbar{display:flex;align-items:center;gap:0.5rem;padding:1.25rem 0 1rem;font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);letter-spacing:0.04em;border-bottom:1px solid var(--border-subtle);margin-bottom:2.5rem;}
+    .topbar a{color:var(--text-muted);text-decoration:none;transition:color var(--transition);font-size:1.1rem;}
+    .topbar a:hover{color:var(--text-secondary);}
+    .topbar .sep{color:var(--border-strong);}
+    .topbar .current{color:var(--text-secondary);}
+
+    /* HEADER */
+    .module-header{margin-bottom:2.5rem;}
+    .module-badge{display:inline-flex;align-items:center;gap:0.4rem;font-family:var(--font-mono);font-size:0.67rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.28em 0.75em;border-radius:999px;border:1px solid;margin-bottom:1rem;color:var(--tag-gofai);border-color:var(--tag-gofai);background:rgba(42,100,150,0.06);}
+    .module-title{font-family:var(--font-serif);font-size:clamp(1.75rem,4vw,2.6rem);line-height:1.2;margin-bottom:0.75rem;font-weight:400;letter-spacing:-0.01em;}
+    .module-subtitle{font-size:0.9375rem;color:var(--text-secondary);max-width:60ch;line-height:1.65;}
+    .module-meta{display:flex;gap:1.5rem;margin-top:1.25rem;flex-wrap:wrap;}
+    .module-meta span{font-family:var(--font-mono);font-size:0.68rem;color:var(--text-muted);letter-spacing:0.04em;}
+    .module-meta span strong{color:var(--text-secondary);font-weight:500;}
+
+    /* SECTIONS */
+    .section{margin-bottom:3rem;}
+    .section-label{font-family:var(--font-mono);font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:0.75rem;display:flex;align-items:center;gap:0.75rem;}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--border-subtle);}
+    .section-title{font-family:var(--font-serif);font-size:1.45rem;font-weight:400;margin-bottom:0.75rem;}
+
+    p{color:var(--text-secondary);margin-bottom:1rem;max-width:72ch;}
+    strong{color:var(--text-primary);font-weight:600;}
+    em{font-style:italic;}
+
+    .callout{border-left:2px solid;padding:0.9rem 1.2rem;border-radius:0 var(--radius-md) var(--radius-md) 0;margin:1.5rem 0;background:var(--bg-raised);box-shadow:var(--shadow-sm);}
+    .callout-key {border-color:var(--accent);background:var(--accent-bg);}
+    .callout-info{border-color:var(--tag-gofai);background:rgba(42,100,150,0.04);}
+    .callout-tip {border-color:var(--tag-ml);background:rgba(58,125,68,0.04);}
+    .callout-warn{border-color:var(--tag-nn);background:rgba(196,124,21,0.05);}
+    .callout-label{font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem;}
+    .callout-key  .callout-label{color:var(--accent);}
+    .callout-info .callout-label{color:var(--tag-gofai);}
+    .callout-tip  .callout-label{color:var(--tag-ml);}
+    .callout-warn .callout-label{color:var(--tag-nn);}
+    .callout p{margin-bottom:0;}
+
+    pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:var(--radius-md);padding:1.2rem 1.4rem;overflow-x:auto;margin:1.5rem 0;font-family:var(--font-mono);font-size:0.8rem;line-height:1.65;color:var(--code-text);box-shadow:var(--shadow-sm);}
+    .code-header{display:flex;align-items:center;justify-content:space-between;background:var(--bg-overlay);border:1px solid var(--border-default);border-bottom:none;border-radius:var(--radius-md) var(--radius-md) 0 0;padding:0.45rem 1rem;font-family:var(--font-mono);font-size:0.68rem;color:var(--text-muted);margin-top:1.5rem;}
+    .code-header+pre{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;}
+    code{font-family:var(--font-mono);font-size:0.84em;background:var(--code-bg);padding:0.13em 0.42em;border-radius:4px;color:var(--accent);border:1px solid var(--code-border);}
+    pre code{background:none;padding:0;border:none;color:inherit;font-size:inherit;}
+
+    .math-block{background:var(--bg-raised);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:1.4rem 2rem;margin:1.5rem 0;overflow-x:auto;text-align:center;box-shadow:var(--shadow-sm);}
+    .math-block .math-label{font-family:var(--font-mono);font-size:0.66rem;color:var(--text-faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.75rem;text-align:left;}
+
+    table{width:100%;border-collapse:collapse;font-size:0.875rem;margin:1.5rem 0;}
+    th{font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:0.55rem 1rem;border-bottom:1px solid var(--border-default);}
+    td{padding:0.6rem 1rem;border-bottom:1px solid var(--border-subtle);color:var(--text-secondary);vertical-align:top;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:var(--bg-overlay);}
+
+    /* ══════════════════════════════
+       ALGO BADGE PILLS
+    ══════════════════════════════ */
+    .algo-pills{display:flex;gap:0.5rem;flex-wrap:wrap;margin:1.25rem 0;}
+    .algo-pill{font-family:var(--font-mono);font-size:0.7rem;padding:0.35em 0.9em;border-radius:999px;border:1px solid;letter-spacing:0.04em;}
+    .pill-bfs  {color:var(--bfs-color); border-color:var(--bfs-color); background:rgba(42,100,150,0.07);}
+    .pill-dfs  {color:var(--dfs-color); border-color:var(--dfs-color); background:rgba(123,82,168,0.07);}
+    .pill-astar{color:var(--astar-color);border-color:var(--astar-color);background:rgba(58,125,68,0.07);}
+
+    /* ══════════════════════════════
+       COMPARISON CARDS
+    ══════════════════════════════ */
+    .algo-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin:1.5rem 0;}
+    @media(max-width:620px){.algo-cards{grid-template-columns:1fr;}}
+    .algo-card{background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1.1rem;box-shadow:var(--shadow-sm);border-top:3px solid;}
+    .algo-card.bfs  {border-top-color:var(--bfs-color);}
+    .algo-card.dfs  {border-top-color:var(--dfs-color);}
+    .algo-card.astar{border-top-color:var(--astar-color);}
+    .algo-card-name{font-family:var(--font-mono);font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:500;margin-bottom:0.5rem;}
+    .bfs   .algo-card-name{color:var(--bfs-color);}
+    .dfs   .algo-card-name{color:var(--dfs-color);}
+    .astar .algo-card-name{color:var(--astar-color);}
+    .algo-card-full{font-family:var(--font-serif);font-size:1rem;color:var(--text-primary);margin-bottom:0.6rem;}
+    .algo-card-prop{font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;display:flex;justify-content:space-between;}
+    .algo-card-prop span:last-child{color:var(--text-secondary);font-family:var(--font-mono);font-size:0.75rem;}
+
+    /* ══════════════════════════════
+       MAZE DEMO
+    ══════════════════════════════ */
+    .demo-container{background:var(--bg-raised);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:1.5rem;margin:1.5rem 0;box-shadow:var(--shadow-md);}
+    .demo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.75rem;}
+    .demo-title{font-family:var(--font-mono);font-size:0.73rem;color:var(--text-secondary);letter-spacing:0.04em;display:flex;align-items:center;gap:0.5rem;}
+    .demo-title::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent);}
+
+    .demo-controls{display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;margin-bottom:1.25rem;}
+
+    .algo-select{display:flex;gap:0.35rem;}
+    .algo-tab{font-family:var(--font-mono);font-size:0.72rem;padding:0.38em 0.9em;border-radius:var(--radius-sm);border:1px solid var(--border-default);background:var(--bg-surface);color:var(--text-muted);cursor:pointer;transition:all var(--transition);}
+    .algo-tab.active-bfs  {background:rgba(42,100,150,0.1); border-color:var(--bfs-color);  color:var(--bfs-color);}
+    .algo-tab.active-dfs  {background:rgba(123,82,168,0.1); border-color:var(--dfs-color);  color:var(--dfs-color);}
+    .algo-tab.active-astar{background:rgba(58,125,68,0.1);  border-color:var(--astar-color);color:var(--astar-color);}
+
+    .maze-layout{display:grid;grid-template-columns:auto 1fr;gap:1.25rem;align-items:start;}
+    @media(max-width:620px){.maze-layout{grid-template-columns:1fr;}}
+
+    #maze-canvas{border:1px solid var(--border-default);border-radius:var(--radius-md);cursor:crosshair;display:block;}
+
+    .maze-side{display:flex;flex-direction:column;gap:0.75rem;}
+
+    .side-panel{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:0.9rem;}
+    .side-panel-label{font-family:var(--font-mono);font-size:0.63rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:0.55rem;}
+
+    .stat-row{display:flex;justify-content:space-between;align-items:center;font-size:0.82rem;margin-bottom:0.3rem;}
+    .stat-row:last-child{margin-bottom:0;}
+    .stat-key{color:var(--text-muted);font-family:var(--font-mono);font-size:0.7rem;}
+    .stat-val{color:var(--text-primary);font-family:var(--font-mono);font-size:0.75rem;font-weight:500;}
+
+    .legend-row{display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.3rem;}
+    .legend-swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0;border:1px solid var(--border-subtle);}
+
+    .queue-display{font-family:var(--font-mono);font-size:0.68rem;color:var(--text-muted);word-break:break-all;line-height:1.6;max-height:80px;overflow-y:auto;}
+
+    .maze-controls-row{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem;}
+
+    button,.btn{font-family:var(--font-mono);font-size:0.73rem;letter-spacing:0.03em;padding:0.42em 0.95em;border-radius:var(--radius-sm);border:1px solid var(--border-default);background:var(--bg-raised);color:var(--text-secondary);cursor:pointer;transition:all var(--transition);display:inline-flex;align-items:center;gap:0.4em;box-shadow:var(--shadow-sm);}
+    button:hover,.btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg);}
+    button:disabled{opacity:0.4;pointer-events:none;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:#fff;}
+
+    .speed-select{font-family:var(--font-mono);font-size:0.72rem;padding:0.38em 0.6em;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-raised);color:var(--text-secondary);cursor:pointer;box-shadow:var(--shadow-sm);}
+
+    .status-bar{font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);margin-top:0.75rem;padding:0.5rem 0.75rem;background:var(--bg-surface);border-radius:var(--radius-sm);border:1px solid var(--border-subtle);min-height:2rem;}
+
+    /* draw mode hint */
+    .draw-hint{font-family:var(--font-mono);font-size:0.65rem;color:var(--text-faint);letter-spacing:0.05em;margin-top:0.4rem;}
+
+    /* MODULE NAV */
+    .module-nav{display:flex;justify-content:space-between;align-items:center;padding:1.5rem 0;border-top:1px solid var(--border-subtle);margin-top:3rem;}
+    .module-nav a{font-family:var(--font-mono);font-size:0.73rem;color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:0.5rem;transition:color var(--transition);}
+    .module-nav a:hover{color:var(--text-primary);}
+
+    hr{border:none;border-top:1px solid var(--border-subtle);margin:2rem 0;}
+
+    ::-webkit-scrollbar{width:5px;height:5px;}
+    ::-webkit-scrollbar-track{background:var(--bg-base);}
+    ::-webkit-scrollbar-thumb{background:var(--border-default);border-radius:999px;}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+    .fade-up{animation:fadeUp 0.4s ease forwards;}
+    .d1{animation-delay:0.05s;opacity:0;}.d2{animation-delay:0.14s;opacity:0;}.d3{animation-delay:0.23s;opacity:0;}.d4{animation-delay:0.32s;opacity:0;}
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="#">GOFAI</a><span class="sep">›</span>
+    <span class="current">Módulo 02 · Búsqueda</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge">● GOFAI · Módulo 2</span>
+    <h1 class="module-title">Búsqueda en Grafos<br>BFS, DFS &amp; A*</h1>
+    <p class="module-subtitle">Cómo un agente explora un espacio de estados para encontrar la solución a un problema. La base de los planificadores, juegos y sistemas de navegación clásicos.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> GOFAI</span>
+      <span><strong>Duración</strong> ~30 min</span>
+      <span><strong>Prerrequisitos</strong> Módulo 01 · Sistemas Expertos</span>
+      <span><strong>Período histórico</strong> 1959–hoy</span>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════
+       1. ESPACIO DE ESTADOS
+  ══════════════════════════ -->
+  <section class="section fade-up d1">
+    <div class="section-label">Fundamento</div>
+    <h2 class="section-title">El Espacio de Estados</h2>
+
+    <p>Un <strong>problema de búsqueda</strong> se define formalmente con cuatro componentes: un estado inicial, un conjunto de estados meta, una función de transición que describe los movimientos posibles, y un costo por transición.</p>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Definición formal</div>
+      <p>Un problema de búsqueda es una tupla $\langle S, s_0, A, T, G, c \rangle$ donde $S$ es el espacio de estados, $s_0$ el estado inicial, $A$ las acciones, $T: S \times A \to S$ la función de transición, $G \subseteq S$ los estados meta, y $c: A \to \mathbb{R}^+$ el costo de cada acción.</p>
+    </div>
+
+    <p>Una <strong>solución</strong> es una secuencia de acciones $a_1, a_2, \ldots, a_n$ que lleva de $s_0$ a algún $g \in G$. Los algoritmos de búsqueda difieren en <em>qué nodo expanden a continuación</em> — esa decisión define su comportamiento completo.</p>
+
+    <div class="math-block">
+      <div class="math-label">Costo de camino</div>
+      $$g(n) = \sum_{i=1}^{d} c(a_i) \qquad \text{donde } d = \text{profundidad del nodo } n$$
+    </div>
+
+    <p>En un laberinto, cada celda es un estado, las acciones son moverse en 4 direcciones, el costo es 1 por paso, y el objetivo es llegar a la celda de destino.</p>
+  </section>
+
+  <!-- ══════════════════════════
+       2. LOS TRES ALGORITMOS
+  ══════════════════════════ -->
+  <section class="section fade-up d2">
+    <div class="section-label">Algoritmos</div>
+    <h2 class="section-title">BFS, DFS y A* — La Trinidad de la Búsqueda</h2>
+
+    <div class="algo-cards">
+      <div class="algo-card bfs">
+        <div class="algo-card-name">BFS</div>
+        <div class="algo-card-full">Breadth-First Search</div>
+        <div class="algo-card-prop"><span>Estructura</span><span>Cola (FIFO)</span></div>
+        <div class="algo-card-prop"><span>Completo</span><span>✓ Sí</span></div>
+        <div class="algo-card-prop"><span>Óptimo</span><span>✓ Costo uniforme</span></div>
+        <div class="algo-card-prop"><span>Tiempo</span><span>$O(b^d)$</span></div>
+        <div class="algo-card-prop"><span>Espacio</span><span>$O(b^d)$</span></div>
+      </div>
+      <div class="algo-card dfs">
+        <div class="algo-card-name">DFS</div>
+        <div class="algo-card-full">Depth-First Search</div>
+        <div class="algo-card-prop"><span>Estructura</span><span>Pila (LIFO)</span></div>
+        <div class="algo-card-prop"><span>Completo</span><span>✗ (ciclos)</span></div>
+        <div class="algo-card-prop"><span>Óptimo</span><span>✗ No</span></div>
+        <div class="algo-card-prop"><span>Tiempo</span><span>$O(b^m)$</span></div>
+        <div class="algo-card-prop"><span>Espacio</span><span>$O(bm)$</span></div>
+      </div>
+      <div class="algo-card astar">
+        <div class="algo-card-name">A*</div>
+        <div class="algo-card-full">A-Star Search</div>
+        <div class="algo-card-prop"><span>Estructura</span><span>Cola de prioridad</span></div>
+        <div class="algo-card-prop"><span>Completo</span><span>✓ Sí</span></div>
+        <div class="algo-card-prop"><span>Óptimo</span><span>✓ Si $h$ admisible</span></div>
+        <div class="algo-card-prop"><span>Tiempo</span><span>$O(b^{\varepsilon d})$</span></div>
+        <div class="algo-card-prop"><span>Espacio</span><span>$O(b^d)$</span></div>
+      </div>
+    </div>
+
+    <p style="font-size:0.82rem;color:var(--text-faint);font-family:var(--font-mono);">$b$ = factor de ramificación, $d$ = profundidad de la solución, $m$ = profundidad máxima del árbol</p>
+
+    <hr>
+
+    <h2 class="section-title">BFS — Búsqueda por Anchura</h2>
+    <p>BFS expande primero todos los nodos a profundidad 1, luego a profundidad 2, y así sucesivamente. Usa una <strong>cola FIFO</strong>. Garantiza encontrar el camino con <em>menor cantidad de pasos</em> (óptimo cuando todos los costos son iguales).</p>
+
+    <div class="math-block">
+      <div class="math-label">Invariante de BFS</div>
+      $$\forall n \in \text{frontera}: \; d(n) \geq d(\text{nodo expandido más reciente})$$
+    </div>
+
+    <div class="code-header"><span>bfs.py</span></div>
+<pre><code><span style="color:#6b93b8">from</span> collections <span style="color:#6b93b8">import</span> deque
+
+<span style="color:#6b93b8">def</span> <span style="color:#3a7d44">bfs</span>(grid, start, goal):
+    queue   = deque([start])      <span style="color:#a0a0a0"># FIFO — el orden importa</span>
+    visited = {start: None}       <span style="color:#a0a0a0"># nodo → padre (para reconstruir camino)</span>
+
+    <span style="color:#6b93b8">while</span> queue:
+        node = queue.popleft()    <span style="color:#a0a0a0"># siempre el más antiguo</span>
+        <span style="color:#6b93b8">if</span> node == goal:
+            <span style="color:#6b93b8">return</span> reconstruct(visited, goal)
+
+        <span style="color:#6b93b8">for</span> neighbor <span style="color:#6b93b8">in</span> get_neighbors(grid, node):
+            <span style="color:#6b93b8">if</span> neighbor <span style="color:#6b93b8">not in</span> visited:
+                visited[neighbor] = node
+                queue.append(neighbor)
+
+    <span style="color:#6b93b8">return</span> <span style="color:#c96442">None</span>  <span style="color:#a0a0a0"># sin solución</span></code></pre>
+
+    <hr>
+
+    <h2 class="section-title">DFS — Búsqueda por Profundidad</h2>
+    <p>DFS explora tan profundo como sea posible antes de retroceder (<em>backtrack</em>). Usa una <strong>pila LIFO</strong>. Muy eficiente en memoria — $O(bm)$ vs $O(b^d)$ de BFS — pero no garantiza encontrar el camino más corto y puede perderse en ramas infinitas.</p>
+
+    <div class="callout callout-warn">
+      <div class="callout-label">Cuidado</div>
+      <p>DFS sin detección de ciclos puede entrar en un <strong>bucle infinito</strong> en grafos con ciclos. Siempre hay que mantener el conjunto de nodos visitados.</p>
+    </div>
+
+    <div class="code-header"><span>dfs.py</span></div>
+<pre><code><span style="color:#6b93b8">def</span> <span style="color:#7b52a8">dfs</span>(grid, start, goal):
+    stack   = [start]             <span style="color:#a0a0a0"># LIFO — usamos lista como pila</span>
+    visited = {start: None}
+
+    <span style="color:#6b93b8">while</span> stack:
+        node = stack.pop()        <span style="color:#a0a0a0"># siempre el más reciente</span>
+        <span style="color:#6b93b8">if</span> node == goal:
+            <span style="color:#6b93b8">return</span> reconstruct(visited, goal)
+
+        <span style="color:#6b93b8">for</span> neighbor <span style="color:#6b93b8">in</span> get_neighbors(grid, node):
+            <span style="color:#6b93b8">if</span> neighbor <span style="color:#6b93b8">not in</span> visited:
+                visited[neighbor] = node
+                stack.append(neighbor)   <span style="color:#a0a0a0"># se explora ANTES que los hermanos</span>
+
+    <span style="color:#6b93b8">return</span> <span style="color:#c96442">None</span></code></pre>
+
+    <hr>
+
+    <h2 class="section-title">A* — Búsqueda Informada</h2>
+    <p>A* combina el costo real del camino recorrido $g(n)$ con una <strong>heurística</strong> $h(n)$ que estima el costo restante hasta la meta. Expande siempre el nodo con menor $f(n) = g(n) + h(n)$.</p>
+
+    <div class="math-block">
+      <div class="math-label">Función de evaluación de A*</div>
+      $$f(n) = g(n) + h(n)$$
+      $$g(n) = \text{costo real desde el inicio hasta } n$$
+      $$h(n) = \text{estimación del costo desde } n \text{ hasta la meta}$$
+    </div>
+
+    <p>Para que A* sea <strong>óptimo</strong>, la heurística debe ser <em>admisible</em>: nunca sobreestima el costo real.</p>
+
+    <div class="math-block">
+      <div class="math-label">Condición de admisibilidad</div>
+      $$h(n) \leq h^*(n) \quad \forall n$$
+      $$\text{donde } h^*(n) \text{ es el costo real óptimo desde } n \text{ hasta la meta}$$
+    </div>
+
+    <p>En un laberinto, una heurística admisible clásica es la <strong>distancia de Manhattan</strong>: no puede haber un camino más corto que la distancia en línea recta (por celdas).</p>
+
+    <div class="math-block">
+      <div class="math-label">Distancia de Manhattan como heurística</div>
+      $$h(n) = |x_n - x_{\text{meta}}| + |y_n - y_{\text{meta}}|$$
+    </div>
+
+    <div class="callout callout-tip">
+      <div class="callout-label">Consistencia (heurística más fuerte)</div>
+      <p>Una heurística es <strong>consistente</strong> (o monótona) si $h(n) \leq c(n, a, n') + h(n')$ para todo sucesor $n'$ de $n$. Consistencia implica admisibilidad y garantiza que A* nunca revisita un nodo expandido — más eficiente en la práctica.</p>
+    </div>
+
+    <div class="code-header"><span>astar.py</span></div>
+<pre><code><span style="color:#6b93b8">import</span> heapq
+
+<span style="color:#6b93b8">def</span> <span style="color:#3a7d44">heuristic</span>(a, b):                    <span style="color:#a0a0a0"># Manhattan distance</span>
+    <span style="color:#6b93b8">return</span> abs(a[0]-b[0]) + abs(a[1]-b[1])
+
+<span style="color:#6b93b8">def</span> <span style="color:#3a7d44">astar</span>(grid, start, goal):
+    heap    = [(0, start)]              <span style="color:#a0a0a0"># (f, nodo) — min-heap por f</span>
+    g_cost  = {start: 0}
+    parent  = {start: None}
+
+    <span style="color:#6b93b8">while</span> heap:
+        f, node = heapq.heappop(heap)
+
+        <span style="color:#6b93b8">if</span> node == goal:
+            <span style="color:#6b93b8">return</span> reconstruct(parent, goal)
+
+        <span style="color:#6b93b8">for</span> neighbor <span style="color:#6b93b8">in</span> get_neighbors(grid, node):
+            new_g = g_cost[node] + <span style="color:#c47c15">1</span>    <span style="color:#a0a0a0"># costo de paso = 1</span>
+            <span style="color:#6b93b8">if</span> neighbor <span style="color:#6b93b8">not in</span> g_cost <span style="color:#6b93b8">or</span> new_g < g_cost[neighbor]:
+                g_cost[neighbor] = new_g
+                f_val = new_g + heuristic(neighbor, goal)
+                heapq.heappush(heap, (f_val, neighbor))
+                parent[neighbor] = node
+
+    <span style="color:#6b93b8">return</span> <span style="color:#c96442">None</span></code></pre>
+  </section>
+
+  <!-- ══════════════════════════
+       3. DEMO INTERACTIVA
+  ══════════════════════════ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Demo interactiva</div>
+    <h2 class="section-title">Laberinto — Visualización Paso a Paso</h2>
+
+    <p>Seleccioná el algoritmo, dibujá paredes haciendo clic en las celdas y presioná <strong>Ejecutar</strong> para ver cómo cada algoritmo explora el espacio. El color más intenso indica los nodos explorados más recientemente.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Exploración de laberinto</span>
+        <select class="speed-select" id="speed-select">
+          <option value="120">Lento</option>
+          <option value="40" selected>Normal</option>
+          <option value="8">Rápido</option>
+          <option value="1">Instantáneo</option>
+        </select>
+      </div>
+
+      <!-- Algorithm selector -->
+      <div class="demo-controls">
+        <div class="algo-select" id="algo-select">
+          <button class="algo-tab active-bfs" data-algo="bfs">BFS</button>
+          <button class="algo-tab" data-algo="dfs">DFS</button>
+          <button class="algo-tab" data-algo="astar">A*</button>
+        </div>
+      </div>
+
+      <div class="maze-layout">
+        <!-- Canvas -->
+        <div>
+          <canvas id="maze-canvas" width="374" height="374"></canvas>
+          <div class="draw-hint">Clic para pared · Shift+clic para inicio · Alt+clic para meta</div>
+          <div class="maze-controls-row">
+            <button class="btn-primary" id="btn-run">▶ Ejecutar</button>
+            <button id="btn-step">→ Paso</button>
+            <button id="btn-reset">↺ Limpiar búsqueda</button>
+            <button id="btn-new">⊞ Nuevo laberinto</button>
+          </div>
+          <div class="status-bar" id="status-bar">Seleccioná un algoritmo y presioná Ejecutar.</div>
+        </div>
+
+        <!-- Side panels -->
+        <div class="maze-side">
+          <div class="side-panel">
+            <div class="side-panel-label">Estadísticas</div>
+            <div class="stat-row"><span class="stat-key">Nodos explorados</span><span class="stat-val" id="stat-explored">—</span></div>
+            <div class="stat-row"><span class="stat-key">Longitud del camino</span><span class="stat-val" id="stat-path">—</span></div>
+            <div class="stat-row"><span class="stat-key">Nodos en frontera</span><span class="stat-val" id="stat-frontier">—</span></div>
+            <div class="stat-row"><span class="stat-key">Algoritmo</span><span class="stat-val" id="stat-algo">BFS</span></div>
+          </div>
+
+          <div class="side-panel">
+            <div class="side-panel-label">Frontera actual</div>
+            <div class="queue-display" id="queue-display">—</div>
+          </div>
+
+          <div class="side-panel">
+            <div class="side-panel-label">Leyenda</div>
+            <div class="legend-row"><div class="legend-swatch" style="background:#3a7d44"></div>Inicio</div>
+            <div class="legend-row"><div class="legend-swatch" style="background:#c96442"></div>Meta</div>
+            <div class="legend-row"><div class="legend-swatch" style="background:#c8bfb4"></div>Pared</div>
+            <div class="legend-row"><div class="legend-swatch" style="background:rgba(42,100,150,0.35);border-color:#2a6496"></div>Visitado (BFS)</div>
+            <div class="legend-row"><div class="legend-swatch" style="background:rgba(123,82,168,0.35);border-color:#7b52a8"></div>Visitado (DFS)</div>
+            <div class="legend-row"><div class="legend-swatch" style="background:rgba(58,125,68,0.35);border-color:#3a7d44"></div>Visitado (A*)</div>
+            <div class="legend-row"><div class="legend-swatch" style="background:rgba(201,100,66,0.35);border-color:#c96442"></div>Frontera</div>
+            <div class="legend-row"><div class="legend-swatch" style="background:#f0c040;border-color:#c9a020"></div>Camino final</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════
+       4. COMPARATIVA Y CONCLUSIONES
+  ══════════════════════════ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Análisis</div>
+    <h2 class="section-title">¿Cuándo usar cada uno?</h2>
+
+    <table>
+      <thead>
+        <tr><th>Criterio</th><th>BFS</th><th>DFS</th><th>A*</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Querés el camino más corto</td><td style="color:var(--tag-ml)">✓ Óptimo</td><td style="color:var(--accent)">✗</td><td style="color:var(--tag-ml)">✓ Con $h$ admisible</td></tr>
+        <tr><td>Memoria limitada</td><td style="color:var(--accent)">✗ $O(b^d)$</td><td style="color:var(--tag-ml)">✓ $O(bm)$</td><td style="color:var(--accent)">✗ $O(b^d)$</td></tr>
+        <tr><td>Tenés buena heurística</td><td style="color:var(--text-faint)">—</td><td style="color:var(--text-faint)">—</td><td style="color:var(--tag-ml)">✓ Mucho más rápido</td></tr>
+        <tr><td>Grafo infinito/muy profundo</td><td style="color:var(--accent)">✗</td><td style="color:var(--accent)">✗ (ciclos)</td><td style="color:var(--tag-ml)">✓ Mejor opción</td></tr>
+        <tr><td>Implementación simple</td><td style="color:var(--tag-ml)">✓</td><td style="color:var(--tag-ml)">✓</td><td style="color:var(--tag-nn)">~ Necesita heap</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Conexión con el resto del curso</div>
+      <p>Estos algoritmos son la base de muchos sistemas modernos: <strong>GPS y mapas</strong> usan A* o Dijkstra, <strong>juegos de tablero</strong> (ajedrez, Go) combinan búsqueda con evaluación heurística, y los <strong>planificadores de IA</strong> usan variantes de BFS. Incluso el entrenamiento de modelos de ML puede verse como búsqueda en el espacio de parámetros — aunque el espacio es de millones de dimensiones.</p>
+    </div>
+
+    <hr>
+
+    <h2 class="section-title">Más allá: Búsqueda en Espacios Continuos</h2>
+    <p>En problemas reales el espacio de estados no es un laberinto discreto. Los planificadores de movimiento para robots usan <strong>RRT</strong> (Rapidly-exploring Random Trees), que muestrea el espacio aleatoriamente. Los juegos de tablero usan <strong>MCTS</strong> (Monte Carlo Tree Search), que combina búsqueda con simulaciones aleatorias para estimar el valor de cada nodo.</p>
+    <p>Y cuando el espacio de búsqueda no tiene estructura explotable por una heurística — o cuando la función de costo no es diferenciable — entran en juego los <strong>Algoritmos Genéticos</strong>, que veremos en el Área 6.</p>
+  </section>
+
+  <nav class="module-nav">
+    <a href="01_gofai_sistemas_expertos.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="03_gofai_minimax.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MAZE ENGINE
+══════════════════════════════════════════════════ -->
+<script>
+const COLS = 17, ROWS = 17, CELL = 22;
+const canvas = document.getElementById('maze-canvas');
+const ctx    = canvas.getContext('2d');
+canvas.width  = COLS * CELL;
+canvas.height = ROWS * CELL;
+
+// State
+let grid, startCell, goalCell, currentAlgo = 'bfs';
+let stepGen = null, running = false, animTimer = null;
+let exploredCount = 0, pathLength = 0;
+let mouseDown = false, drawMode = 'wall'; // wall | erase
+
+// ── Colors ──
+const COLORS = {
+  bfs:   { visited:'rgba(42,100,150,0.28)',  frontier:'rgba(42,100,150,0.55)',  path:'#2a6496' },
+  dfs:   { visited:'rgba(123,82,168,0.28)',  frontier:'rgba(123,82,168,0.55)',  path:'#7b52a8' },
+  astar: { visited:'rgba(58,125,68,0.28)',   frontier:'rgba(58,125,68,0.55)',   path:'#3a7d44' },
+};
+
+// ── Grid helpers ──
+function makeGrid() {
+  return Array.from({length:ROWS}, () => Array(COLS).fill(0));
+}
+
+function carve(g, r, c) {
+  // recursive division-ish DFS maze generator
+  const dirs = [[0,2],[2,0],[0,-2],[-2,0]].sort(()=>Math.random()-0.5);
+  for (const [dr,dc] of dirs) {
+    const nr = r+dr, nc = c+dc;
+    if (nr>0&&nr<ROWS-1&&nc>0&&nc<COLS-1&&g[nr][nc]===1) {
+      g[r+dr/2][c+dc/2] = 0;
+      g[nr][nc] = 0;
+      carve(g, nr, nc);
+    }
+  }
+}
+
+function newMaze() {
+  grid = Array.from({length:ROWS}, () => Array(COLS).fill(1));
+  grid[1][1] = 0;
+  carve(grid, 1, 1);
+  // open borders just in case
+  startCell = {r:1, c:1};
+  goalCell  = {r:ROWS-2, c:COLS-2};
+  grid[startCell.r][startCell.c] = 0;
+  grid[goalCell.r][goalCell.c]   = 0;
+  resetSearch();
+}
+
+// ── Draw ──
+function drawGrid(visited, frontier, path) {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const C = COLORS[currentAlgo];
+
+  for (let r=0;r<ROWS;r++) {
+    for (let c=0;c<COLS;c++) {
+      const x=c*CELL, y=r*CELL;
+      const key = `${r},${c}`;
+
+      if (grid[r][c]===1) {
+        ctx.fillStyle='#c8bfb4';
+      } else if (path && path.some(p=>p.r===r&&p.c===c)) {
+        ctx.fillStyle='#f0c040';
+      } else if (frontier && frontier.has(key)) {
+        ctx.fillStyle=C.frontier;
+      } else if (visited && visited.has(key)) {
+        ctx.fillStyle=C.visited;
+      } else {
+        ctx.fillStyle='#faf7f4';
+      }
+
+      ctx.fillRect(x+1,y+1,CELL-2,CELL-2);
+    }
+  }
+
+  // start / goal
+  drawSpecial(startCell.r, startCell.c, '#3a7d44', 'S');
+  drawSpecial(goalCell.r,  goalCell.c,  '#c96442',  'G');
+
+  // grid lines
+  ctx.strokeStyle='rgba(0,0,0,0.04)';
+  ctx.lineWidth=0.5;
+  for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*CELL);ctx.lineTo(COLS*CELL,r*CELL);ctx.stroke();}
+  for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*CELL,0);ctx.lineTo(c*CELL,ROWS*CELL);ctx.stroke();}
+}
+
+function drawSpecial(r, c, color, label) {
+  const x=c*CELL+1, y=r*CELL+1, s=CELL-2;
+  ctx.fillStyle=color;
+  ctx.fillRect(x,y,s,s);
+  ctx.fillStyle='#fff';
+  ctx.font=`bold ${Math.floor(CELL*0.55)}px Geist, sans-serif`;
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(label, c*CELL+CELL/2, r*CELL+CELL/2);
+}
+
+// ── Neighbors ──
+function neighbors(r, c) {
+  return [[r-1,c],[r+1,c],[r,c-1],[r,c+1]]
+    .filter(([nr,nc])=>nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&grid[nr][nc]===0);
+}
+
+// ── Reconstruct ──
+function reconstruct(parent, goal) {
+  const path = [];
+  let cur = `${goal.r},${goal.c}`;
+  while (cur) {
+    const [r,c] = cur.split(',').map(Number);
+    path.push({r,c});
+    cur = parent[cur];
+  }
+  return path.reverse();
+}
+
+// ── BFS generator ──
+function* bfsGen() {
+  const queue   = [{r:startCell.r,c:startCell.c}];
+  const visited = new Map([[`${startCell.r},${startCell.c}`, null]]);
+  const frontier = new Set([`${startCell.r},${startCell.c}`]);
+  const goalKey = `${goalCell.r},${goalCell.c}`;
+
+  while (queue.length) {
+    const node = queue.shift();
+    const key  = `${node.r},${node.c}`;
+    frontier.delete(key);
+
+    updateStats(visited.size, 0, frontier.size);
+    updateQueue(frontier);
+    drawGrid(new Set(visited.keys()), frontier, null);
+    yield;
+
+    if (key === goalKey) {
+      const path = reconstruct(Object.fromEntries(visited), goalCell);
+      drawGrid(new Set(visited.keys()), new Set(), path);
+      updateStats(visited.size, path.length, 0);
+      setStatus(`✓ Camino encontrado — ${path.length} pasos, ${visited.size} nodos explorados.`, 'ok');
+      return;
+    }
+
+    for (const [nr,nc] of neighbors(node.r, node.c)) {
+      const nk = `${nr},${nc}`;
+      if (!visited.has(nk)) {
+        visited.set(nk, key);
+        frontier.add(nk);
+        queue.push({r:nr,c:nc});
+      }
+    }
+  }
+  setStatus('✗ No se encontró camino.', 'err');
+}
+
+// ── DFS generator ──
+function* dfsGen() {
+  const stack   = [{r:startCell.r,c:startCell.c}];
+  const visited = new Map([[`${startCell.r},${startCell.c}`, null]]);
+  const frontier = new Set([`${startCell.r},${startCell.c}`]);
+  const goalKey  = `${goalCell.r},${goalCell.c}`;
+
+  while (stack.length) {
+    const node = stack.pop();
+    const key  = `${node.r},${node.c}`;
+    frontier.delete(key);
+
+    updateStats(visited.size, 0, frontier.size);
+    updateQueue(frontier);
+    drawGrid(new Set(visited.keys()), frontier, null);
+    yield;
+
+    if (key === goalKey) {
+      const path = reconstruct(Object.fromEntries(visited), goalCell);
+      drawGrid(new Set(visited.keys()), new Set(), path);
+      updateStats(visited.size, path.length, 0);
+      setStatus(`✓ Camino encontrado — ${path.length} pasos, ${visited.size} nodos explorados.`, 'ok');
+      return;
+    }
+
+    for (const [nr,nc] of neighbors(node.r, node.c)) {
+      const nk = `${nr},${nc}`;
+      if (!visited.has(nk)) {
+        visited.set(nk, key);
+        frontier.add(nk);
+        stack.push({r:nr,c:nc});
+      }
+    }
+  }
+  setStatus('✗ No se encontró camino.', 'err');
+}
+
+// ── A* generator ──
+function* astarGen() {
+  function h(r,c){ return Math.abs(r-goalCell.r)+Math.abs(c-goalCell.c); }
+
+  // MinHeap via sorted array (small grid, fine for demo)
+  const startKey = `${startCell.r},${startCell.c}`;
+  const goalKey  = `${goalCell.r},${goalCell.c}`;
+
+  const open    = [{f:h(startCell.r,startCell.c), g:0, r:startCell.r, c:startCell.c}];
+  const gCost   = new Map([[startKey, 0]]);
+  const parent  = new Map([[startKey, null]]);
+  const closed  = new Set();
+  const frontier= new Set([startKey]);
+
+  while (open.length) {
+    open.sort((a,b)=>a.f-b.f);
+    const node = open.shift();
+    const key  = `${node.r},${node.c}`;
+    frontier.delete(key);
+    closed.add(key);
+
+    updateStats(closed.size, 0, frontier.size);
+    updateQueue(frontier);
+    drawGrid(closed, frontier, null);
+    yield;
+
+    if (key === goalKey) {
+      const path = reconstructMap(parent, goalCell);
+      drawGrid(closed, new Set(), path);
+      updateStats(closed.size, path.length, 0);
+      setStatus(`✓ Camino óptimo encontrado — ${path.length} pasos, ${closed.size} nodos explorados.`, 'ok');
+      return;
+    }
+
+    for (const [nr,nc] of neighbors(node.r, node.c)) {
+      const nk = `${nr},${nc}`;
+      if (closed.has(nk)) continue;
+      const newG = gCost.get(key) + 1;
+      if (!gCost.has(nk) || newG < gCost.get(nk)) {
+        gCost.set(nk, newG);
+        parent.set(nk, key);
+        const f = newG + h(nr,nc);
+        open.push({f, g:newG, r:nr, c:nc});
+        frontier.add(nk);
+      }
+    }
+  }
+  setStatus('✗ No se encontró camino.', 'err');
+}
+
+function reconstructMap(parentMap, goal) {
+  const path = [];
+  let cur = `${goal.r},${goal.c}`;
+  while (cur) {
+    const [r,c] = cur.split(',').map(Number);
+    path.push({r,c});
+    cur = parentMap.get(cur);
+  }
+  return path.reverse();
+}
+
+// ── UI Helpers ──
+function updateStats(explored, path, front) {
+  document.getElementById('stat-explored').textContent = explored || '—';
+  document.getElementById('stat-path').textContent     = path     || '—';
+  document.getElementById('stat-frontier').textContent = front    || '—';
+  document.getElementById('stat-algo').textContent     = currentAlgo.toUpperCase();
+}
+
+function updateQueue(frontier) {
+  const keys = [...frontier].slice(0,12).map(k=>`(${k})`).join(' ');
+  document.getElementById('queue-display').textContent = keys + (frontier.size>12?` … +${frontier.size-12}` : '');
+}
+
+function setStatus(msg, type) {
+  const el = document.getElementById('status-bar');
+  el.textContent = msg;
+  el.style.color = type==='ok' ? 'var(--tag-ml)' : type==='err' ? 'var(--accent)' : 'var(--text-muted)';
+}
+
+function resetSearch() {
+  if (animTimer) { clearInterval(animTimer); animTimer=null; }
+  stepGen = null; running = false;
+  document.getElementById('btn-run').textContent = '▶ Ejecutar';
+  document.getElementById('btn-run').disabled    = false;
+  document.getElementById('btn-step').disabled   = false;
+  updateStats(0,0,0);
+  document.getElementById('queue-display').textContent = '—';
+  setStatus('Seleccioná un algoritmo y presioná Ejecutar.','');
+  drawGrid(null,null,null);
+}
+
+function makeGen() {
+  if (currentAlgo==='bfs')   return bfsGen();
+  if (currentAlgo==='dfs')   return dfsGen();
+  if (currentAlgo==='astar') return astarGen();
+}
+
+// ── Run / Step ──
+document.getElementById('btn-run').addEventListener('click', ()=>{
+  if (running) {
+    clearInterval(animTimer); animTimer=null; running=false;
+    document.getElementById('btn-run').textContent='▶ Continuar';
+    return;
+  }
+  if (!stepGen) stepGen = makeGen();
+  running = true;
+  document.getElementById('btn-run').textContent='⏸ Pausar';
+  const delay = parseInt(document.getElementById('speed-select').value);
+  animTimer = setInterval(()=>{
+    const res = stepGen.next();
+    if (res.done) {
+      clearInterval(animTimer); animTimer=null; running=false;
+      document.getElementById('btn-run').textContent='▶ Ejecutar';
+      document.getElementById('btn-run').disabled=true;
+    }
+  }, delay);
+});
+
+document.getElementById('btn-step').addEventListener('click', ()=>{
+  if (running) return;
+  if (!stepGen) stepGen = makeGen();
+  const res = stepGen.next();
+  if (res.done) {
+    document.getElementById('btn-step').disabled=true;
+    document.getElementById('btn-run').disabled=true;
+  }
+});
+
+document.getElementById('btn-reset').addEventListener('click', resetSearch);
+document.getElementById('btn-new').addEventListener('click', ()=>{ newMaze(); drawGrid(null,null,null); });
+
+// ── Algo tabs ──
+document.getElementById('algo-select').addEventListener('click', e=>{
+  const tab = e.target.closest('[data-algo]');
+  if (!tab) return;
+  currentAlgo = tab.dataset.algo;
+  document.querySelectorAll('.algo-tab').forEach(t=>{
+    t.className = 'algo-tab';
+    if (t.dataset.algo===currentAlgo) t.classList.add(`active-${currentAlgo}`);
+  });
+  resetSearch();
+});
+
+// ── Mouse drawing ──
+function cellFromEvent(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top)  * scaleY;
+  return { r: Math.floor(y/CELL), c: Math.floor(x/CELL) };
+}
+
+canvas.addEventListener('mousedown', e=>{
+  e.preventDefault();
+  mouseDown = true;
+  const {r,c} = cellFromEvent(e);
+  if (e.shiftKey) {
+    if (grid[r][c]!==1) { startCell={r,c}; resetSearch(); drawGrid(null,null,null); }
+    return;
+  }
+  if (e.altKey) {
+    if (grid[r][c]!==1) { goalCell={r,c}; resetSearch(); drawGrid(null,null,null); }
+    return;
+  }
+  // toggle wall
+  if ((r===startCell.r&&c===startCell.c)||(r===goalCell.r&&c===goalCell.c)) return;
+  drawMode = grid[r][c]===1 ? 'erase' : 'wall';
+  grid[r][c] = drawMode==='wall' ? 1 : 0;
+  resetSearch(); drawGrid(null,null,null);
+});
+
+canvas.addEventListener('mousemove', e=>{
+  if (!mouseDown || e.shiftKey || e.altKey) return;
+  const {r,c} = cellFromEvent(e);
+  if ((r===startCell.r&&c===startCell.c)||(r===goalCell.r&&c===goalCell.c)) return;
+  grid[r][c] = drawMode==='wall' ? 1 : 0;
+  drawGrid(null,null,null);
+});
+
+window.addEventListener('mouseup', ()=>{ mouseDown=false; });
+
+// ── Init ──
+newMaze();
+</script>
+</body>
+</html>
+

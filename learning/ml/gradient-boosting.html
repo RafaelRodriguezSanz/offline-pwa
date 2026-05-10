@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Gradient Boosting</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* ML Theme */
+      --accent:         #3a7d44; 
+      --accent-hover:   #2c5e33;
+      --accent-bg:      rgba(58,125,68,0.08);
+      --accent-border:  rgba(58,125,68,0.25);
+      --tag-ml:         #3a7d44;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-ml { color:var(--tag-ml); border-color:var(--tag-ml); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    .canvas-wrapper { width: 100%; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface); }
+    canvas { width: 100%; height: 350px; border-radius: var(--radius-sm); display: block; }
+    
+    .legend { display: flex; gap: 1rem; font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.5rem;}
+    .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+    .dot-data { width: 10px; height: 10px; border-radius: 50%; background: var(--text-faint); }
+    .dot-pred { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .demo-controls-bar { display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); justify-content: center; flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 2 — Machine Learning</a><span class="sep">›</span>
+    <span class="current">Módulo 12 · Boosting</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-ml">● ML · Módulo 12</span>
+    <h1 class="module-title">Métodos Ensemble:<br>Gradient Boosting & XGBoost</h1>
+    <p class="module-subtitle">¿Cómo ganar competencias de Kaggle? En lugar de hacer un árbol gigante, entrena 100 árboles diminutos, donde cada uno corrige los errores del anterior.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Machine Learning</span>
+      <span><strong>Duración</strong> ~15 min</span>
+      <span><strong>Prerrequisitos</strong> Árboles de Decisión</span>
+    </div>
+  </header>
+
+  <section class="section fade-up d1">
+    <div class="section-label">Ensamblando Modelos</div>
+    <h2 class="section-title">Ajustando los Residuos</h2>
+    <p>Mientras que Random Forest promedia muchos árboles independientes, el <strong>Gradient Boosting</strong> es secuencial. Funciona así:</p>
+    <ol>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem;">El Árbol 1 hace una predicción burda. Queda un error (Residuo).</li>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem;">El Árbol 2 no intenta predecir el valor original, intenta predecir el <strong>Residuo</strong> del Árbol 1.</li>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem;">El Árbol 3 predice el residuo que quedó tras el Árbol 2.</li>
+    </ol>
+    <p>Al sumar todas las predicciones de estos "árboles débiles", obtenemos un modelo extremadamente preciso. XGBoost es simplemente una versión ultra-optimizada matemáticamente de esta misma idea.</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Construcción Aditiva en Vivo</h2>
+    <p>Mira la onda sinusoidal ruidosa gris. Al presionar <strong>Agregar Árbol</strong>, agregaremos un modelo muy simple que hace cortes escalonados (como todo árbol de decisión). Cada nuevo árbol perfeccionará los escalones de la línea verde hasta ajustarse perfectamente a la curva.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Regresión por Boosting</span>
+        <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted);" id="lbl-status">Árboles: 0</span>
+      </div>
+
+      <div class="demo-layout">
+        <div class="canvas-wrapper">
+          <canvas id="canvas-boosting" width="800" height="350"></canvas>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="dot-data"></div> Datos Reales</div>
+          <div class="legend-item"><div class="dot-pred"></div> Predicción del Ensemble</div>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <button id="btn-add" class="btn-primary">▶ Agregar Árbol Débil</button>
+        <button id="btn-reset" class="btn">↻ Reiniciar Ensemble</button>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="11_ml_arboles.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="13_ml_bias_variance.html">Próximo →</a>
+  </nav>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas-boosting');
+  const ctx = canvas.getContext('2d');
+  const lblStatus = document.getElementById('lbl-status');
+  const btnAdd = document.getElementById('btn-add');
+  const btnReset = document.getElementById('btn-reset');
+  
+  let data = [];
+  let ensemble = []; // Array of simple "stump" functions
+  let numTrees = 0;
+  const learningRate = 0.8;
+
+  function initData() {
+    data = [];
+    for(let x=0; x<=100; x+=1) {
+      // Sine wave with noise
+      let rx = x / 100 * Math.PI * 2;
+      let ry = Math.sin(rx) * 100 + (Math.random()-0.5)*20;
+      data.push({ x: x, y: ry, pred: 0 });
+    }
+  }
+
+  // A very dumb "decision tree" (a single split / stump)
+  function trainStump(residuals) {
+    // Random split point
+    let splitX = Math.floor(Math.random() * 80) + 10; // Avoid extreme edges
+    
+    // Calculate mean of residuals left and right of split
+    let sumL = 0, countL = 0;
+    let sumR = 0, countR = 0;
+    
+    residuals.forEach(p => {
+      if(p.x < splitX) { sumL += p.res; countL++; }
+      else { sumR += p.res; countR++; }
+    });
+    
+    let meanL = countL > 0 ? sumL / countL : 0;
+    let meanR = countR > 0 ? sumR / countR : 0;
+    
+    return { split: splitX, left: meanL, right: meanR };
+  }
+
+  function addTree() {
+    // 1. Calculate residuals (Actual - Current Pred)
+    let residuals = data.map(d => {
+      return { x: d.x, res: d.y - d.pred };
+    });
+    
+    // 2. Train a stump to fit residuals
+    let stump = trainStump(residuals);
+    ensemble.push(stump);
+    
+    // 3. Update current predictions with learning rate
+    data.forEach(d => {
+      let val = d.x < stump.split ? stump.left : stump.right;
+      d.pred += learningRate * val;
+    });
+    
+    numTrees++;
+    lblStatus.textContent = `Árboles: ${numTrees}`;
+    draw();
+  }
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    
+    // Map functions
+    const mapX = (x) => (x / 100) * W;
+    const mapY = (y) => H/2 - y; // inverted Y, centered
+    
+    // Draw Data
+    ctx.fillStyle = '#b8b0a8';
+    data.forEach(d => {
+      ctx.beginPath();
+      ctx.arc(mapX(d.x), mapY(d.y), 3, 0, Math.PI*2);
+      ctx.fill();
+    });
+    
+    // Draw Ensemble Prediction
+    if (numTrees > 0) {
+      ctx.strokeStyle = '#3a7d44';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      data.forEach((d, i) => {
+        if(i===0) ctx.moveTo(mapX(d.x), mapY(d.pred));
+        else ctx.lineTo(mapX(d.x), mapY(d.pred));
+      });
+      ctx.stroke();
+    }
+  }
+
+  btnAdd.addEventListener('click', () => {
+    // Add 3 trees at a time to speed up the visual convergence
+    addTree();
+    addTree();
+    addTree();
+  });
+
+  btnReset.addEventListener('click', () => {
+    ensemble = [];
+    numTrees = 0;
+    lblStatus.textContent = `Árboles: 0`;
+    initData();
+    draw();
+  });
+
+  // Init
+  initData();
+  draw();
+
+})();
+</script>
+</body>
+</html>
+

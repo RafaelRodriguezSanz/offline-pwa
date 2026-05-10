@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Optimizadores: SGD, Momentum & Adam</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* Redes Neuronales Theme */
+      --accent:         #c47c15; 
+      --accent-hover:   #a36511;
+      --accent-bg:      rgba(196,124,21,0.08);
+      --accent-border:  rgba(196,124,21,0.25);
+      --tag-nn:         #c47c15;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+      
+      /* Optimizers Colors */
+      --col-sgd: #2a6496; /* Blue */
+      --col-mom: #3a7d44; /* Green */
+      --col-adam: #c96442; /* Red */
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-nn { color:var(--tag-nn); border-color:var(--tag-nn); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* CALLOUTS */
+    .callout { border-left:2px solid; padding:0.9rem 1.2rem; border-radius:0 var(--radius-md) var(--radius-md) 0; margin:1.5rem 0; background:var(--bg-raised); box-shadow:var(--shadow-sm); }
+    .callout-key  { border-color:var(--accent);    background:var(--accent-bg); }
+    .callout-tip  { border-color:var(--tag-nn);    background:rgba(196,124,21,0.05); }
+    .callout-label { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.35rem; }
+    .callout-key  .callout-label { color:var(--accent); }
+    .callout-tip  .callout-label { color:var(--tag-nn); }
+    .callout p { margin-bottom:0; }
+
+    /* MATH */
+    .math-block { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:1.4rem 2rem; margin:1.5rem 0; overflow-x:auto; text-align:center; box-shadow:var(--shadow-sm); }
+    .math-block .math-label { font-family:var(--font-mono); font-size:0.66rem; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.75rem; text-align:left; }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .demo-layout .canvas-wrapper { flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0; background: #fff; overflow:hidden; position:relative; }
+    .demo-layout canvas { width: 100%; height: auto; display:block; }
+    
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .ctrl-group { display:flex; align-items:center; gap:0.6rem; }
+    .ctrl-label { font-family:var(--font-mono); font-size:0.67rem; color:var(--text-muted); letter-spacing:0.04em; }
+
+    input[type="range"] { -webkit-appearance:none; width:100px; height:3px; background:var(--border-default); border-radius:999px; outline:none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--accent); cursor:pointer; transition:box-shadow var(--transition); border: 2px solid #fff; box-shadow: var(--shadow-sm); }
+    input[type="range"]::-webkit-slider-thumb:hover { box-shadow:0 0 0 4px var(--accent-bg); }
+
+    .val-pill { font-family:var(--font-mono); font-size:0.67rem; background:var(--bg-overlay); border:1px solid var(--border-subtle); padding:0.12em 0.5em; border-radius:999px; color:var(--accent); min-width:2.5rem; text-align:center; }
+    
+    .demo-controls-bar { display: flex; gap: 1.5rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); justify-content: center; flex-wrap: wrap; }
+
+    /* Legend */
+    .legend-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; }
+    .dot-sgd { background:var(--col-sgd); }
+    .dot-mom { background:var(--col-mom); }
+    .dot-adam { background:var(--col-adam); }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+    .d4 { animation-delay:0.32s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 4 — Redes Neuronales</a><span class="sep">›</span>
+    <span class="current">Módulo 18 · Optimizadores</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-nn">● NN · Módulo 18</span>
+    <h1 class="module-title">Optimizadores:<br>SGD, Momentum & Adam</h1>
+    <p class="module-subtitle">Navegando el paisaje de pérdida. Por qué el Descenso de Gradiente básico se atasca en valles estrechos, y cómo la física y la estadística lo aceleran exponencialmente.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Redes Neuronales</span>
+      <span><strong>Duración</strong> ~25 min</span>
+      <span><strong>Prerrequisitos</strong> Backpropagation</span>
+    </div>
+  </header>
+
+  <!-- ══ 1. EL PROBLEMA DE SGD ══ -->
+  <section class="section fade-up d1">
+    <div class="section-label">Fundamentos</div>
+    <h2 class="section-title">El paisaje de la pérdida</h2>
+    <p>Con Backpropagation obtenemos los gradientes, que nos dicen la dirección de máxima pendiente ascendente. El Stochastic Gradient Descent (SGD) simplemente toma un pequeño paso en la dirección opuesta (descenso). Pero en redes profundas, la "superficie" matemática de la pérdida $L$ respecto a los pesos no es un cuenco perfecto; está llena de <strong>valles estrechos (ravines)</strong> y <strong>puntos de silla (saddle points)</strong>.</p>
+    <p>En un valle estrecho, las laderas son muy empinadas pero el fondo se inclina muy suavemente hacia el mínimo. SGD tiende a oscilar salvajemente de una ladera a otra, avanzando a paso de tortuga hacia la verdadera meta.</p>
+  </section>
+
+  <!-- ══ 2. MATEMÁTICAS ══ -->
+  <section class="section fade-up d2">
+    <div class="section-label">Mejoras</div>
+    <h2 class="section-title">Momentum & Adam</h2>
+    
+    <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin-top:1.5rem;margin-bottom:0.5rem;font-weight:500;">Momentum (Simulando la Física)</h3>
+    <p>Imaginate tirar una bola de boliche por el valle. La bola ganará inercia en la dirección en la que sigue cayendo constantemente, y las oscilaciones laterales se cancelarán. Eso es el <strong>Momentum</strong>: acumulamos un promedio móvil exponencial (EMA) de los gradientes pasados.</p>
+
+    <div class="math-block">
+      <div class="math-label">Regla de Actualización con Momentum</div>
+      $$v_t = \beta \cdot v_{t-1} + (1-\beta) \cdot g_t$$
+      $$w_t = w_{t-1} - \alpha \cdot v_t$$
+    </div>
+
+    <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin-top:1.5rem;margin-bottom:0.5rem;font-weight:500;">Adam (Adaptive Moment Estimation)</h3>
+    <p>Publicado en 2014, Adam es actualmente el optimizador estándar por defecto en Deep Learning. Combina la idea del Momentum (promedio del gradiente) con la idea de RMSProp (promedio de los <em>cuadrados</em> de los gradientes) para adaptar automáticamente el <em>learning rate</em> de cada peso individualmente.</p>
+
+    <div class="math-block">
+      <div class="math-label">Núcleo de Adam</div>
+      $$m_t = \beta_1 m_{t-1} + (1-\beta_1) g_t \quad \text{(Momento de 1er orden)}$$
+      $$v_t = \beta_2 v_{t-1} + (1-\beta_2) g_t^2 \quad \text{(Momento de 2do orden)}$$
+      $$w_t = w_{t-1} - \frac{\alpha}{\sqrt{v_t} + \epsilon} \cdot m_t$$
+    </div>
+  </section>
+
+  <!-- ══ 3. DEMO INTERACTIVA ══ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Carrera de Optimizadores</h2>
+    <p>Observá el comportamiento de los tres optimizadores en un valle de Rosenbrock (una función clásica que penaliza severamente el descenso ingenuo). Las líneas de contorno representan las curvas de nivel topográficas (el centro blanco/amarillo es el mínimo global).</p>
+    <p>Hacé clic en <strong>"▶ Correr"</strong> para ver la carrera. Notá cómo SGD oscila sin avanzar, Momentum avanza pero se "pasa de largo" a veces, y Adam encuentra el camino de manera rápida y amortiguada.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Valle Estrecho (Función de costo topográfica)</span>
+        <div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted);">
+          <span class="legend-dot dot-sgd"></span> SGD $\quad$
+          <span class="legend-dot dot-mom"></span> Momentum $\quad$
+          <span class="legend-dot dot-adam"></span> Adam
+        </div>
+      </div>
+
+      <div class="demo-layout">
+        <div class="canvas-wrapper">
+          <canvas id="canvas-surface" width="600" height="350"></canvas>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <button class="btn-primary" id="btn-run">▶ Correr Carrera</button>
+        <button id="btn-reset">↺ Reiniciar Posiciones</button>
+        <div style="flex:1"></div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Learning Rate base ($\alpha$)</span>
+          <input type="range" id="sl-lr" min="-3" max="-1" step="0.1" value="-2">
+          <span class="val-pill" id="vl-lr">0.01</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="17_nn_backprop.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="19_nn_saddle.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: OPTIMIZERS RACE ON 2D SURFACE
+══════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('canvas-surface');
+  const ctx = canvas.getContext('2d');
+
+  // Surface function: Elongated bowl (resembles Rosenbrock but easier to scale)
+  // f(x,y) = x^2 / 20 + y^2
+  // Gradients: df/dx = x/10, df/dy = 2y
+  function f(x, y) {
+    return (x * x) / 20.0 + (y * y);
+  }
+  function gradFunc(x, y) {
+    return { dx: x / 10.0, dy: 2.0 * y };
+  }
+
+  // Bounds for drawing
+  const X_MIN = -50;
+  const X_MAX = 50;
+  const Y_MIN = -5;
+  const Y_MAX = 5;
+
+  const START_X = -45;
+  const START_Y = 4.5;
+
+  let baseLR = 0.01;
+  let isRunning = false;
+  let animId = null;
+
+  // Optimizadores state
+  let optimizers = [
+    { name: 'SGD',      color: '#2a6496', x: START_X, y: START_Y, path: [], state: {} },
+    { name: 'Momentum', color: '#3a7d44', x: START_X, y: START_Y, path: [], state: { vx: 0, vy: 0 } },
+    { name: 'Adam',     color: '#c96442', x: START_X, y: START_Y, path: [], state: { mx: 0, my: 0, vx: 0, vy: 0, t: 0 } }
+  ];
+
+  function resetRace() {
+    isRunning = false;
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+    
+    optimizers.forEach(opt => {
+      opt.x = START_X;
+      opt.y = START_Y;
+      opt.path = [{x: START_X, y: START_Y}];
+      opt.state = opt.name === 'Momentum' ? { vx: 0, vy: 0 } : 
+                  opt.name === 'Adam' ? { mx: 0, my: 0, vx: 0, vy: 0, t: 0 } : {};
+    });
+    draw();
+  }
+
+  function stepOptimizers() {
+    let hasMoved = false;
+    
+    optimizers.forEach(opt => {
+      const g = gradFunc(opt.x, opt.y);
+      let dx = 0, dy = 0;
+
+      if (opt.name === 'SGD') {
+        // High learning rate for SGD to make it move, but it causes oscillation
+        const lr = baseLR * 5; 
+        dx = -lr * g.dx;
+        dy = -lr * g.dy;
+      } 
+      else if (opt.name === 'Momentum') {
+        const lr = baseLR * 5;
+        const beta = 0.9;
+        opt.state.vx = beta * opt.state.vx + (1 - beta) * g.dx;
+        opt.state.vy = beta * opt.state.vy + (1 - beta) * g.dy;
+        dx = -lr * opt.state.vx;
+        dy = -lr * opt.state.vy;
+      } 
+      else if (opt.name === 'Adam') {
+        const lr = baseLR * 50; // Adam needs different scale for this specific function
+        const beta1 = 0.9, beta2 = 0.999, eps = 1e-8;
+        opt.state.t += 1;
+        
+        opt.state.mx = beta1 * opt.state.mx + (1 - beta1) * g.dx;
+        opt.state.my = beta1 * opt.state.my + (1 - beta1) * g.dy;
+        
+        opt.state.vx = beta2 * opt.state.vx + (1 - beta2) * (g.dx * g.dx);
+        opt.state.vy = beta2 * opt.state.vy + (1 - beta2) * (g.dy * g.dy);
+        
+        const mhatX = opt.state.mx / (1 - Math.pow(beta1, opt.state.t));
+        const mhatY = opt.state.my / (1 - Math.pow(beta1, opt.state.t));
+        
+        const vhatX = opt.state.vx / (1 - Math.pow(beta2, opt.state.t));
+        const vhatY = opt.state.vy / (1 - Math.pow(beta2, opt.state.t));
+        
+        dx = -lr * mhatX / (Math.sqrt(vhatX) + eps);
+        dy = -lr * mhatY / (Math.sqrt(vhatY) + eps);
+      }
+
+      opt.x += dx;
+      opt.y += dy;
+      opt.path.push({x: opt.x, y: opt.y});
+      
+      if (Math.abs(dx) > 1e-4 || Math.abs(dy) > 1e-4) hasMoved = true;
+    });
+
+    return hasMoved;
+  }
+
+  // --- Rendering ---
+  let bgCanvas = null;
+
+  function toPx(x, y, w, h) {
+    const px = ((x - X_MIN) / (X_MAX - X_MIN)) * w;
+    const py = h - ((y - Y_MIN) / (Y_MAX - Y_MIN)) * h;
+    return [px, py];
+  }
+
+  function precomputeBackground(W, H) {
+    bgCanvas = document.createElement('canvas');
+    bgCanvas.width = W;
+    bgCanvas.height = H;
+    const ctxBg = bgCanvas.getContext('2d');
+
+    const imgData = ctxBg.createImageData(W, H);
+    
+    // Very simple contour coloring
+    for (let py = 0; py < H; py++) {
+      for (let px = 0; px < W; px++) {
+        // Map px,py back to math coords
+        const x = X_MIN + (px / W) * (X_MAX - X_MIN);
+        const y = Y_MIN + ((H - py) / H) * (Y_MAX - Y_MIN);
+        
+        const val = f(x, y);
+        
+        // Map val to a colormap (Dark blue -> light -> white)
+        // val is roughly 0 to (2500/20 + 25) = 150
+        const norm = Math.min(1.0, val / 100.0);
+        
+        // Base color (surface)
+        let r = 245, g = 240, b = 235; // --bg-base
+        
+        // Add contour lines (modulo math)
+        // If val is near an integer multiple of 5, draw contour
+        if (val % 10 < 0.3) {
+          r = 217; g = 208; b = 199; // --border-default
+        } else {
+          // Gradient based on value
+          r = Math.floor(250 - norm * 30);
+          g = Math.floor(247 - norm * 30);
+          b = Math.floor(244 - norm * 15);
+        }
+
+        const idx = (py * W + px) * 4;
+        imgData.data[idx] = r;
+        imgData.data[idx+1] = g;
+        imgData.data[idx+2] = b;
+        imgData.data[idx+3] = 255;
+      }
+    }
+    ctxBg.putImageData(imgData, 0, 0);
+  }
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    
+    if (!bgCanvas || bgCanvas.width !== W) {
+      precomputeBackground(W, H);
+    }
+    
+    // Draw background
+    ctx.drawImage(bgCanvas, 0, 0);
+
+    // Draw paths
+    optimizers.forEach(opt => {
+      if (opt.path.length === 0) return;
+      
+      ctx.beginPath();
+      const [sx, sy] = toPx(opt.path[0].x, opt.path[0].y, W, H);
+      ctx.moveTo(sx, sy);
+      
+      for (let i = 1; i < opt.path.length; i++) {
+        const [px, py] = toPx(opt.path[i].x, opt.path[i].y, W, H);
+        ctx.lineTo(px, py);
+      }
+      
+      ctx.strokeStyle = opt.color;
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      // Draw current position dot
+      const [lx, ly] = toPx(opt.x, opt.y, W, H);
+      ctx.beginPath(); ctx.arc(lx, ly, 4, 0, Math.PI*2);
+      ctx.fillStyle = opt.color; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+    });
+  }
+
+  function loop() {
+    if (!isRunning) return;
+    
+    // Advance multiple steps per frame to make it watchable
+    let moved = false;
+    for(let i=0; i<3; i++) {
+      if (stepOptimizers()) moved = true;
+    }
+    
+    draw();
+    
+    if (moved && optimizers[0].path.length < 500) { // Limit max steps
+      animId = requestAnimationFrame(loop);
+    } else {
+      isRunning = false;
+    }
+  }
+
+  // Interactions
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = 350;
+    bgCanvas = null; // force recompute
+    draw();
+  }
+
+  document.getElementById('btn-run').addEventListener('click', () => {
+    if (isRunning) return;
+    if (optimizers[0].path.length > 10) resetRace(); // if already run, reset first
+    isRunning = true;
+    loop();
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', resetRace);
+
+  document.getElementById('sl-lr').addEventListener('input', function() {
+    baseLR = Math.pow(10, parseFloat(this.value));
+    document.getElementById('vl-lr').textContent = baseLR.toFixed(3);
+    resetRace();
+  });
+
+  // Init
+  window.addEventListener('resize', resize);
+  
+  setTimeout(() => {
+    resetRace();
+  }, 100);
+
+})();
+</script>
+</body>
+</html>
+

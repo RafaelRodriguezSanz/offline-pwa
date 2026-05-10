@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — El Perceptrón & Funciones de Activación</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* Redes Neuronales Theme */
+      --accent:         #c47c15; 
+      --accent-hover:   #a36511;
+      --accent-bg:      rgba(196,124,21,0.08);
+      --accent-border:  rgba(196,124,21,0.25);
+      --tag-nn:         #c47c15;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+
+      /* Classes */
+      --col-cls0: #2a6496; /* Class 0 */
+      --col-cls1: #c96442; /* Class 1 */
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-nn { color:var(--tag-nn); border-color:var(--tag-nn); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* CALLOUTS */
+    .callout { border-left:2px solid; padding:0.9rem 1.2rem; border-radius:0 var(--radius-md) var(--radius-md) 0; margin:1.5rem 0; background:var(--bg-raised); box-shadow:var(--shadow-sm); }
+    .callout-key  { border-color:var(--accent);    background:var(--accent-bg); }
+    .callout-warn { border-color:#c96442;          background:rgba(201,100,66,0.05); }
+    .callout-label { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.35rem; }
+    .callout-key  .callout-label { color:var(--accent); }
+    .callout-warn .callout-label { color:#c96442; }
+    .callout p { margin-bottom:0; }
+
+    /* CODE */
+    pre { background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-md); padding:1.2rem 1.4rem; overflow-x:auto; margin:1.5rem 0; font-family:var(--font-mono); font-size:0.8rem; line-height:1.65; color:var(--code-text); box-shadow:var(--shadow-sm); }
+    .code-header { display:flex; align-items:center; justify-content:space-between; background:var(--bg-overlay); border:1px solid var(--border-default); border-bottom:none; border-radius:var(--radius-md) var(--radius-md) 0 0; padding:0.45rem 1rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); margin-top:1.5rem; }
+    .code-header + pre { margin-top:0; border-top-left-radius:0; border-top-right-radius:0; }
+    code { font-family:var(--font-mono); font-size:0.84em; background:var(--code-bg); padding:0.13em 0.42em; border-radius:4px; color:var(--accent); border:1px solid var(--code-border); }
+    pre code { background:none; padding:0; border:none; color:inherit; font-size:inherit; }
+
+    /* MATH */
+    .math-block { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:1.4rem 2rem; margin:1.5rem 0; overflow-x:auto; text-align:center; box-shadow:var(--shadow-sm); }
+    .math-block .math-label { font-family:var(--font-mono); font-size:0.66rem; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.75rem; text-align:left; }
+
+    /* TABLE */
+    table { width:100%; border-collapse:collapse; font-size:0.875rem; margin:1.5rem 0; }
+    th { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); text-align:left; padding:0.55rem 1rem; border-bottom:1px solid var(--border-default); }
+    td { padding:0.6rem 1rem; border-bottom:1px solid var(--border-subtle); color:var(--text-secondary); vertical-align:top; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:var(--bg-overlay); }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .demo-layout .canvas-wrapper { flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.5rem; background: var(--bg-surface); }
+    .demo-layout canvas { width: 100%; height: auto; border-radius: var(--radius-sm); }
+    .demo-layout .canvas-title { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; display: flex; justify-content: space-between; width: 100%; padding: 0 0.5rem; }
+
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .ctrl-group { display:flex; align-items:center; gap:0.6rem; }
+    .ctrl-label { font-family:var(--font-mono); font-size:0.67rem; color:var(--text-muted); letter-spacing:0.04em; }
+
+    select { font-family:var(--font-mono); font-size:0.73rem; padding:0.3em 0.6em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; outline:none; }
+
+    .demo-controls-bar { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+    .d4 { animation-delay:0.32s; opacity:0; }
+    
+    .act-func-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .act-func-card { background: var(--bg-raised); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 1rem; text-align: center; box-shadow: var(--shadow-sm); }
+    .act-func-card h3 { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); margin-bottom: 0.5rem; }
+    .act-func-card img { width: 100%; max-width: 150px; opacity: 0.8; }
+    .act-func-card p { font-size: 0.8rem; margin-bottom: 0; margin-top: 0.5rem; color: var(--text-muted); }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 4 — Redes Neuronales</a><span class="sep">›</span>
+    <span class="current">Módulo 15 · Perceptrón</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-nn">● NN · Módulo 15</span>
+    <h1 class="module-title">El Perceptrón &<br>Funciones de Activación</h1>
+    <p class="module-subtitle">La neurona artificial de 1957 que lo inició todo. Cómo una suma ponderada y una decisión binaria pueden aprender la lógica computacional básica.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Redes Neuronales</span>
+      <span><strong>Duración</strong> ~20 min</span>
+      <span><strong>Prerrequisitos</strong> Regresión Lineal / Logística</span>
+    </div>
+  </header>
+
+  <!-- ══ 1. EL CONCEPTO ══ -->
+  <section class="section fade-up d1">
+    <div class="section-label">Fundamentos</div>
+    <h2 class="section-title">La Neurona Artificial</h2>
+    <p>Inspirado en la biología neuronal (dendritas, soma, axón), el <strong>Perceptrón</strong> de Frank Rosenblatt recibe múltiples entradas ($x_i$), cada una multiplicada por un "peso" ($w_i$) que indica su importancia. Suma todo, le suma un sesgo ($b$, el umbral de disparo), y pasa el resultado por una función de activación.</p>
+
+    <div class="math-block">
+      <div class="math-label">Transformación Afín (Suma Ponderada)</div>
+      $$z = \sum_{i=1}^{n} w_i x_i + b \quad = \quad \mathbf{w}^T\mathbf{x} + b$$
+    </div>
+
+    <p>El algoritmo de aprendizaje original del perceptrón era asombrosamente simple: si la predicción es correcta, no hacemos nada. Si se equivoca, ajustamos los pesos empujando la frontera de decisión en la dirección que corrige el error.</p>
+
+    <div class="math-block">
+      <div class="math-label">Regla de Aprendizaje del Perceptrón</div>
+      $$w_i \leftarrow w_i + \alpha \cdot (\text{target} - \text{output}) \cdot x_i$$
+    </div>
+  </section>
+
+  <!-- ══ 2. FUNCIONES DE ACTIVACIÓN ══ -->
+  <section class="section fade-up d2">
+    <div class="section-label">No-linealidad</div>
+    <h2 class="section-title">Funciones de Activación</h2>
+    <p>Si conectáramos perceptrones sin usar una función de activación (dejando que devuelvan $z$ tal cual), una red de 100 capas colapsaría en una simple regresión lineal, perdiendo todo su poder computacional. <strong>La magia de las redes neuronales reside en la no-linealidad de la función de activación</strong>.</p>
+
+    <div class="act-func-grid">
+      <div class="act-func-card">
+        <h3>Step (Escalón)</h3>
+        $$f(z) = \begin{cases} 1 & z \ge 0 \\ 0 & z < 0 \end{cases}$$
+        <p>El original de 1957. Binario, pero no diferenciable, por lo que no se puede usar con Backpropagation.</p>
+      </div>
+      <div class="act-func-card">
+        <h3>Sigmoide</h3>
+        $$f(z) = \frac{1}{1 + e^{-z}}$$
+        <p>Salida en (0, 1). Suave, se usaba mucho antes, pero sufre de "gradiente desvaneciente" en valores extremos.</p>
+      </div>
+      <div class="act-func-card">
+        <h3>ReLU</h3>
+        $$f(z) = \max(0, z)$$
+        <p>Rectified Linear Unit. El estándar moderno. Simple, computacionalmente barata y evita gradientes desvanecientes.</p>
+      </div>
+      <div class="act-func-card">
+        <h3>Tanh</h3>
+        $$f(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}$$
+        <p>Salida en (-1, 1). Similar a sigmoide pero centrada en 0, lo que a menudo acelera el entrenamiento.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 3. DEMO INTERACTIVA ══ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Enseñándole Lógica a una Neurona</h2>
+    <p>El perceptrón puede resolver problemas linealmente separables (como las compuertas lógicas AND y OR). Probá cambiar el dataset y presioná <strong>"Entrenar un Paso"</strong> para ver cómo se ajustan los pesos ($w_1, w_2$) y la frontera de decisión (la línea verde) hasta separar las clases.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Perceptron Learning Rule (Step Activation)</span>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Dataset:</span>
+          <select id="sel-dataset">
+            <option value="OR">Compuerta OR</option>
+            <option value="AND">Compuerta AND</option>
+            <option value="XOR">Compuerta XOR (Spoiler: ¡Falla!)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="demo-layout">
+        <div class="canvas-wrapper">
+          <div class="canvas-title">Espacio 2D & Frontera</div>
+          <canvas id="canvas-plot" width="350" height="300"></canvas>
+        </div>
+        <div class="canvas-wrapper">
+          <div class="canvas-title">Red Neuronal (Pesos)</div>
+          <canvas id="canvas-net" width="350" height="300"></canvas>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <button class="btn-primary" id="btn-step">▶ Entrenar un Paso</button>
+        <button id="btn-train-full">⏭ Entrenar hasta Converger</button>
+        <button id="btn-reset">↺ Reiniciar Pesos</button>
+        <div style="flex:1"></div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Learning Rate</span>
+          <input type="range" id="sl-lr" min="0.05" max="0.5" step="0.05" value="0.1">
+          <span class="val-pill" id="vl-lr">0.10</span>
+        </div>
+      </div>
+      <div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); margin-top:1rem; text-align:center;" id="epoch-counter">
+        Iteración (Época): 0 | Errores: —
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 4. EL PROBLEMA DEL XOR ══ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Limitación</div>
+    <h2 class="section-title">Minsky, Papert y el Invierno de la IA</h2>
+    <p>Si intentaste entrenar la compuerta <strong>XOR</strong> en la demo, te habrás dado cuenta de que la línea nunca logra separar los puntos correctamente y el perceptrón entra en un bucle infinito (error > 0).</p>
+    
+    <div class="callout callout-warn">
+      <div class="callout-label">El colapso de 1969</div>
+      <p>En su libro <em>Perceptrons</em> (1969), Marvin Minsky y Seymour Papert demostraron rigurosamente que un perceptrón simple es matemáticamente incapaz de aprender la función XOR (o cualquier función que no sea linealmente separable). Esta demostración devastadora provocó una masiva retirada de fondos a la investigación en redes neuronales, iniciando el primer "Invierno de la IA" que duró más de una década.</p>
+    </div>
+
+    <p>La solución que plantearon ya se intuía: <strong>conectar varios perceptrones juntos (capas ocultas)</strong> para formar un Perceptrón Multicapa (MLP). El problema era que en 1969 nadie sabía cómo entrenar matemáticamente esas capas ocultas intermedias. Hubo que esperar al redescubrimiento del algoritmo de <strong>Backpropagation</strong> en los años 80 para solucionar el problema del XOR y dar inicio a la revolución actual.</p>
+  </section>
+
+  <nav class="module-nav">
+    <a href="14_rl_qlearning.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="16_nn_mlp.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: PERCEPTRON LEARNING RULE
+══════════════════════════════════════════════ */
+(function() {
+  const canvasPlot = document.getElementById('canvas-plot');
+  const ctxPlot = canvasPlot.getContext('2d');
+  const canvasNet = document.getElementById('canvas-net');
+  const ctxNet = canvasNet.getContext('2d');
+
+  // Datasets
+  const DATASETS = {
+    OR:  [{x:[0,0], y:0}, {x:[0,1], y:1}, {x:[1,0], y:1}, {x:[1,1], y:1}],
+    AND: [{x:[0,0], y:0}, {x:[0,1], y:0}, {x:[1,0], y:0}, {x:[1,1], y:1}],
+    XOR: [{x:[0,0], y:0}, {x:[0,1], y:1}, {x:[1,0], y:1}, {x:[1,1], y:0}]
+  };
+
+  let currentData = DATASETS['OR'];
+  let w1 = 0.5, w2 = 0.5, b = -0.2; // initial random-ish weights
+  let epoch = 0;
+  let lastErrors = 4;
+  let isConverged = false;
+  let animId = null;
+
+  function resetWeights() {
+    w1 = (Math.random() - 0.5) * 2;
+    w2 = (Math.random() - 0.5) * 2;
+    b  = (Math.random() - 0.5) * 2;
+    epoch = 0;
+    lastErrors = 4;
+    isConverged = false;
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+    document.getElementById('epoch-counter').textContent = `Iteración (Época): 0 | Errores: —`;
+    renderAll();
+  }
+
+  function predict(x1, x2) {
+    const z = w1 * x1 + w2 * x2 + b;
+    return z >= 0 ? 1 : 0; // Step function
+  }
+
+  function trainEpoch() {
+    if (isConverged) return;
+    const lr = parseFloat(document.getElementById('sl-lr').value);
+    let errors = 0;
+
+    for (const pt of currentData) {
+      const pred = predict(pt.x[0], pt.x[1]);
+      const error = pt.y - pred;
+      
+      if (error !== 0) {
+        errors++;
+        w1 += lr * error * pt.x[0];
+        w2 += lr * error * pt.x[1];
+        b  += lr * error * 1; // bias input is implicitly 1
+      }
+    }
+
+    epoch++;
+    lastErrors = errors;
+    if (errors === 0) {
+      isConverged = true;
+    }
+
+    document.getElementById('epoch-counter').textContent = `Iteración (Época): ${epoch} | Errores: ${errors}${isConverged ? ' (Convergió)' : ''}`;
+  }
+
+  // --- Rendering ---
+  function resizeCanvas(c) {
+    const rect = c.parentElement.getBoundingClientRect();
+    c.width = rect.width - 16;
+    c.height = 300;
+  }
+
+  function toPlotCoords(x, y, w, h) {
+    // Data range [-0.5, 1.5]
+    const px = ((x + 0.5) / 2.0) * w;
+    const py = h - ((y + 0.5) / 2.0) * h;
+    return [px, py];
+  }
+
+  function drawPlot() {
+    const W = canvasPlot.width;
+    const H = canvasPlot.height;
+    ctxPlot.clearRect(0, 0, W, H);
+
+    // Axes
+    ctxPlot.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border-default').trim();
+    ctxPlot.lineWidth = 1;
+    const [ax, ay] = toPlotCoords(0, 0, W, H);
+    ctxPlot.beginPath(); ctxPlot.moveTo(0, ay); ctxPlot.lineTo(W, ay); ctxPlot.stroke();
+    ctxPlot.beginPath(); ctxPlot.moveTo(ax, 0); ctxPlot.lineTo(ax, H); ctxPlot.stroke();
+
+    // Grid markings for 0 and 1
+    ctxPlot.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+    ctxPlot.font = '10px "Geist Mono", monospace';
+    const [x1, y1] = toPlotCoords(1, 1, W, H);
+    ctxPlot.fillText("1", x1, ay + 12);
+    ctxPlot.fillText("1", ax - 12, y1);
+
+    // Decision Boundary: w1*x + w2*y + b = 0  => y = (-w1/w2)*x - b/w2
+    if (Math.abs(w2) > 0.001) {
+      ctxPlot.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      ctxPlot.lineWidth = 2.5;
+      ctxPlot.beginPath();
+      const boundX1 = -0.5, boundY1 = (-w1 * boundX1 - b) / w2;
+      const boundX2 = 1.5,  boundY2 = (-w1 * boundX2 - b) / w2;
+      const [px1, py1] = toPlotCoords(boundX1, boundY1, W, H);
+      const [px2, py2] = toPlotCoords(boundX2, boundY2, W, H);
+      ctxPlot.moveTo(px1, py1); ctxPlot.lineTo(px2, py2);
+      ctxPlot.stroke();
+
+      // Shaded region for output = 1 (where w1*x + w2*y + b >= 0)
+      ctxPlot.save();
+      ctxPlot.beginPath();
+      ctxPlot.moveTo(px1, py1); ctxPlot.lineTo(px2, py2);
+      
+      // Determine which side is positive
+      const testY = 1.5;
+      const sign = (w1 * 0.5 + w2 * testY + b) >= 0 ? 1 : -1;
+      
+      if ((sign === 1 && w2 > 0) || (sign === -1 && w2 < 0)) {
+        ctxPlot.lineTo(W, 0); ctxPlot.lineTo(0, 0);
+      } else {
+        ctxPlot.lineTo(W, H); ctxPlot.lineTo(0, H);
+      }
+      ctxPlot.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent-bg').trim();
+      ctxPlot.fill();
+      ctxPlot.restore();
+    }
+
+    // Points
+    for (const pt of currentData) {
+      const [px, py] = toPlotCoords(pt.x[0], pt.x[1], W, H);
+      ctxPlot.beginPath(); ctxPlot.arc(px, py, 8, 0, Math.PI * 2);
+      ctxPlot.fillStyle = pt.y === 1 ? getComputedStyle(document.documentElement).getPropertyValue('--col-cls1').trim() : getComputedStyle(document.documentElement).getPropertyValue('--col-cls0').trim();
+      ctxPlot.fill();
+      ctxPlot.strokeStyle = '#fff'; ctxPlot.lineWidth = 1.5; ctxPlot.stroke();
+    }
+  }
+
+  function drawNet() {
+    const W = canvasNet.width;
+    const H = canvasNet.height;
+    ctxNet.clearRect(0, 0, W, H);
+
+    const nodeR = 20;
+    const inX = W * 0.3;
+    const outX = W * 0.7;
+    const y1 = H * 0.25;
+    const y2 = H * 0.5;
+    const yB = H * 0.75;
+    const outY = H * 0.5;
+
+    // Draw Edges
+    ctxNet.lineWidth = 2;
+    
+    function drawEdge(startX, startY, weight, isBias) {
+      ctxNet.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim();
+      ctxNet.beginPath(); ctxNet.moveTo(startX, startY); ctxNet.lineTo(outX, outY); ctxNet.stroke();
+
+      // Weight label
+      ctxNet.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim();
+      ctxNet.font = '12px "Geist Mono", monospace';
+      const mx = (startX + outX) / 2;
+      const my = (startY + outY) / 2;
+      
+      // background for text
+      const text = `${weight.toFixed(2)}`;
+      const tw = ctxNet.measureText(text).width;
+      ctxNet.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-surface').trim();
+      ctxNet.fillRect(mx - tw/2 - 2, my - 8, tw + 4, 16);
+
+      ctxNet.fillStyle = isBias ? getComputedStyle(document.documentElement).getPropertyValue('--col-cls1').trim() : getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      ctxNet.textAlign = 'center'; ctxNet.textBaseline = 'middle';
+      ctxNet.fillText(text, mx, my);
+    }
+
+    drawEdge(inX, y1, w1, false);
+    drawEdge(inX, y2, w2, false);
+    drawEdge(inX, yB, b, true);
+
+    // Draw Nodes
+    function drawNode(x, y, label, isInput) {
+      ctxNet.beginPath(); ctxNet.arc(x, y, nodeR, 0, Math.PI * 2);
+      ctxNet.fillStyle = isInput ? '#ffffff' : getComputedStyle(document.documentElement).getPropertyValue('--accent-bg').trim();
+      ctxNet.fill();
+      ctxNet.strokeStyle = isInput ? getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim() : getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      ctxNet.lineWidth = 2; ctxNet.stroke();
+
+      ctxNet.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+      ctxNet.font = '14px "Geist Mono", monospace';
+      ctxNet.textAlign = 'center'; ctxNet.textBaseline = 'middle';
+      ctxNet.fillText(label, x, y);
+    }
+
+    drawNode(inX, y1, 'x1', true);
+    drawNode(inX, y2, 'x2', true);
+    drawNode(inX, yB, '1', true); // Bias input
+    drawNode(outX, outY, 'Σ', false);
+
+    // Output arrow
+    ctxNet.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    ctxNet.beginPath(); ctxNet.moveTo(outX + nodeR, outY); ctxNet.lineTo(outX + nodeR + 30, outY); ctxNet.stroke();
+    // Arrowhead
+    ctxNet.beginPath(); ctxNet.moveTo(outX + nodeR + 30, outY); ctxNet.lineTo(outX + nodeR + 25, outY - 4); ctxNet.lineTo(outX + nodeR + 25, outY + 4); ctxNet.fill();
+
+    ctxNet.fillText('y', outX + nodeR + 40, outY);
+  }
+
+  function renderAll() {
+    drawPlot();
+    drawNet();
+  }
+
+  // --- Interaction ---
+  document.getElementById('sel-dataset').addEventListener('change', function() {
+    currentData = DATASETS[this.value];
+    resetWeights();
+  });
+
+  document.getElementById('sl-lr').addEventListener('input', function() {
+    document.getElementById('vl-lr').textContent = parseFloat(this.value).toFixed(2);
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', resetWeights);
+
+  document.getElementById('btn-step').addEventListener('click', () => {
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+    trainEpoch();
+    renderAll();
+  });
+
+  document.getElementById('btn-train-full').addEventListener('click', () => {
+    if (isConverged || epoch > 100) return; // Prevent infinite loop on XOR
+    
+    function step() {
+      trainEpoch();
+      renderAll();
+      if (!isConverged && epoch < 100) {
+        // slow down animation to make it visible
+        setTimeout(() => {
+          animId = requestAnimationFrame(step);
+        }, 100);
+      } else if (epoch >= 100 && !isConverged) {
+        document.getElementById('epoch-counter').textContent = `Detenido tras 100 épocas. El dataset no es linealmente separable.`;
+      }
+    }
+    step();
+  });
+
+  // Init
+  window.addEventListener('resize', () => {
+    resizeCanvas(canvasPlot);
+    resizeCanvas(canvasNet);
+    renderAll();
+  });
+  
+  setTimeout(() => {
+    resizeCanvas(canvasPlot);
+    resizeCanvas(canvasNet);
+    resetWeights();
+  }, 100);
+
+})();
+</script>
+</body>
+</html>
+

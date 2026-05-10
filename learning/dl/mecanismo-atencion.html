@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Mecanismo de Atención</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* Deep Learning Theme */
+      --accent:         #c96442; 
+      --accent-hover:   #b05838;
+      --accent-bg:      rgba(201,100,66,0.07);
+      --accent-border:  rgba(201,100,66,0.2);
+      --tag-dl:         #c96442;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-dl { color:var(--tag-dl); border-color:var(--tag-dl); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* MATH */
+    .math-block { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:1.4rem 2rem; margin:1.5rem 0; overflow-x:auto; text-align:center; box-shadow:var(--shadow-sm); }
+    .math-block .math-label { font-family:var(--font-mono); font-size:0.66rem; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.75rem; text-align:left; }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .demo-layout .canvas-wrapper { flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-surface); }
+    
+    /* Attention Grid */
+    .attn-container { display: flex; flex-direction: column; width: 100%; max-width: 400px; }
+    .attn-row { display: flex; width: 100%; }
+    .attn-cell { flex: 1; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.75rem; border: 1px solid rgba(0,0,0,0.05); transition: background-color 0.2s; cursor:pointer;}
+    .attn-cell:hover { border-color: var(--accent); z-index:2; position:relative;}
+    .attn-labels { display: flex; width: 100%; margin-bottom: 5px;}
+    .attn-label { flex: 1; text-align: center; font-size: 0.75rem; color: var(--text-secondary); writing-mode: vertical-rl; transform: rotate(180deg); height: 60px; display:flex; align-items:flex-start;}
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 5 — Deep Learning</a><span class="sep">›</span>
+    <span class="current">Módulo 23 · Atención</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-dl">● DL · Módulo 23</span>
+    <h1 class="module-title">Mecanismo de Atención</h1>
+    <p class="module-subtitle">La revolución que destronó a las RNNs. Cómo permitir que la red mire todas las palabras de una oración simultáneamente y decida cuáles son relevantes para el contexto actual.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Deep Learning</span>
+      <span><strong>Duración</strong> ~30 min</span>
+      <span><strong>Prerrequisitos</strong> Embeddings</span>
+    </div>
+  </header>
+
+  <section class="section fade-up d1">
+    <div class="section-label">El Cuello de Botella</div>
+    <h2 class="section-title">El fin de las Secuencias Estrictas</h2>
+    <p>Antes de 2017, la traducción automática usaba modelos Seq2Seq basados en RNN/LSTM. El problema es que el encoder debía leer toda una frase ("El gato persiguió al ratón porque tenía hambre") y comprimir su significado total en <strong>un único vector de tamaño fijo</strong>. Si la frase tenía 50 palabras, ese vector se convertía en un terrible cuello de botella de información.</p>
+    <p>La solución fue el mecanismo de Atención: en lugar de un único vector, el decoder tiene acceso a <em>todos</em> los vectores de la oración original, y aprende a "prestar atención" (darle más peso) a palabras específicas en cada paso de la traducción.</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">Matemáticas</div>
+    <h2 class="section-title">Self-Attention y Matrices Q, K, V</h2>
+    <p>Para calcular la atención matemáticamente, se utiliza una analogía de base de datos. Tienes un <strong>Query (Q)</strong> (qué estoy buscando), que se compara contra todas las <strong>Keys (K)</strong> (las etiquetas de las demás palabras). La similitud (producto punto) entre Q y K determina cuánto "prestas atención". Luego se usa ese peso para sumar los <strong>Values (V)</strong> (el contenido real de las palabras).</p>
+
+    <div class="math-block">
+      <div class="math-label">Scaled Dot-Product Attention</div>
+      $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right) V$$
+    </div>
+
+    <p>Esta simple fórmula matricial permite contextualizar cada palabra basándose en todas las demás de forma simultánea, paralelizable en GPUs, y allanó el camino para la arquitectura Transformer.</p>
+  </section>
+
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Matriz de Atención</h2>
+    <p>Aquí simulamos la matriz resultante del $\text{softmax}(QK^T)$. Pasa el mouse (o haz clic) sobre las palabras para ver a qué otras palabras le presta atención el modelo para entender el contexto. Nota cómo la palabra "banco" presta atención a "sentarse" en lugar de "dinero".</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Mapa de Calor (Self-Attention)</span>
+      </div>
+
+      <div class="demo-layout">
+        <div class="canvas-wrapper">
+          
+          <div class="attn-container" id="attn-grid">
+            <!-- Dynamically populated -->
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="22_dl_embeddings.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="24_dl_gans.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: ATTENTION MATRIX HEATMAP
+══════════════════════════════════════════════ */
+(function() {
+  const sentence = ["el", "hombre", "fue", "al", "banco", "del", "parque", "para", "sentarse"];
+  
+  // Simulated attention weights (rows must sum to 1)
+  // How much does row i attend to col j
+  const attnMatrix = [
+    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], // el
+    [0.1, 0.8, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], // hombre
+    [0.0, 0.2, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0], // fue
+    [0.0, 0.0, 0.3, 0.5, 0.2, 0.0, 0.0, 0.0, 0.0], // al
+    [0.0, 0.0, 0.0, 0.0, 0.5, 0.1, 0.1, 0.0, 0.3], // banco -> attends heavily to sentarse
+    [0.0, 0.0, 0.0, 0.0, 0.2, 0.5, 0.3, 0.0, 0.0], // del
+    [0.0, 0.0, 0.0, 0.0, 0.2, 0.2, 0.6, 0.0, 0.0], // parque
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.3], // para
+    [0.0, 0.1, 0.0, 0.0, 0.3, 0.0, 0.0, 0.2, 0.4]  // sentarse -> attends to banco and hombre
+  ];
+
+  const grid = document.getElementById('attn-grid');
+  
+  // Build top labels
+  const labelRow = document.createElement('div');
+  labelRow.className = 'attn-labels';
+  
+  // Empty corner
+  const corner = document.createElement('div');
+  corner.style.width = '60px';
+  labelRow.appendChild(corner);
+
+  sentence.forEach(word => {
+    const lbl = document.createElement('div');
+    lbl.className = 'attn-label';
+    lbl.textContent = word;
+    labelRow.appendChild(lbl);
+  });
+  grid.appendChild(labelRow);
+
+  // Build matrix
+  sentence.forEach((rowWord, i) => {
+    const row = document.createElement('div');
+    row.className = 'attn-row';
+
+    // Row label
+    const rowLbl = document.createElement('div');
+    rowLbl.style.width = '60px';
+    rowLbl.style.textAlign = 'right';
+    rowLbl.style.paddingRight = '10px';
+    rowLbl.style.fontSize = '0.75rem';
+    rowLbl.style.color = 'var(--text-secondary)';
+    rowLbl.style.display = 'flex';
+    rowLbl.style.alignItems = 'center';
+    rowLbl.style.justifyContent = 'flex-end';
+    rowLbl.textContent = rowWord;
+    row.appendChild(rowLbl);
+
+    sentence.forEach((colWord, j) => {
+      const cell = document.createElement('div');
+      cell.className = 'attn-cell';
+      
+      const weight = attnMatrix[i][j];
+      
+      // Compute color (white to DL Accent #c96442)
+      // rgba(201,100,66, weight)
+      cell.style.backgroundColor = `rgba(201, 100, 66, ${weight})`;
+      
+      if (weight > 0.4) {
+        cell.style.color = 'white';
+        cell.style.fontWeight = '500';
+      } else {
+        cell.style.color = 'rgba(0,0,0,0.6)';
+      }
+      
+      cell.textContent = weight.toFixed(1);
+      row.appendChild(cell);
+    });
+
+    grid.appendChild(row);
+  });
+
+})();
+</script>
+</body>
+</html>
+

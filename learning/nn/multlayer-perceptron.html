@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — MLP & Forward Propagation</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* Redes Neuronales Theme */
+      --accent:         #c47c15; 
+      --accent-hover:   #a36511;
+      --accent-bg:      rgba(196,124,21,0.08);
+      --accent-border:  rgba(196,124,21,0.25);
+      --tag-nn:         #c47c15;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-nn { color:var(--tag-nn); border-color:var(--tag-nn); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* CALLOUTS */
+    .callout { border-left:2px solid; padding:0.9rem 1.2rem; border-radius:0 var(--radius-md) var(--radius-md) 0; margin:1.5rem 0; background:var(--bg-raised); box-shadow:var(--shadow-sm); }
+    .callout-key  { border-color:var(--accent);    background:var(--accent-bg); }
+    .callout-tip  { border-color:var(--tag-nn);    background:rgba(196,124,21,0.05); }
+    .callout-label { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.35rem; }
+    .callout-key  .callout-label { color:var(--accent); }
+    .callout-tip  .callout-label { color:var(--tag-nn); }
+    .callout p { margin-bottom:0; }
+
+    /* CODE */
+    pre { background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-md); padding:1.2rem 1.4rem; overflow-x:auto; margin:1.5rem 0; font-family:var(--font-mono); font-size:0.8rem; line-height:1.65; color:var(--code-text); box-shadow:var(--shadow-sm); }
+    .code-header { display:flex; align-items:center; justify-content:space-between; background:var(--bg-overlay); border:1px solid var(--border-default); border-bottom:none; border-radius:var(--radius-md) var(--radius-md) 0 0; padding:0.45rem 1rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); margin-top:1.5rem; }
+    .code-header + pre { margin-top:0; border-top-left-radius:0; border-top-right-radius:0; }
+    code { font-family:var(--font-mono); font-size:0.84em; background:var(--code-bg); padding:0.13em 0.42em; border-radius:4px; color:var(--accent); border:1px solid var(--code-border); }
+    pre code { background:none; padding:0; border:none; color:inherit; font-size:inherit; }
+
+    /* MATH */
+    .math-block { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:1.4rem 2rem; margin:1.5rem 0; overflow-x:auto; text-align:center; box-shadow:var(--shadow-sm); }
+    .math-block .math-label { font-family:var(--font-mono); font-size:0.66rem; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.75rem; text-align:left; }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .demo-layout .canvas-wrapper { flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.5rem; background: var(--bg-surface); }
+    .demo-layout canvas { width: 100%; height: auto; border-radius: var(--radius-sm); }
+    
+    /* CONTROLS */
+    button, .btn { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover, .btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+
+    .ctrl-group { display:flex; align-items:center; gap:0.6rem; }
+    .ctrl-label { font-family:var(--font-mono); font-size:0.67rem; color:var(--text-muted); letter-spacing:0.04em; }
+
+    input[type="range"] { -webkit-appearance:none; width:120px; height:3px; background:var(--border-default); border-radius:999px; outline:none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:var(--accent); cursor:pointer; transition:box-shadow var(--transition); border: 2px solid #fff; box-shadow: var(--shadow-sm); }
+    input[type="range"]::-webkit-slider-thumb:hover { box-shadow:0 0 0 4px var(--accent-bg); }
+
+    .val-pill { font-family:var(--font-mono); font-size:0.67rem; background:var(--bg-overlay); border:1px solid var(--border-subtle); padding:0.12em 0.5em; border-radius:999px; color:var(--accent); min-width:2.5rem; text-align:center; }
+    
+    .demo-controls-bar { display: flex; gap: 1.5rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); justify-content: center; flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+    .d4 { animation-delay:0.32s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 4 — Redes Neuronales</a><span class="sep">›</span>
+    <span class="current">Módulo 16 · MLP</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-nn">● NN · Módulo 16</span>
+    <h1 class="module-title">MLP & Forward Propagation</h1>
+    <p class="module-subtitle">Cómo el apilar perceptrones en "capas ocultas" nos permite superar la linealidad y aproximar cualquier función del universo mediante álgebra matricial.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Redes Neuronales</span>
+      <span><strong>Duración</strong> ~25 min</span>
+      <span><strong>Prerrequisitos</strong> El Perceptrón</span>
+    </div>
+  </header>
+
+  <!-- ══ 1. EL CONCEPTO ══ -->
+  <section class="section fade-up d1">
+    <div class="section-label">Arquitectura</div>
+    <h2 class="section-title">El Perceptrón Multicapa (MLP)</h2>
+    <p>Para resolver problemas que no son linealmente separables (como el XOR), la solución es agregar una o más <strong>capas ocultas</strong> (<em>hidden layers</em>) entre las entradas y la salida. A esta arquitectura se le llama <em>Multi-Layer Perceptron</em> o Red Neuronal "Feedforward" Densa.</p>
+    
+    <p>La idea clave es la <strong>composición de funciones</strong>. La primera capa oculta aprende transformaciones lineales de los datos originales, aplicando una deformación no lineal (la función de activación). La segunda capa toma esos datos "deformados" (que ahora sí pueden ser linealmente separables) y realiza su propia clasificación.</p>
+
+    <div class="callout callout-tip">
+      <div class="callout-label">Teorema de Aproximación Universal</div>
+      <p>Este teorema matemático establece que una red neuronal <em>feedforward</em> con una sola capa oculta que contenga un número finito (pero suficientemente grande) de neuronas puede aproximar <strong>cualquier función continua</strong> con una precisión arbitraria. ¡Las redes neuronales son aproximadores de funciones universales!</p>
+    </div>
+  </section>
+
+  <!-- ══ 2. MATEMÁTICAS ══ -->
+  <section class="section fade-up d2">
+    <div class="section-label">Matemáticas</div>
+    <h2 class="section-title">Forward Propagation: Vectores y Matrices</h2>
+    <p>En lugar de calcular neurona por neurona, en la práctica utilizamos álgebra lineal para computar una capa entera a la vez. Si representamos los pesos de una capa como una matriz $W$ y las activaciones como un vector $A$, el paso hacia adelante (<em>forward propagation</em>) para la capa $l$ es simplemente:</p>
+
+    <div class="math-block">
+      <div class="math-label">Ecuaciones Vectorizadas de la Capa $l$</div>
+      $$Z^{[l]} = W^{[l]} A^{[l-1]} + b^{[l]}$$
+      $$A^{[l]} = g^{[l]}(Z^{[l]})$$
+    </div>
+
+    <ul>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem"><strong>$A^{[l-1]}$:</strong> Vector de activaciones de la capa anterior (para $l=1$, esto es la entrada $X$).</li>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem"><strong>$W^{[l]}$:</strong> Matriz de pesos. Cada fila contiene los pesos de una neurona en la capa $l$.</li>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem"><strong>$b^{[l]}$:</strong> Vector columna de sesgos (bias).</li>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem"><strong>$g^{[l]}$:</strong> Función de activación (e.g., ReLU para ocultas, Sigmoide para salida).</li>
+    </ul>
+    
+    <p>La salida de la red es simplemente el resultado de aplicar esta fórmula en cascada desde $l=1$ hasta $L$ (la capa de salida).</p>
+  </section>
+
+  <!-- ══ 3. DEMO INTERACTIVA ══ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Propagando Información</h2>
+    <p>Experimentá con una pequeña red neuronal de <strong>2 entradas, 1 capa oculta de 3 neuronas (con activación ReLU), y 1 neurona de salida (Sigmoide)</strong>. Cambiá los valores de entrada $x_1$ y $x_2$ y observá en tiempo real cómo fluye la activación a través de la red, cómo interactúan los pesos (rojo = negativo, azul = positivo), y cómo la red produce la predicción $\hat{y}$.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Forward Propagation Visualizer</span>
+        <button id="btn-rand-weights">↺ Aleatorizar Pesos</button>
+      </div>
+
+      <div class="demo-layout">
+        <div class="canvas-wrapper" style="width:100%; border:none; background:transparent;">
+          <canvas id="canvas-net" width="700" height="350" style="background:var(--bg-surface); border:1px solid var(--border-subtle);"></canvas>
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Input $x_1$</span>
+          <input type="range" id="sl-x1" min="-2" max="2" step="0.01" value="1.0">
+          <span class="val-pill" id="vl-x1">1.00</span>
+        </div>
+        <div class="ctrl-group" style="margin-left:1.5rem">
+          <span class="ctrl-label">Input $x_2$</span>
+          <input type="range" id="sl-x2" min="-2" max="2" step="0.01" value="0.5">
+          <span class="val-pill" id="vl-x2">0.50</span>
+        </div>
+      </div>
+      
+      <div style="text-align:center; margin-top:1.5rem; font-family:var(--font-mono); font-size:0.8rem; color:var(--text-secondary);">
+        Output Predicción ($\hat{y}$): <strong id="val-out" style="color:var(--accent); font-size:1.1rem;">0.000</strong>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="15_nn_perceptron.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="17_nn_backprop.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: FORWARD PROPAGATION VISUALIZER
+══════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('canvas-net');
+  const ctx = canvas.getContext('2d');
+
+  // Network Architecture: [2, 3, 1]
+  const layers = [2, 3, 1];
+  
+  // Model state
+  let W1 = []; // 3x2 matrix
+  let b1 = []; // 3x1 vector
+  let W2 = []; // 1x3 matrix
+  let b2 = []; // 1x1 vector
+
+  let A0 = [1.0, 0.5]; // Inputs
+  let Z1 = [0, 0, 0];
+  let A1 = [0, 0, 0];
+  let Z2 = [0];
+  let A2 = [0]; // Output
+
+  // Colors
+  const COLOR_POS = '#2a6496'; // Blue for positive weight
+  const COLOR_NEG = '#c96442'; // Red for negative weight
+  const COLOR_ZERO = '#d9d0c7';
+
+  // Math Helpers
+  function relu(z) { return Math.max(0, z); }
+  function sigmoid(z) { return 1 / (1 + Math.exp(-z)); }
+  function randn() { 
+    // basic normal approximation
+    let u = 0, v = 0;
+    while(u === 0) u = Math.random();
+    while(v === 0) v = Math.random();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  }
+
+  function initWeights() {
+    // Glorot/Xavier style init for nice visuals
+    W1 = [
+      [randn()*0.8, randn()*0.8],
+      [randn()*0.8, randn()*0.8],
+      [randn()*0.8, randn()*0.8]
+    ];
+    b1 = [randn()*0.3, randn()*0.3, randn()*0.3];
+    
+    W2 = [
+      [randn()*0.8, randn()*0.8, randn()*0.8]
+    ];
+    b2 = [randn()*0.3];
+  }
+
+  function forwardProp() {
+    // Layer 1
+    for (let i = 0; i < 3; i++) {
+      Z1[i] = W1[i][0] * A0[0] + W1[i][1] * A0[1] + b1[i];
+      A1[i] = relu(Z1[i]);
+    }
+
+    // Layer 2
+    Z2[0] = W2[0][0] * A1[0] + W2[0][1] * A1[1] + W2[0][2] * A1[2] + b2[0];
+    A2[0] = sigmoid(Z2[0]);
+
+    // Update UI
+    document.getElementById('val-out').textContent = A2[0].toFixed(4);
+  }
+
+  // Visualization coords
+  let nodes = [[], [], []]; // nodes[layer][idx] = {x, y}
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = 350;
+    
+    const W = canvas.width;
+    const H = canvas.height;
+    
+    // Compute node positions
+    const layerXs = [W * 0.15, W * 0.5, W * 0.85];
+    
+    for (let l = 0; l < layers.length; l++) {
+      const numNodes = layers[l];
+      nodes[l] = [];
+      const spacing = H / (numNodes + 1);
+      for (let i = 0; i < numNodes; i++) {
+        nodes[l].push({
+          x: layerXs[l],
+          y: spacing * (i + 1)
+        });
+      }
+    }
+    
+    draw();
+  }
+
+  function drawEdge(startX, startY, endX, endY, weight, activationIn) {
+    // Activation flowing through edge affects visual intensity
+    // but weight determines color and base thickness
+    
+    const isPos = weight >= 0;
+    const baseColor = isPos ? '42,100,150' : '201,100,66'; // RGB of POS and NEG
+    
+    // Thickness based on absolute weight
+    const thickness = Math.max(0.5, Math.abs(weight) * 3);
+    
+    // Opacity based on activation flowing (how "active" this connection is right now)
+    // activationIn is e.g. from 0 to 1
+    const signal = Math.abs(activationIn * weight);
+    const opacity = Math.min(1.0, 0.2 + signal * 0.4);
+
+    ctx.strokeStyle = `rgba(${baseColor}, ${opacity})`;
+    ctx.lineWidth = thickness;
+
+    // Draw smooth bezier curve instead of straight line for premium look
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    // Control points for S-curve
+    const cpDist = (endX - startX) * 0.4;
+    ctx.bezierCurveTo(startX + cpDist, startY, endX - cpDist, endY, endX, endY);
+    ctx.stroke();
+
+    // Draw weight value in the middle
+    ctx.font = '9px "Geist Mono", monospace';
+    ctx.fillStyle = `rgba(${baseColor}, 0.8)`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Find midpoint of bezier (approximate with linear midpoint for text)
+    const mx = (startX + endX) / 2;
+    const my = (startY + endY) / 2;
+    
+    // Small background for text readability
+    const txt = weight.toFixed(2);
+    const tw = ctx.measureText(txt).width;
+    ctx.fillStyle = 'rgba(250,247,244,0.85)'; // var(--bg-surface)
+    ctx.fillRect(mx - tw/2 - 2, my - 6, tw + 4, 12);
+    
+    ctx.fillStyle = `rgba(${baseColor}, 1.0)`;
+    ctx.fillText(txt, mx, my);
+  }
+
+  function drawNode(x, y, value, label, isInput) {
+    const r = 24;
+    
+    // Fill color based on activation value
+    // value is mostly in [0, 1] for inputs/sigmoid, and [0, +inf) for ReLU
+    const normalizedVal = isInput ? (value + 2)/4 : (value > 1 ? 1 : value); // map to 0-1 approx
+    
+    // Orange-ish glow for activation
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    
+    // Inner fill representing activation level
+    ctx.beginPath();
+    ctx.arc(x, y, r * 0.9, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(196,124,21, ${normalizedVal * 0.4})`; // accent color with opacity
+    ctx.fill();
+
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim();
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Text value
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+    ctx.font = '11px "Geist Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(value.toFixed(2), x, y);
+
+    // Label below
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+    ctx.font = '10px "Geist Mono", monospace';
+    ctx.fillText(label, x, y + r + 12);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 1. Draw Edges from L0 to L1
+    for (let i = 0; i < layers[0]; i++) { // inputs
+      for (let j = 0; j < layers[1]; j++) { // hidden
+        drawEdge(nodes[0][i].x, nodes[0][i].y, nodes[1][j].x, nodes[1][j].y, W1[j][i], A0[i]);
+      }
+    }
+
+    // 2. Draw Edges from L1 to L2
+    for (let j = 0; j < layers[1]; j++) { // hidden
+      for (let k = 0; k < layers[2]; k++) { // output
+        drawEdge(nodes[1][j].x, nodes[1][j].y, nodes[2][k].x, nodes[2][k].y, W2[k][j], A1[j]);
+      }
+    }
+
+    // 3. Draw Nodes
+    // Layer 0 (Input)
+    for (let i = 0; i < layers[0]; i++) {
+      drawNode(nodes[0][i].x, nodes[0][i].y, A0[i], `x${i+1}`, true);
+    }
+    
+    // Layer 1 (Hidden, ReLU)
+    for (let j = 0; j < layers[1]; j++) {
+      drawNode(nodes[1][j].x, nodes[1][j].y, A1[j], `a[1]_${j+1} (ReLU)`, false);
+      // Draw bias slightly above
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-faint').trim();
+      ctx.font = '9px "Geist Mono", monospace';
+      ctx.fillText(`b=${b1[j].toFixed(2)}`, nodes[1][j].x, nodes[1][j].y - 34);
+    }
+
+    // Layer 2 (Output, Sigmoid)
+    drawNode(nodes[2][0].x, nodes[2][0].y, A2[0], `ŷ (Sigmoide)`, false);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-faint').trim();
+    ctx.font = '9px "Geist Mono", monospace';
+    ctx.fillText(`b=${b2[0].toFixed(2)}`, nodes[2][0].x, nodes[2][0].y - 34);
+  }
+
+  // Interactions
+  function updateData() {
+    A0[0] = parseFloat(document.getElementById('sl-x1').value);
+    A0[1] = parseFloat(document.getElementById('sl-x2').value);
+    forwardProp();
+    draw();
+  }
+
+  document.getElementById('sl-x1').addEventListener('input', function() {
+    document.getElementById('vl-x1').textContent = parseFloat(this.value).toFixed(2);
+    updateData();
+  });
+
+  document.getElementById('sl-x2').addEventListener('input', function() {
+    document.getElementById('vl-x2').textContent = parseFloat(this.value).toFixed(2);
+    updateData();
+  });
+
+  document.getElementById('btn-rand-weights').addEventListener('click', () => {
+    initWeights();
+    updateData();
+  });
+
+  // Init
+  window.addEventListener('resize', resize);
+  
+  setTimeout(() => {
+    initWeights();
+    forwardProp();
+    resize();
+  }, 100);
+
+})();
+</script>
+</body>
+</html>
+

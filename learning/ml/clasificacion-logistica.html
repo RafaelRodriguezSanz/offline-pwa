@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Módulo 06 · Clasificación: Logística, SVM & KNN</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      --accent:         #3a7d44;
+      --accent-hover:   #2f6537;
+      --accent-bg:      rgba(58,125,68,0.07);
+      --accent-border:  rgba(58,125,68,0.2);
+      --tag-ml:         #3a7d44;
+      --col-a:          #2a6496;   /* clase A — azul */
+      --col-b:          #c96442;   /* clase B — naranja */
+      --col-margin:     rgba(58,125,68,0.55);
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; scroll-behavior:smooth; }
+    body { background:var(--bg-base); color:var(--text-primary); font-family:var(--font-sans); font-size:0.9375rem; line-height:1.7; -webkit-font-smoothing:antialiased; }
+    ::selection { background:rgba(58,125,68,0.12); }
+
+    .page-wrapper { max-width:860px; margin:0 auto; padding:0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; flex-wrap:wrap; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; color:var(--tag-ml); border-color:var(--tag-ml); background:rgba(58,125,68,0.06); }
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:62ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* CALLOUTS */
+    .callout { border-left:2px solid; padding:0.9rem 1.2rem; border-radius:0 var(--radius-md) var(--radius-md) 0; margin:1.5rem 0; background:var(--bg-raised); box-shadow:var(--shadow-sm); }
+    .callout-key  { border-color:var(--accent);  background:var(--accent-bg); }
+    .callout-info { border-color:#2a6496;         background:rgba(42,100,150,0.04); }
+    .callout-tip  { border-color:var(--tag-ml);   background:rgba(58,125,68,0.04); }
+    .callout-warn { border-color:#c47c15;          background:rgba(196,124,21,0.05); }
+    .callout-label { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.35rem; }
+    .callout-key  .callout-label { color:var(--accent); }
+    .callout-info .callout-label { color:#2a6496; }
+    .callout-tip  .callout-label { color:var(--tag-ml); }
+    .callout-warn .callout-label { color:#c47c15; }
+    .callout p { margin-bottom:0; max-width:none; }
+
+    /* CODE */
+    pre { background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-md); padding:1.2rem 1.4rem; overflow-x:auto; margin:1.5rem 0; font-family:var(--font-mono); font-size:0.8rem; line-height:1.65; color:var(--code-text); box-shadow:var(--shadow-sm); }
+    .code-header { display:flex; align-items:center; justify-content:space-between; background:var(--bg-overlay); border:1px solid var(--border-default); border-bottom:none; border-radius:var(--radius-md) var(--radius-md) 0 0; padding:0.45rem 1rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); margin-top:1.5rem; }
+    .code-header + pre { margin-top:0; border-top-left-radius:0; border-top-right-radius:0; }
+    code { font-family:var(--font-mono); font-size:0.84em; background:var(--code-bg); padding:0.13em 0.42em; border-radius:4px; color:var(--accent); border:1px solid var(--code-border); }
+    pre code { background:none; padding:0; border:none; color:inherit; font-size:inherit; }
+
+    /* MATH */
+    .math-block { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:1.4rem 2rem; margin:1.5rem 0; overflow-x:auto; text-align:center; box-shadow:var(--shadow-sm); }
+    .math-block .math-label { font-family:var(--font-mono); font-size:0.66rem; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.75rem; text-align:left; }
+
+    /* TABLE */
+    .table-wrap { overflow-x:auto; margin:1.5rem 0; }
+    table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+    th { font-family:var(--font-mono); font-size:0.66rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); text-align:left; padding:0.55rem 1rem; border-bottom:1px solid var(--border-default); white-space:nowrap; }
+    td { padding:0.6rem 1rem; border-bottom:1px solid var(--border-subtle); color:var(--text-secondary); vertical-align:top; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:var(--bg-overlay); }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.5rem; }
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+
+    /* CONTROLS */
+    button { font-family:var(--font-mono); font-size:0.73rem; letter-spacing:0.03em; padding:0.42em 0.95em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-secondary); cursor:pointer; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4em; box-shadow:var(--shadow-sm); }
+    button:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+    .btn-active { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+
+    input[type="range"] { -webkit-appearance:none; width:130px; height:3px; background:var(--border-default); border-radius:999px; outline:none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--accent); cursor:pointer; transition:box-shadow var(--transition); }
+    input[type="range"]::-webkit-slider-thumb:hover { box-shadow:0 0 0 4px var(--accent-bg); }
+
+    .val-pill { font-family:var(--font-mono); font-size:0.67rem; background:var(--bg-overlay); border:1px solid var(--border-subtle); padding:0.12em 0.5em; border-radius:999px; color:var(--accent); min-width:2.8rem; text-align:center; }
+
+    /* NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background:var(--border-default); border-radius:999px; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1{animation-delay:0.05s;opacity:0} .d2{animation-delay:0.14s;opacity:0}
+    .d3{animation-delay:0.23s;opacity:0} .d4{animation-delay:0.32s;opacity:0}
+    .d5{animation-delay:0.41s;opacity:0}
+
+    /* ── CANVAS DEMOS ── */
+    canvas.demo-canvas {
+      width:100%; border-radius:var(--radius-md);
+      border:1px solid var(--border-subtle);
+      background:var(--bg-surface); cursor:crosshair; display:block;
+    }
+    .demo-controls { display:flex; flex-wrap:wrap; gap:0.9rem; align-items:center; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border-subtle); }
+    .ctrl-group { display:flex; align-items:center; gap:0.55rem; }
+    .ctrl-label { font-family:var(--font-mono); font-size:0.67rem; color:var(--text-muted); letter-spacing:0.03em; white-space:nowrap; }
+
+    .stat-row { display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.8rem; }
+    .stat-chip { font-family:var(--font-mono); font-size:0.67rem; background:var(--bg-overlay); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:0.25em 0.65em; color:var(--text-secondary); }
+    .stat-chip span { color:var(--accent); font-weight:500; }
+
+    /* legend dots */
+    .legend { display:flex; gap:1.2rem; flex-wrap:wrap; margin-bottom:0.75rem; }
+    .legend-item { display:flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); }
+    .legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .dot-a { background:var(--col-a); }
+    .dot-b { background:var(--col-b); }
+    .dot-sv { background:var(--accent); }
+
+    /* sigmoid plot container */
+    #sigmoid-wrap { overflow-x:auto; }
+    #sigmoid-canvas { border-radius:var(--radius-md); border:1px solid var(--border-subtle); background:var(--bg-surface); display:block; }
+
+    /* algo tab selector */
+    .algo-tabs { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .algo-tab { font-family:var(--font-mono); font-size:0.72rem; padding:0.38em 0.9em; border-radius:var(--radius-sm); border:1px solid var(--border-default); background:var(--bg-raised); color:var(--text-muted); cursor:pointer; transition:all var(--transition); }
+    .algo-tab:hover { border-color:var(--accent); color:var(--accent); }
+    .algo-tab.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 2 — Machine Learning</a><span class="sep">›</span>
+    <span class="current">Módulo 09 · Clasificación</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge">● ML · Módulo 9</span>
+    <h1 class="module-title">Clasificación:<br>Logística, SVM & KNN</h1>
+    <p class="module-subtitle">De predecir números a predecir categorías. Tres algoritmos clásicos con geometrías muy distintas: fronteras probabilísticas, márgenes máximos y vecindades locales.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> Machine Learning</span>
+      <span><strong>Duración</strong> ~35 min</span>
+      <span><strong>Prerrequisitos</strong> Módulo 05 — Regresión Lineal</span>
+    </div>
+  </header>
+
+  <!-- ══ 1. EL PROBLEMA DE CLASIFICACIÓN ══ -->
+  <section class="section fade-up d1">
+    <div class="section-label">Concepto</div>
+    <h2 class="section-title">De regresión a clasificación</h2>
+    <p>En regresión predecíamos un valor continuo $\hat{y} \in \mathbb{R}$. En clasificación la salida es discreta: ¿es un email spam o no? ¿Este tumor es benigno o maligno? ¿Qué dígito es esta imagen?</p>
+    <p>El caso más simple es la <strong>clasificación binaria</strong>: dos clases, que llamamos 0 y 1 (o $-1$ y $+1$ en SVM). Formalmente, buscamos una función $f: \mathbb{R}^d \to \{0,1\}$ que separe el espacio de features en dos regiones.</p>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Frontera de decisión</div>
+      <p>La <strong>frontera de decisión</strong> (decision boundary) es la superficie que separa las regiones donde el modelo predice clase 0 de las que predice clase 1. Dependiendo del algoritmo, esta frontera puede ser lineal, curva, o una región compleja definida por ejemplos vecinos.</p>
+    </div>
+
+    <p>Los tres algoritmos de este módulo producen fronteras de decisión con filosofías completamente distintas — y entender esas diferencias es clave para saber cuándo usar cada uno.</p>
+  </section>
+
+  <!-- ══ 2. REGRESIÓN LOGÍSTICA ══ -->
+  <section class="section fade-up d1">
+    <div class="section-label">Algoritmo I</div>
+    <h2 class="section-title">Regresión Logística</h2>
+    <p>A pesar del nombre, la regresión logística es un clasificador. La idea: tomar la salida lineal $z = \mathbf{w}^T\mathbf{x} + b$ y <em>aplastarla</em> al rango $[0,1]$ con la <strong>función sigmoide</strong> $\sigma$, interpretando el resultado como una probabilidad.</p>
+
+    <div class="math-block">
+      <div class="math-label">Función sigmoide y predicción</div>
+      $$\sigma(z) = \frac{1}{1+e^{-z}} \qquad \hat{p} = \sigma(\mathbf{w}^T\mathbf{x}+b) \qquad \hat{y} = \begin{cases}1 & \hat{p} \geq 0.5 \\ 0 & \hat{p} < 0.5\end{cases}$$
+    </div>
+
+    <p>La frontera de decisión $\hat{p}=0.5$ corresponde a $z=0$, es decir, al hiperplano $\mathbf{w}^T\mathbf{x}+b=0$ — es lineal.</p>
+
+    <p>En lugar del MSE, entrenamos minimizando la <strong>Binary Cross-Entropy</strong> (también llamada log-loss). Esta función mide cuán sorprendido estaría un modelo probabilístico con los datos observados:</p>
+
+    <div class="math-block">
+      <div class="math-label">Función de pérdida — Binary Cross-Entropy</div>
+      $$\mathcal{L} = -\frac{1}{n}\sum_{i=1}^{n}\Big[y_i\log\hat{p}_i + (1-y_i)\log(1-\hat{p}_i)\Big]$$
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-label">¿Por qué no MSE para clasificación?</div>
+      <p>Con la sigmoide y MSE, la superficie de pérdida tiene muchos mínimos locales y los gradientes se aplanan cuando la predicción es muy incorrecta (el gradiente de $\sigma$ se acerca a 0). La cross-entropy tiene gradientes bien comportados en toda la superficie y es la derivación natural desde máxima verosimilitud.</p>
+    </div>
+
+    <p>Los gradientes resultan notablemente simples — derivando la cross-entropy sobre $z = \mathbf{w}^T\mathbf{x}+b$:</p>
+
+    <div class="math-block">
+      <div class="math-label">Gradientes de BCE respecto a w y b</div>
+      $$\frac{\partial \mathcal{L}}{\partial \mathbf{w}} = \frac{1}{n}\sum_{i=1}^{n}(\hat{p}_i - y_i)\,\mathbf{x}_i \qquad \frac{\partial \mathcal{L}}{\partial b} = \frac{1}{n}\sum_{i=1}^{n}(\hat{p}_i - y_i)$$
+    </div>
+
+    <div class="code-header"><span>logistic_regression.py</span><span>NumPy</span></div>
+    <pre><code>import numpy as np
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+def logistic_regression(X, y, lr=0.1, epochs=1000):
+    n, d = X.shape
+    w, b = np.zeros(d), 0.0
+
+    for _ in range(epochs):
+        z    = X @ w + b
+        p    = sigmoid(z)               # probabilidades predichas
+        err  = p - y                    # residuos
+
+        dw = (1/n) * X.T @ err          # gradiente respecto a w
+        db = (1/n) * err.sum()          # gradiente respecto a b
+
+        w -= lr * dw
+        b -= lr * db
+
+    return w, b</code></pre>
+  </section>
+
+  <!-- ══ 3. DEMO SIGMOIDE ══ -->
+  <section class="section fade-up d2">
+    <div class="section-label">Visualización</div>
+    <h2 class="section-title">La función sigmoide</h2>
+    <p>Mové el slider para ver cómo el parámetro $w$ (escala del input lineal) afecta la forma de la sigmoide. Con $w$ grande la curva se vuelve casi escalón; con $w$ pequeño se aplana.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">$\sigma(wx) = 1/(1+e^{-wx})$</span>
+      </div>
+      <div id="sigmoid-wrap">
+        <canvas id="sigmoid-canvas" height="200"></canvas>
+      </div>
+      <div class="demo-controls">
+        <div class="ctrl-group">
+          <span class="ctrl-label">w (escala)</span>
+          <input type="range" id="sl-sig-w" min="0.1" max="6" step="0.1" value="1">
+          <span class="val-pill" id="vl-sig-w">1.0</span>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">b (sesgo)</span>
+          <input type="range" id="sl-sig-b" min="-4" max="4" step="0.1" value="0">
+          <span class="val-pill" id="vl-sig-b">0.0</span>
+        </div>
+        <div class="stat-chip" style="margin-left:auto">Umbral de decisión: z = 0 → $\hat{p}$ = 0.5</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 4. SVM ══ -->
+  <section class="section fade-up d2">
+    <div class="section-label">Algoritmo II</div>
+    <h2 class="section-title">Support Vector Machine (SVM)</h2>
+    <p>La regresión logística encuentra <em>alguna</em> frontera que separa las clases. La SVM busca la <em>mejor</em> frontera: aquella que maximiza el <strong>margen</strong>, la distancia entre la frontera y los puntos más cercanos de cada clase.</p>
+    <p>Esos puntos más cercanos son los <strong>vectores de soporte</strong> — y son los únicos que importan para definir la frontera. Si el resto de los puntos desaparecieran, la frontera no cambiaría.</p>
+
+    <div class="math-block">
+      <div class="math-label">Problema de optimización (SVM lineal de margen duro)</div>
+      $$\min_{\mathbf{w},b} \frac{1}{2}\|\mathbf{w}\|^2 \quad \text{sujeto a} \quad y_i(\mathbf{w}^T\mathbf{x}_i + b) \geq 1 \quad \forall i$$
+    </div>
+
+    <p>El margen tiene ancho $\frac{2}{\|\mathbf{w}\|}$. Minimizar $\|\mathbf{w}\|^2$ equivale a maximizar el margen. En la práctica se usa la formulación de <strong>margen blando</strong> (soft margin), que permite algunas violaciones con penalidad $C$:</p>
+
+    <div class="math-block">
+      <div class="math-label">SVM de margen blando (hinge loss)</div>
+      $$\mathcal{L} = \frac{1}{n}\sum_{i=1}^{n}\max(0,\, 1 - y_i(\mathbf{w}^T\mathbf{x}_i + b)) + \frac{\lambda}{2}\|\mathbf{w}\|^2$$
+    </div>
+
+    <div class="callout callout-key">
+      <div class="callout-label">Kernel trick</div>
+      <p>El poder real de las SVM está en el <strong>kernel trick</strong>: si los datos no son linealmente separables, se proyectan implícitamente a un espacio de mayor dimensión mediante una función kernel $K(\mathbf{x}_i, \mathbf{x}_j)$, donde sí pueden serlo. Kernels comunes: lineal, polinomial $(\mathbf{x}_i^T\mathbf{x}_j + c)^d$, y RBF gaussiano $e^{-\gamma\|\mathbf{x}_i-\mathbf{x}_j\|^2}$.</p>
+    </div>
+  </section>
+
+  <!-- ══ 5. KNN ══ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Algoritmo III</div>
+    <h2 class="section-title">K-Nearest Neighbors (KNN)</h2>
+    <p>KNN es radicalmente distinto: no tiene parámetros que entrenar. En predicción, simplemente busca los $k$ ejemplos de entrenamiento más cercanos al punto de consulta y devuelve la clase mayoritaria entre ellos.</p>
+
+    <div class="math-block">
+      <div class="math-label">Predicción KNN</div>
+      $$\hat{y} = \underset{c}{\operatorname{argmax}} \sum_{i \in \mathcal{N}_k(\mathbf{x})} \mathbf{1}[y_i = c]$$
+    </div>
+
+    <p>$\mathcal{N}_k(\mathbf{x})$ denota los $k$ vecinos más cercanos de $\mathbf{x}$ según alguna métrica de distancia. La más común es la distancia Euclidiana, pero también se usan Manhattan ($L_1$), Minkowski ($L_p$), o coseno para texto.</p>
+
+    <div class="math-block">
+      <div class="math-label">Distancias de Minkowski</div>
+      $$d_p(\mathbf{x}, \mathbf{z}) = \left(\sum_{j=1}^{d}|x_j - z_j|^p\right)^{1/p} \quad \begin{cases} p=1: & \text{Manhattan} \\ p=2: & \text{Euclídea} \\ p\to\infty: & \text{Chebyshev} \end{cases}$$
+    </div>
+
+    <div class="callout callout-warn">
+      <div class="callout-label">El parámetro k importa mucho</div>
+      <p><strong>k=1:</strong> frontera muy irregular, sobreajuste — cada punto de entrenamiento define su propia región de Voronoi. <strong>k grande:</strong> frontera más suave pero puede subajustar. El valor óptimo se encuentra con validación cruzada. Siempre escalá los features antes de KNN: las distancias son sensibles a la escala.</p>
+    </div>
+
+    <div class="code-header"><span>knn.py</span><span>NumPy</span></div>
+    <pre><code>import numpy as np
+from collections import Counter
+
+class KNN:
+    def __init__(self, k=3):
+        self.k = k
+
+    def fit(self, X, y):           # sólo memorizamos
+        self.X_train = X
+        self.y_train = y
+
+    def predict(self, X):
+        return np.array([self._predict_one(x) for x in X])
+
+    def _predict_one(self, x):
+        dists = np.linalg.norm(self.X_train - x, axis=1)   # distancias euclidianas
+        k_idx = np.argsort(dists)[:self.k]                  # índices de k vecinos
+        k_labels = self.y_train[k_idx]
+        return Counter(k_labels).most_common(1)[0][0]        # clase mayoritaria</code></pre>
+  </section>
+
+  <!-- ══ 6. DEMO INTERACTIVA: CLASIFICADOR ══ -->
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Dibujá puntos y observá la frontera</h2>
+    <p>Hacé clic izquierdo para agregar puntos de la <span style="color:var(--col-a);font-weight:600">Clase A</span> y clic derecho (o con el botón activo) para <span style="color:var(--col-b);font-weight:600">Clase B</span>. Seleccioná el algoritmo y ajustá sus parámetros. La frontera de decisión y las regiones se actualizan automáticamente.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Clasificador interactivo</span>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <button id="btn-random-cls">Datos aleatorios</button>
+          <button id="btn-clear-cls">Limpiar</button>
+        </div>
+      </div>
+
+      <!-- Algo tabs -->
+      <div class="algo-tabs">
+        <button class="algo-tab active" data-algo="logistic">Logística</button>
+        <button class="algo-tab" data-algo="svm">SVM lineal</button>
+        <button class="algo-tab" data-algo="knn">KNN</button>
+      </div>
+
+      <!-- Active class selector -->
+      <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.8rem;flex-wrap:wrap;">
+        <span class="ctrl-label">Pintando:</span>
+        <button id="btn-cls-a" class="btn-active" style="border-color:var(--col-a);color:var(--col-a);background:rgba(42,100,150,0.07);">● Clase A</button>
+        <button id="btn-cls-b" style="border-color:var(--col-b);color:var(--col-b);background:rgba(201,100,66,0.07);">● Clase B</button>
+        <span class="ctrl-label" style="margin-left:0.5rem;font-size:0.63rem;">o clic derecho para clase B</span>
+      </div>
+
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot dot-a"></span>Clase A</span>
+        <span class="legend-item"><span class="legend-dot dot-b"></span>Clase B</span>
+        <span class="legend-item" id="legend-sv" style="display:none"><span class="legend-dot dot-sv"></span>Vectores de soporte</span>
+      </div>
+
+      <canvas id="cls-canvas" class="demo-canvas" height="340"></canvas>
+
+      <!-- Per-algo controls (shown/hidden) -->
+      <div class="demo-controls" id="ctrl-logistic">
+        <div class="ctrl-group">
+          <span class="ctrl-label">lr α</span>
+          <input type="range" id="sl-log-lr" min="0.01" max="2" step="0.01" value="0.5">
+          <span class="val-pill" id="vl-log-lr">0.50</span>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">iteraciones</span>
+          <input type="range" id="sl-log-ep" min="50" max="2000" step="50" value="500">
+          <span class="val-pill" id="vl-log-ep">500</span>
+        </div>
+        <button class="btn-primary" id="btn-train-log" style="margin-left:auto">▶ Entrenar</button>
+      </div>
+
+      <div class="demo-controls" id="ctrl-svm" style="display:none">
+        <div class="ctrl-group">
+          <span class="ctrl-label">C (margen blando)</span>
+          <input type="range" id="sl-svm-c" min="0.01" max="20" step="0.01" value="1">
+          <span class="val-pill" id="vl-svm-c">1.00</span>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">lr</span>
+          <input type="range" id="sl-svm-lr" min="0.001" max="0.5" step="0.001" value="0.01">
+          <span class="val-pill" id="vl-svm-lr">0.010</span>
+        </div>
+        <button class="btn-primary" id="btn-train-svm" style="margin-left:auto">▶ Entrenar</button>
+      </div>
+
+      <div class="demo-controls" id="ctrl-knn" style="display:none">
+        <div class="ctrl-group">
+          <span class="ctrl-label">k vecinos</span>
+          <input type="range" id="sl-knn-k" min="1" max="15" step="1" value="3">
+          <span class="val-pill" id="vl-knn-k">3</span>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">distancia</span>
+          <select id="sel-knn-dist" style="font-family:var(--font-mono);font-size:0.72rem;padding:0.3em 0.6em;border-radius:var(--radius-sm);border:1px solid var(--border-default);background:var(--bg-raised);color:var(--text-secondary);cursor:pointer;">
+            <option value="2">Euclídea (L2)</option>
+            <option value="1">Manhattan (L1)</option>
+          </select>
+        </div>
+        <button class="btn-primary" id="btn-train-knn" style="margin-left:auto">▶ Clasificar</button>
+      </div>
+
+      <div class="stat-row" style="margin-top:1rem;">
+        <div class="stat-chip">Clase A <span id="sc-na">0</span></div>
+        <div class="stat-chip">Clase B <span id="sc-nb">0</span></div>
+        <div class="stat-chip">Accuracy <span id="sc-acc">—</span></div>
+        <div class="stat-chip" id="sc-extra-wrap">Iteraciones <span id="sc-extra">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 7. COMPARATIVA ══ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Comparativa</div>
+    <h2 class="section-title">¿Cuándo usar cada uno?</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Algoritmo</th>
+            <th>Frontera</th>
+            <th>Output</th>
+            <th>Entrenamiento</th>
+            <th>Predicción</th>
+            <th>Cuándo usarlo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Regresión Logística</strong></td>
+            <td>Lineal</td>
+            <td>Probabilidad $\hat{p}$</td>
+            <td>$O(n \cdot d \cdot T)$</td>
+            <td>$O(d)$</td>
+            <td>Baseline rápido, interpretabilidad, texto con TF-IDF</td>
+          </tr>
+          <tr>
+            <td><strong>SVM lineal</strong></td>
+            <td>Lineal (máximo margen)</td>
+            <td>Score $\pm$</td>
+            <td>$O(n \cdot d \cdot T)$</td>
+            <td>$O(d)$</td>
+            <td>Texto, datos de alta dimensión, margen explícito</td>
+          </tr>
+          <tr>
+            <td><strong>SVM RBF kernel</strong></td>
+            <td>No lineal</td>
+            <td>Score $\pm$</td>
+            <td>$O(n^2)$–$O(n^3)$</td>
+            <td>$O(n_{sv} \cdot d)$</td>
+            <td>Datasets pequeños/medianos con estructura compleja</td>
+          </tr>
+          <tr>
+            <td><strong>KNN</strong></td>
+            <td>No lineal (Voronoi)</td>
+            <td>Clase (o prob.)</td>
+            <td>$O(n)$ — trivial</td>
+            <td>$O(n \cdot d)$ — lento</td>
+            <td>Prototipos, detección de anomalías, datasets pequeños</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-tip">
+      <div class="callout-label">Regla práctica</div>
+      <p>Siempre empezá con <strong>regresión logística</strong> como baseline. Si los datos no son linealmente separables y el dataset es pequeño, probá <strong>SVM con kernel RBF</strong>. <strong>KNN</strong> es útil como sanity check o cuando los datos tienen estructura de vecindad natural. Para datasets grandes (millones de ejemplos), GBM (Gradient Boosting) o redes neuronales suelen superar a SVM y KNN.</p>
+    </div>
+  </section>
+
+  <!-- ══ 8. MÉTRICAS DE CLASIFICACIÓN ══ -->
+  <section class="section fade-up d4">
+    <div class="section-label">Evaluación</div>
+    <h2 class="section-title">Más allá del accuracy</h2>
+    <p>El <em>accuracy</em> (porcentaje de aciertos) es una métrica engañosa en datasets desbalanceados. Si el 95 % de los emails son legítimos, un clasificador que siempre predice "no spam" tiene 95 % de accuracy — y es completamente inútil.</p>
+
+    <div class="math-block">
+      <div class="math-label">Matriz de confusión y métricas derivadas</div>
+      $$\text{Precision} = \frac{TP}{TP+FP} \qquad \text{Recall} = \frac{TP}{TP+FN} \qquad F_1 = 2\cdot\frac{P \cdot R}{P + R}$$
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>Pred. Positivo</th><th>Pred. Negativo</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Real Positivo</strong></td><td style="color:#3a7d44">TP — Verdadero positivo</td><td style="color:#c96442">FN — Falso negativo (Error tipo II)</td></tr>
+          <tr><td><strong>Real Negativo</strong></td><td style="color:#c96442">FP — Falso positivo (Error tipo I)</td><td style="color:#3a7d44">TN — Verdadero negativo</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-label">Precision vs Recall — el trade-off</div>
+      <p>Bajar el umbral de decisión (de 0.5 a 0.3) aumenta el Recall (detectamos más positivos reales) pero baja la Precision (más falsos positivos). La curva <strong>Precision-Recall</strong> y el área bajo ella (AUC-PR) son métricas más informativas que el accuracy para clases desbalanceadas.</p>
+    </div>
+  </section>
+
+  <!-- ══ 9. RESUMEN ══ -->
+  <section class="section fade-up d5">
+    <div class="section-label">Resumen</div>
+    <h2 class="section-title">Lo que aprendiste</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Concepto</th><th>Descripción</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Clasificación binaria</strong></td><td>Predecir clase discreta $y \in \{0,1\}$ en lugar de valor continuo</td></tr>
+          <tr><td><strong>Sigmoide</strong></td><td>$\sigma(z) = 1/(1+e^{-z})$ — aplasta $\mathbb{R}$ al rango $[0,1]$</td></tr>
+          <tr><td><strong>Cross-entropy</strong></td><td>Función de pérdida para clasificación: $-[y\log\hat{p}+(1-y)\log(1-\hat{p})]$</td></tr>
+          <tr><td><strong>Margen SVM</strong></td><td>Ancho $2/\|\mathbf{w}\|$ — se maximiza minimizando $\|\mathbf{w}\|^2$</td></tr>
+          <tr><td><strong>Vectores de soporte</strong></td><td>Únicos puntos que definen la frontera de la SVM</td></tr>
+          <tr><td><strong>Kernel trick</strong></td><td>Proyección implícita a alta dimensión para separabilidad no lineal</td></tr>
+          <tr><td><strong>KNN</strong></td><td>Sin entrenamiento: predice por votación de $k$ vecinos más cercanos</td></tr>
+          <tr><td><strong>F1 / Precision / Recall</strong></td><td>Métricas más robustas que accuracy para clases desbalanceadas</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="08_ml_pca.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="10_ml_naive_bayes.html">Próximo →</a>
+  </nav>
+
+</div><!-- /page-wrapper -->
+
+<script>
+/* ══════════════════════════════════════════
+   UTILIDADES COMPARTIDAS
+══════════════════════════════════════════ */
+function sigmoid(z){ return 1/(1+Math.exp(-z)); }
+function dot(w,x){ return w[0]*x[0]+w[1]*x[1]+w[2]; } // w=[w0,w1,b]
+
+/* ══════════════════════════════════════════
+   DEMO 1 — SIGMOIDE INTERACTIVA
+══════════════════════════════════════════ */
+(function(){
+  const canvas = document.getElementById('sigmoid-canvas');
+  const ctx    = canvas.getContext('2d');
+  const wrap   = document.getElementById('sigmoid-wrap');
+
+  const CW=()=>canvas.width, CH=()=>canvas.height;
+
+  function resize(){
+    canvas.width  = wrap.clientWidth;
+    canvas.height = 200;
+    draw();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function toCanvas(x,y){ // x in [-6,6], y in [0,1]
+    return [(x+6)/12*CW(), CH()-(y*0.85+0.075)*CH()];
+  }
+
+  function draw(){
+    const w = parseFloat(document.getElementById('sl-sig-w').value);
+    const b = parseFloat(document.getElementById('sl-sig-b').value);
+    ctx.clearRect(0,0,CW(),CH());
+
+    const gridCol  = getComputedStyle(document.documentElement).getPropertyValue('--border-subtle').trim();
+    const axisCol  = getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim();
+    const mutedCol = getComputedStyle(document.documentElement).getPropertyValue('--text-faint').trim();
+
+    // Grid
+    ctx.strokeStyle=gridCol; ctx.lineWidth=1;
+    [0,0.25,0.5,0.75,1].forEach(yv=>{
+      const [,py]=toCanvas(0,yv);
+      ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(CW(),py); ctx.stroke();
+    });
+    [-6,-4,-2,0,2,4,6].forEach(xv=>{
+      const [px]=toCanvas(xv,0);
+      ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,CH()); ctx.stroke();
+    });
+
+    // Axes labels
+    ctx.font=`10px "Geist Mono",monospace`; ctx.fillStyle=mutedCol; ctx.textAlign='right';
+    [0,0.25,0.5,0.75,1].forEach(yv=>{
+      const [,py]=toCanvas(0,yv);
+      ctx.fillText(yv.toFixed(2),34,py+4);
+    });
+    ctx.textAlign='center';
+    [-4,-2,0,2,4].forEach(xv=>{
+      const [px]=toCanvas(xv,0);
+      ctx.fillText(xv,px,CH()-4);
+    });
+
+    // threshold line at y=0.5
+    const [,py05]=toCanvas(0,0.5);
+    ctx.strokeStyle='rgba(58,125,68,0.35)'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(0,py05); ctx.lineTo(CW(),py05); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // decision boundary x = -b/w
+    if(Math.abs(w)>0.01){
+      const xBound = -b/w;
+      if(xBound>=-6&&xBound<=6){
+        const [pxb]=toCanvas(xBound,0);
+        ctx.strokeStyle='rgba(201,100,66,0.5)'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+        ctx.beginPath(); ctx.moveTo(pxb,0); ctx.lineTo(pxb,CH()); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='rgba(201,100,66,0.7)'; ctx.textAlign='left';
+        ctx.fillText(`z=0 (x=${xBound.toFixed(2)})`,pxb+4,20);
+      }
+    }
+
+    // Sigmoid curve
+    ctx.strokeStyle='#3a7d44'; ctx.lineWidth=2.5; ctx.setLineDash([]);
+    ctx.beginPath();
+    let first=true;
+    for(let px=0;px<=CW();px++){
+      const x=(px/CW())*12-6;
+      const z=w*x+b;
+      const y=sigmoid(z);
+      const [cx,cy]=toCanvas(x,y);
+      if(first){ctx.moveTo(cx,cy);first=false;}else ctx.lineTo(cx,cy);
+    }
+    ctx.stroke();
+  }
+
+  document.getElementById('sl-sig-w').addEventListener('input',function(){
+    document.getElementById('vl-sig-w').textContent=parseFloat(this.value).toFixed(1);
+    draw();
+  });
+  document.getElementById('sl-sig-b').addEventListener('input',function(){
+    document.getElementById('vl-sig-b').textContent=parseFloat(this.value).toFixed(1);
+    draw();
+  });
+})();
+
+/* ══════════════════════════════════════════
+   DEMO 2 — CLASIFICADOR INTERACTIVO
+══════════════════════════════════════════ */
+(function(){
+  const canvas = document.getElementById('cls-canvas');
+  const ctx    = canvas.getContext('2d');
+
+  let points   = [];   // {x,y,cls} — data coords [-1,1]x[-1,1]
+  let activeClass = 0; // 0=A, 1=B
+  let currentAlgo = 'logistic';
+  let model = null;    // trained model params
+  let bgImageData = null;  // cached background
+
+  const CW=()=>canvas.width, CH=()=>canvas.height;
+  const MARGIN=32;
+
+  /* ── Sizing ── */
+  function resize(){
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width  = rect.width - 48;
+    canvas.height = 340;
+    bgImageData = null;
+    render();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function toCanvas(dx,dy){
+    return [
+      MARGIN + (dx+1)/2*(CW()-2*MARGIN),
+      CH()-MARGIN - (dy+1)/2*(CH()-2*MARGIN)
+    ];
+  }
+  function toData(px,py){
+    return [
+      (px-MARGIN)/(CW()-2*MARGIN)*2-1,
+      (CH()-MARGIN-py)/(CH()-2*MARGIN)*2-1
+    ];
+  }
+
+  /* ── Events ── */
+  function addPoint(e, cls){
+    e.preventDefault();
+    const rect=canvas.getBoundingClientRect();
+    const scaleX=canvas.width/rect.width, scaleY=canvas.height/rect.height;
+    const px=(e.clientX-rect.left)*scaleX, py=(e.clientY-rect.top)*scaleY;
+    const [dx,dy]=toData(px,py);
+    if(dx<-1||dx>1||dy<-1||dy>1)return;
+    points.push({x:dx,y:dy,cls});
+    model=null; bgImageData=null;
+    updateCounts(); render();
+  }
+  canvas.addEventListener('click', e=>addPoint(e, activeClass));
+  canvas.addEventListener('contextmenu', e=>addPoint(e, 1));
+
+  /* ── Class buttons ── */
+  document.getElementById('btn-cls-a').addEventListener('click',function(){
+    activeClass=0;
+    this.classList.add('btn-active');
+    this.style.borderColor='var(--col-a)'; this.style.color='var(--col-a)'; this.style.background='rgba(42,100,150,0.07)';
+    const bb=document.getElementById('btn-cls-b');
+    bb.classList.remove('btn-active');
+    bb.style.borderColor='var(--border-default)'; bb.style.color='var(--text-secondary)'; bb.style.background='var(--bg-raised)';
+  });
+  document.getElementById('btn-cls-b').addEventListener('click',function(){
+    activeClass=1;
+    this.classList.add('btn-active');
+    this.style.borderColor='var(--col-b)'; this.style.color='var(--col-b)'; this.style.background='rgba(201,100,66,0.07)';
+    const ba=document.getElementById('btn-cls-a');
+    ba.classList.remove('btn-active');
+    ba.style.borderColor='var(--border-default)'; ba.style.color='var(--text-secondary)'; ba.style.background='var(--bg-raised)';
+  });
+
+  /* ── Algo tabs ── */
+  document.querySelectorAll('.algo-tab').forEach(tab=>{
+    tab.addEventListener('click',function(){
+      document.querySelectorAll('.algo-tab').forEach(t=>t.classList.remove('active'));
+      this.classList.add('active');
+      currentAlgo=this.dataset.algo;
+      document.getElementById('ctrl-logistic').style.display=currentAlgo==='logistic'?'flex':'none';
+      document.getElementById('ctrl-svm').style.display=currentAlgo==='svm'?'flex':'none';
+      document.getElementById('ctrl-knn').style.display=currentAlgo==='knn'?'flex':'none';
+      document.getElementById('legend-sv').style.display=currentAlgo==='svm'?'flex':'none';
+      document.getElementById('sc-extra-wrap').style.display=currentAlgo==='knn'?'none':'flex';
+      model=null; bgImageData=null; render();
+    });
+  });
+
+  /* ── Sliders ── */
+  [
+    ['sl-log-lr','vl-log-lr',v=>v.toFixed(2)],
+    ['sl-log-ep','vl-log-ep',v=>Math.round(v)],
+    ['sl-svm-c','vl-svm-c',v=>v.toFixed(2)],
+    ['sl-svm-lr','vl-svm-lr',v=>v.toFixed(3)],
+    ['sl-knn-k','vl-knn-k',v=>Math.round(v)],
+  ].forEach(([id,vid,fmt])=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener('input',function(){
+      document.getElementById(vid).textContent=fmt(parseFloat(this.value));
+      model=null; bgImageData=null;
+    });
+  });
+  document.getElementById('sel-knn-dist').addEventListener('change',()=>{model=null;bgImageData=null;});
+
+  /* ── Random data ── */
+  document.getElementById('btn-random-cls').addEventListener('click',function(){
+    points=[];
+    // Two blobs
+    const makeBlob=(cx,cy,cls,n=18)=>{
+      for(let i=0;i<n;i++){
+        const a=Math.random()*Math.PI*2;
+        const r=Math.random()*0.38;
+        points.push({x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,cls});
+      }
+    };
+    makeBlob(-0.38, 0.25, 0, 18);
+    makeBlob( 0.38,-0.25, 1, 18);
+    model=null; bgImageData=null;
+    updateCounts(); render();
+  });
+
+  document.getElementById('btn-clear-cls').addEventListener('click',function(){
+    points=[]; model=null; bgImageData=null;
+    updateCounts(); render();
+  });
+
+  /* ── Counts ── */
+  function updateCounts(){
+    const na=points.filter(p=>p.cls===0).length;
+    const nb=points.filter(p=>p.cls===1).length;
+    document.getElementById('sc-na').textContent=na;
+    document.getElementById('sc-nb').textContent=nb;
+  }
+
+  /* ════ LOGISTIC REGRESSION TRAINING ════ */
+  function trainLogistic(){
+    const lr   = parseFloat(document.getElementById('sl-log-lr').value);
+    const ep   = parseInt(document.getElementById('sl-log-ep').value);
+    const pts  = points.filter(p=>points.some(q=>q.cls!==p.cls)); // need both classes
+    if(points.filter(p=>p.cls===0).length<1||points.filter(p=>p.cls===1).length<1) return null;
+
+    let w=[0,0], b=0;
+    const n=points.length;
+    for(let e=0;e<ep;e++){
+      let dw=[0,0], db=0;
+      for(const p of points){
+        const z=w[0]*p.x+w[1]*p.y+b;
+        const ph=sigmoid(z);
+        const err=ph-p.cls;
+        dw[0]+=err*p.x; dw[1]+=err*p.y; db+=err;
+      }
+      w[0]-=lr/n*dw[0]; w[1]-=lr/n*dw[1]; b-=lr/n*db;
+    }
+    // accuracy
+    let correct=0;
+    for(const p of points){
+      const z=w[0]*p.x+w[1]*p.y+b;
+      const pred=sigmoid(z)>=0.5?1:0;
+      if(pred===p.cls)correct++;
+    }
+    return {type:'logistic',w,b,acc:(correct/points.length*100).toFixed(1),iters:ep};
+  }
+
+  /* ════ SVM (SGD with hinge loss) ════ */
+  function trainSVM(){
+    if(points.filter(p=>p.cls===0).length<1||points.filter(p=>p.cls===1).length<1) return null;
+    const C   = parseFloat(document.getElementById('sl-svm-c').value);
+    const lr  = parseFloat(document.getElementById('sl-svm-lr').value);
+    const ep  = 800;
+    let w=[0.01,0.01], b=0;
+    const n=points.length;
+    // labels: 0→-1, 1→+1
+    const labels=points.map(p=>p.cls===1?1:-1);
+    for(let e=0;e<ep;e++){
+      for(let i=0;i<n;i++){
+        const p=points[i]; const yi=labels[i];
+        const z=w[0]*p.x+w[1]*p.y+b;
+        if(yi*z<1){
+          w[0]=w[0]*(1-lr*0.01)+lr*C*yi*p.x;
+          w[1]=w[1]*(1-lr*0.01)+lr*C*yi*p.y;
+          b+=lr*C*yi;
+        } else {
+          w[0]*=(1-lr*0.01);
+          w[1]*=(1-lr*0.01);
+        }
+      }
+    }
+    // support vectors: |yi*(w·xi+b) - 1| < 0.25
+    const margin=1/Math.sqrt(w[0]**2+w[1]**2+1e-9);
+    const svs=points.filter((p,i)=>Math.abs(labels[i]*(w[0]*p.x+w[1]*p.y+b)-1)<0.35);
+    let correct=0;
+    for(let i=0;i<n;i++){
+      const p=points[i];
+      const z=w[0]*p.x+w[1]*p.y+b;
+      if((z>=0?1:-1)===labels[i])correct++;
+    }
+    return{type:'svm',w,b,svs,margin,acc:(correct/n*100).toFixed(1),iters:ep};
+  }
+
+  /* ════ KNN PREDICT ════ */
+  function knnPredict(qx,qy){
+    const k  = parseInt(document.getElementById('sl-knn-k').value);
+    const lp = parseInt(document.getElementById('sel-knn-dist').value);
+    if(points.length===0)return 0.5;
+    const dists=points.map(p=>({
+      d:Math.pow(Math.abs(p.x-qx)**lp+Math.abs(p.y-qy)**lp,1/lp),
+      cls:p.cls
+    }));
+    dists.sort((a,b)=>a.d-b.d);
+    const k_nn=dists.slice(0,Math.min(k,dists.length));
+    const votes=[0,0];
+    k_nn.forEach(n=>votes[n.cls]++);
+    return votes[1]/(votes[0]+votes[1]); // proportion of class B = pseudo-prob
+  }
+
+  /* ════ BACKGROUND REGION RENDER ════ */
+  function buildBackground(){
+    const res=80; // grid resolution
+    const cw=CW(), ch=CH();
+    const offscreen=document.createElement('canvas');
+    offscreen.width=cw; offscreen.height=ch;
+    const octx=offscreen.getContext('2d');
+    const imgData=octx.createImageData(cw,ch);
+    const data=imgData.data;
+
+    for(let px=0;px<cw;px++){
+      for(let py=0;py<ch;py++){
+        const [dx,dy]=toData(px,py);
+        let prob=0.5;
+        if(model){
+          if(model.type==='logistic'||model.type==='svm'){
+            const z=model.w[0]*dx+model.w[1]*dy+model.b;
+            prob=model.type==='logistic'?sigmoid(z):(z>=0?0.85:0.15);
+          } else if(model.type==='knn'){
+            prob=knnPredict(dx,dy);
+          }
+        }
+        const idx=(py*cw+px)*4;
+        // class A = blue, class B = orange
+        const alpha=Math.abs(prob-0.5)*0.55+0.08;
+        if(prob>0.5){
+          // class B region — warm orange tint
+          data[idx]=201; data[idx+1]=100; data[idx+2]=66;
+        } else {
+          // class A region — blue tint
+          data[idx]=42; data[idx+1]=100; data[idx+2]=150;
+        }
+        data[idx+3]=Math.round(alpha*255);
+      }
+    }
+    octx.putImageData(imgData,0,0);
+    return offscreen;
+  }
+
+  /* ════ MAIN RENDER ════ */
+  function render(){
+    ctx.clearRect(0,0,CW(),CH());
+
+    // Grid
+    ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--border-subtle').trim();
+    ctx.lineWidth=1;
+    [-0.5,0,0.5].forEach(v=>{
+      const [px]=toCanvas(v,0); const [,py]=toCanvas(0,v);
+      ctx.beginPath();ctx.moveTo(px,0);ctx.lineTo(px,CH());ctx.stroke();
+      ctx.beginPath();ctx.moveTo(0,py);ctx.lineTo(CW(),py);ctx.stroke();
+    });
+
+    // Axes
+    ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim();
+    ctx.lineWidth=1.5;
+    const [ax]=toCanvas(0,0); const [,ay]=toCanvas(0,0);
+    ctx.beginPath();ctx.moveTo(ax,0);ctx.lineTo(ax,CH());ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,ay);ctx.lineTo(CW(),ay);ctx.stroke();
+
+    // Background decision regions
+    if(model || (currentAlgo==='knn' && points.length>0)){
+      if(!bgImageData) bgImageData=buildBackground();
+      ctx.drawImage(bgImageData,0,0);
+    }
+
+    // Decision boundary line (logistic / SVM)
+    if(model && (model.type==='logistic'||model.type==='svm')){
+      const w=model.w, b=model.b;
+      // w0*x + w1*y + b = 0  =>  y = (-w0*x - b)/w1
+      if(Math.abs(w[1])>1e-6){
+        const x1=-1.5, y1=(-w[0]*x1-b)/w[1];
+        const x2= 1.5, y2=(-w[0]*x2-b)/w[1];
+        const [cx1,cy1]=toCanvas(x1,y1);
+        const [cx2,cy2]=toCanvas(x2,y2);
+        ctx.strokeStyle='#3a7d44'; ctx.lineWidth=2.5; ctx.setLineDash([]);
+        ctx.beginPath();ctx.moveTo(cx1,cy1);ctx.lineTo(cx2,cy2);ctx.stroke();
+
+        // SVM margins
+        if(model.type==='svm'){
+          const normW=Math.sqrt(w[0]**2+w[1]**2+1e-9);
+          const offY=1/normW//* ... use margin direction */;
+          const wn=[w[0]/normW, w[1]/normW];
+          for(const s of [-1,1]){
+            const bm = b + s;
+            const y1m=(-w[0]*x1-bm)/w[1];
+            const y2m=(-w[0]*x2-bm)/w[1];
+            const [cx1m,cy1m]=toCanvas(x1,y1m);
+            const [cx2m,cy2m]=toCanvas(x2,y2m);
+            ctx.strokeStyle='rgba(58,125,68,0.4)'; ctx.lineWidth=1.2; ctx.setLineDash([5,4]);
+            ctx.beginPath();ctx.moveTo(cx1m,cy1m);ctx.lineTo(cx2m,cy2m);ctx.stroke();
+          }
+          ctx.setLineDash([]);
+        }
+      } else if(Math.abs(w[0])>1e-6){
+        // vertical boundary
+        const xBound=-b/w[0];
+        const [px]=toCanvas(xBound,0);
+        ctx.strokeStyle='#3a7d44'; ctx.lineWidth=2.5; ctx.setLineDash([]);
+        ctx.beginPath();ctx.moveTo(px,0);ctx.lineTo(px,CH());ctx.stroke();
+      }
+    }
+
+    // Support vectors (SVM)
+    if(model && model.type==='svm' && model.svs){
+      for(const p of model.svs){
+        const [px,py]=toCanvas(p.x,p.y);
+        ctx.beginPath();ctx.arc(px,py,9,0,Math.PI*2);
+        ctx.strokeStyle='#3a7d44';ctx.lineWidth=2;ctx.setLineDash([]);ctx.stroke();
+      }
+    }
+
+    // KNN: draw lines to nearest neighbors on hover (skipped for perf)
+    // Points
+    for(const p of points){
+      const [px,py]=toCanvas(p.x,p.y);
+      ctx.beginPath();ctx.arc(px,py,5.5,0,Math.PI*2);
+      ctx.fillStyle=p.cls===0?'#2a6496':'#c96442';
+      ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.setLineDash([]);ctx.stroke();
+    }
+
+    // Hint
+    if(points.length===0){
+      ctx.font=`11px "Geist Mono",monospace`;
+      ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text-faint').trim();
+      ctx.textAlign='center';
+      ctx.fillText('Clic para agregar puntos de Clase A · Clic derecho para Clase B',CW()/2,CH()/2);
+      ctx.textAlign='left';
+    }
+  }
+
+  /* ── Train buttons ── */
+  document.getElementById('btn-train-log').addEventListener('click',function(){
+    if(points.filter(p=>p.cls===0).length<1||points.filter(p=>p.cls===1).length<1){
+      alert('Necesitás puntos de ambas clases para entrenar.');return;
+    }
+    model=trainLogistic(); bgImageData=null;
+    if(model){
+      document.getElementById('sc-acc').textContent=model.acc+'%';
+      document.getElementById('sc-extra').textContent=model.iters;
+    }
+    render();
+  });
+
+  document.getElementById('btn-train-svm').addEventListener('click',function(){
+    if(points.filter(p=>p.cls===0).length<1||points.filter(p=>p.cls===1).length<1){
+      alert('Necesitás puntos de ambas clases para entrenar.');return;
+    }
+    model=trainSVM(); bgImageData=null;
+    if(model){
+      document.getElementById('sc-acc').textContent=model.acc+'%';
+      document.getElementById('sc-extra').textContent=model.iters;
+    }
+    render();
+  });
+
+  document.getElementById('btn-train-knn').addEventListener('click',function(){
+    if(points.length<2){alert('Agregá más puntos.');return;}
+    model={type:'knn'}; bgImageData=null;
+    // compute accuracy
+    const k=parseInt(document.getElementById('sl-knn-k').value);
+    let correct=0;
+    for(const p of points){
+      // leave-one-out
+      const others=points.filter(q=>q!==p);
+      const lp=parseInt(document.getElementById('sel-knn-dist').value);
+      const dists=others.map(q=>({d:Math.pow(Math.abs(q.x-p.x)**lp+Math.abs(q.y-p.y)**lp,1/lp),cls:q.cls}));
+      dists.sort((a,b)=>a.d-b.d);
+      const votes=[0,0];
+      dists.slice(0,Math.min(k,dists.length)).forEach(n=>votes[n.cls]++);
+      const pred=votes[1]>votes[0]?1:0;
+      if(pred===p.cls)correct++;
+    }
+    document.getElementById('sc-acc').textContent=(correct/points.length*100).toFixed(1)+'%';
+    render();
+  });
+
+  // Initial render
+  updateCounts(); render();
+})();
+</script>
+</body>
+</html>
+

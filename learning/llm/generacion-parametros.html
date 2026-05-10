@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IA desde Cero — Generación de Texto</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+  <style>
+    :root {
+      --bg-base:        #f5f0eb;
+      --bg-surface:     #faf7f4;
+      --bg-raised:      #ffffff;
+      --bg-overlay:     #ede8e1;
+      --border-subtle:  #e8e1d9;
+      --border-default: #d9d0c7;
+      --border-strong:  #bfb5ab;
+      --text-primary:   #1a1714;
+      --text-secondary: #4a4540;
+      --text-muted:     #8c847c;
+      --text-faint:     #b8b0a8;
+      
+      /* LLM Theme */
+      --accent:         #7b52a8; 
+      --accent-hover:   #644287;
+      --accent-bg:      rgba(123,82,168,0.08);
+      --accent-border:  rgba(123,82,168,0.25);
+      --tag-llm:        #7b52a8;
+      
+      --code-bg:        #f0ebe4;
+      --code-border:    #ddd6ce;
+      --code-text:      #3a3530;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --radius-sm:      6px; --radius-md:10px; --radius-lg:16px;
+      --font-serif:     'Crimson Pro', Georgia, serif;
+      --font-mono:      'Geist Mono', 'Fira Code', monospace;
+      --font-sans:      'Geist', system-ui, sans-serif;
+      --transition:     0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    ::selection { background: var(--accent-bg); }
+
+    .page-wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; gap:0.5rem; padding:1.25rem 0 1rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); letter-spacing:0.04em; border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; transition:color var(--transition); }
+    .topbar a:hover { color:var(--text-secondary); }
+    .topbar .sep { color:var(--border-strong); }
+    .topbar .current { color:var(--text-secondary); }
+
+    /* HEADER */
+    .module-header { margin-bottom:2.5rem; }
+    .module-badge { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.08em; text-transform:uppercase; padding:0.28em 0.75em; border-radius:999px; border:1px solid; margin-bottom:1rem; }
+    .badge-llm { color:var(--tag-llm); border-color:var(--tag-llm); background:var(--accent-bg); }
+
+    .module-title { font-family:var(--font-serif); font-size:clamp(1.75rem,4vw,2.6rem); line-height:1.2; margin-bottom:0.75rem; font-weight:400; letter-spacing:-0.01em; }
+    .module-subtitle { font-size:0.9375rem; color:var(--text-secondary); max-width:60ch; line-height:1.65; }
+    .module-meta { display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap; }
+    .module-meta span { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); letter-spacing:0.04em; }
+    .module-meta span strong { color:var(--text-secondary); font-weight:500; }
+
+    /* SECTIONS */
+    .section { margin-bottom:3rem; }
+    .section-label { font-family:var(--font-mono); font-size:0.67rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.75rem; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+    .section-title { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin-bottom:0.75rem; }
+
+    p { color:var(--text-secondary); margin-bottom:1rem; max-width:70ch; }
+    strong { color:var(--text-primary); font-weight:600; }
+    a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--accent-border); }
+    a:hover { text-decoration-color:var(--accent); }
+
+    /* MATH */
+    .math-block { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:1.4rem 2rem; margin:1.5rem 0; overflow-x:auto; text-align:center; box-shadow:var(--shadow-sm); }
+    .math-block .math-label { font-family:var(--font-mono); font-size:0.66rem; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.75rem; text-align:left; }
+
+    /* DEMO */
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:var(--radius-lg); padding:1.5rem; margin:1.5rem 0; box-shadow:var(--shadow-md); }
+    .demo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;}
+    .demo-title { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-secondary); letter-spacing:0.04em; display:flex; align-items:center; gap:0.5rem; }
+    .demo-title::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    
+    .demo-layout { display: flex; flex-direction: column; gap: 1rem; }
+    
+    .chart-container { width: 100%; height: 200px; display: flex; align-items: flex-end; gap: 10px; border-bottom: 1px solid var(--border-strong); padding-bottom: 5px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+    .bar { width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; transition: height 0.3s ease, background-color 0.3s ease; }
+    .bar-label { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px; }
+    .bar-val { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-faint); margin-bottom: 5px; }
+
+    /* CONTROLS */
+    .ctrl-group { display:flex; align-items:center; gap:0.6rem; }
+    .ctrl-label { font-family:var(--font-mono); font-size:0.67rem; color:var(--text-muted); letter-spacing:0.04em; }
+
+    input[type="range"] { -webkit-appearance:none; width:150px; height:3px; background:var(--border-default); border-radius:999px; outline:none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:var(--accent); cursor:pointer; transition:box-shadow var(--transition); border: 2px solid #fff; box-shadow: var(--shadow-sm); }
+    input[type="range"]::-webkit-slider-thumb:hover { box-shadow:0 0 0 4px var(--accent-bg); }
+
+    .val-pill { font-family:var(--font-mono); font-size:0.67rem; background:var(--bg-overlay); border:1px solid var(--border-subtle); padding:0.12em 0.5em; border-radius:999px; color:var(--accent); min-width:2.5rem; text-align:center; }
+    
+    .demo-controls-bar { display: flex; gap: 1.5rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); justify-content: center; flex-wrap: wrap; }
+
+    /* MODULE NAV */
+    .module-nav { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:0.5rem; transition:color var(--transition); }
+    .module-nav a:hover { color:var(--text-primary); }
+
+    hr { border:none; border-top:1px solid var(--border-subtle); margin:2rem 0; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation:fadeUp 0.4s ease forwards; }
+    .d1 { animation-delay:0.05s; opacity:0; }
+    .d2 { animation-delay:0.14s; opacity:0; }
+    .d3 { animation-delay:0.23s; opacity:0; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a><span class="sep">›</span>
+    <a href="index.html">Área 6 — LLMs</a><span class="sep">›</span>
+    <span class="current">Módulo 28 · Generación</span>
+  </nav>
+
+  <header class="module-header fade-up">
+    <span class="module-badge badge-llm">● LLM · Módulo 28</span>
+    <h1 class="module-title">Generación: Temperature & Top-p</h1>
+    <p class="module-subtitle">El modelo no produce texto, produce probabilidades. Entendiendo cómo los parámetros estocásticos convierten números crudos (Logits) en respuestas creativas o deterministas.</p>
+    <div class="module-meta">
+      <span><strong>Área</strong> LLMs</span>
+      <span><strong>Duración</strong> ~20 min</span>
+      <span><strong>Prerrequisitos</strong> Pipeline</span>
+    </div>
+  </header>
+
+  <section class="section fade-up d1">
+    <div class="section-label">Logits & Softmax</div>
+    <h2 class="section-title">El Final del Transformer</h2>
+    <p>En su última capa, el LLM emite un vector gigante de números crudos (llamados <strong>Logits</strong>), uno por cada token del vocabulario (ej. 100,000 números). Para convertirlos en probabilidades (números entre 0 y 1 que sumen 1), se pasa el vector por la función Softmax.</p>
+
+    <div class="math-block">
+      <div class="math-label">Softmax con Temperatura ($T$)</div>
+      $$p_i = \frac{\exp(z_i / T)}{\sum_j \exp(z_j / T)}$$
+    </div>
+
+    <p>Luego, el algoritmo de inferencia debe elegir la siguiente palabra. Si siempre elige la de mayor probabilidad ($p_{max}$), se llama <strong>Greedy Decoding</strong>. Es predecible pero robótico, y tiende a atascarse en bucles ("hola hola hola"). Para ser creativo, el modelo hace un "sorteo" (Sampling) ponderado por esas probabilidades.</p>
+  </section>
+
+  <section class="section fade-up d2">
+    <div class="section-label">Parámetros de Control</div>
+    <h2 class="section-title">Afinando la Creatividad</h2>
+    <ul>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem"><strong>Temperature ($T$):</strong> Si $T=1$, la probabilidad no cambia. Si $T \to 0$, la distribución se vuelve un pico gigante en la palabra más probable (robótico/preciso). Si $T > 1$, la distribución se "aplasta" haciendo que palabras raras tengan mucha probabilidad (alucinaciones/caos creativo).</li>
+      <li style="color:var(--text-secondary); margin-bottom:0.5rem"><strong>Top-p (Nucleus Sampling):</strong> Ordena los tokens por probabilidad y solo considera el subconjunto cuya suma de probabilidades llegue a $p$ (ej. 0.9). Corta la "cola larga" de tokens absurdos.</li>
+    </ul>
+  </section>
+
+  <section class="section fade-up d3">
+    <div class="section-label">Demo Interactiva</div>
+    <h2 class="section-title">Distribución de Probabilidades</h2>
+    <p>Imagina que el prompt fue: <em>"El perro jugaba en el..."</em>. A continuación ves los Logits (crudos) para 5 posibles tokens siguientes. Modificá la <strong>Temperatura</strong> para ver cómo cambia la probabilidad final tras pasar por Softmax.</p>
+
+    <div class="demo-container">
+      <div class="demo-header">
+        <span class="demo-title">Softmax Temperature Explorer</span>
+      </div>
+
+      <div class="demo-layout">
+        <div class="chart-container" id="chart">
+          <!-- Bars -->
+        </div>
+      </div>
+
+      <div class="demo-controls-bar">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Temperature ($T$)</span>
+          <input type="range" id="sl-temp" min="0.1" max="3.0" step="0.1" value="1.0">
+          <span class="val-pill" id="vl-temp">1.0</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <a href="27_llm_pretraining.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="29_llm_escala.html">Próximo →</a>
+  </nav>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEMO: TEMPERATURE SOFTMAX SIMULATOR
+══════════════════════════════════════════════ */
+(function() {
+  const chart = document.getElementById('chart');
+  
+  // Raw Logits (z_i)
+  const tokens = [
+    { word: "parque", logit: 5.2 },
+    { word: "jardín", logit: 4.8 },
+    { word: "patio",  logit: 4.1 },
+    { word: "espacio",logit: 2.0 },
+    { word: "cielo",  logit: 0.5 }
+  ];
+
+  // DOM elements
+  const bars = [];
+  
+  // Init DOM
+  tokens.forEach(t => {
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    
+    const val = document.createElement('div');
+    val.className = 'bar-val';
+    val.textContent = '0%';
+
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    
+    const lbl = document.createElement('div');
+    lbl.className = 'bar-label';
+    lbl.textContent = t.word;
+
+    col.appendChild(val);
+    col.appendChild(bar);
+    col.appendChild(lbl);
+    chart.appendChild(col);
+    
+    bars.push({ bar, val });
+  });
+
+  function updateSoftmax(T) {
+    // Math: exp(z_i / T)
+    let exps = tokens.map(t => Math.exp(t.logit / T));
+    let sum = exps.reduce((a, b) => a + b, 0);
+    
+    let probs = exps.map(e => e / sum);
+
+    // Find max to highlight
+    let maxIdx = probs.indexOf(Math.max(...probs));
+
+    // Update UI
+    probs.forEach((p, i) => {
+      const percentage = (p * 100).toFixed(1);
+      bars[i].bar.style.height = `${percentage}%`;
+      bars[i].val.textContent = `${percentage}%`;
+      
+      // Color
+      if (T <= 0.2 && i === maxIdx) {
+        bars[i].bar.style.backgroundColor = 'var(--accent-hover)'; // Highlight greedy choice
+      } else {
+        bars[i].bar.style.backgroundColor = 'var(--accent)';
+      }
+    });
+  }
+
+  document.getElementById('sl-temp').addEventListener('input', function() {
+    const T = parseFloat(this.value);
+    document.getElementById('vl-temp').textContent = T.toFixed(1);
+    updateSoftmax(T);
+  });
+
+  // Init
+  updateSoftmax(1.0);
+
+})();
+</script>
+</body>
+</html>
+

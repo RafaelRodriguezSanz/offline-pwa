@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>IA desde Cero — Jerarquía Cortical</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500&family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #f5f0eb; --bg-surface: #faf7f4; --bg-raised: #ffffff;
+      --border-subtle: #e8e1d9; --border-default: #d9d0c7; --border-strong: #bfb5ab;
+      --text-primary: #1a1714; --text-secondary: #4a4540; --text-muted: #8c847c;
+      --accent: #9c27b0; --accent-bg: rgba(156,39,176,0.08);
+      --font-serif: 'Crimson Pro', serif; --font-mono: 'Geist Mono', monospace; --font-sans: 'Geist', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); line-height: 1.7; padding: 0 1.5rem 5rem; max-width: 860px; margin: 0 auto; }
+    .topbar { padding:1.25rem 0; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; }
+    h1 { font-family:var(--font-serif); font-size:2.6rem; font-weight:400; line-height: 1.2; margin-bottom: 0.75rem;}
+    h2 { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin: 2rem 0 0.5rem; }
+    p, ul { color:var(--text-secondary); margin-bottom:1rem; }
+    ul { padding-left: 1.5rem; }
+    code { font-family: var(--font-mono); font-size: 0.85em; background: rgba(0,0,0,0.05); padding: 0.1em 0.3em; border-radius: 3px; }
+    .module-badge { font-family:var(--font-mono); font-size:0.67rem; padding:0.28em 0.75em; border-radius:999px; border:1px solid var(--accent); color:var(--accent); background:var(--accent-bg); margin-bottom:1rem; display: inline-block;}
+    
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:10px; padding:2rem; margin:1.5rem 0; text-align: center; }
+    .hierarchy { display: flex; justify-content: space-between; align-items: center; }
+    .brain-region { padding: 1rem; border: 2px solid var(--border-strong); border-radius: 8px; width: 28%; background: var(--bg-surface); transition: 0.3s; }
+    .brain-region.active { border-color: var(--accent); background: var(--accent-bg); transform: scale(1.05); }
+    .region-title { font-weight: 600; font-family: var(--font-mono); font-size: 0.9rem; }
+    .arrow { font-size: 2rem; color: var(--text-muted); transition: 0.3s; }
+    .arrow.active { color: var(--accent); }
+    button { font-family:var(--font-mono); padding:0.5em 1em; border-radius:6px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; }
+    
+    .module-nav { display:flex; justify-content:space-between; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a> › Área 9 › <span style="color:var(--text-secondary)">Módulo 44 · Corteza</span></nav>
+  <span class="module-badge">● BIO · Módulo 44</span>
+  <h1>Jerarquía Cortical y Mapas</h1>
+  <p>En el código de <code>my-brain</code>, la corteza se implementa a través de la clase <code>CorticalMap</code>, que instancia una red de múltiples microcolumnas (<code>LIFColumn</code>) conectadas entre sí formando una jerarquía estructurada.</p>
+  
+  <h2>Flujo de Procesamiento V1 → IT → PFC</h2>
+  <p>En lugar de conectar todo con todo (como en un Perceptrón Multicapa denso), el mapa cortical es biológicamente fiel:</p>
+  <ul>
+    <li><strong>V1 (Visual Primaria):</strong> Procesa inputs tempranos (mediante un <code>CorticalSurface</code> previo opcional que extrae bordes retinotópicos).</li>
+    <li><strong>IT (Temporal Inferior):</strong> Integra las señales <em>Feedforward</em> de la Capa 2/3 de V1 para reconocer objetos complejos.</li>
+    <li><strong>PFC (Prefrontal Cortex):</strong> Mantiene la memoria de trabajo y controla la atención mediante proyecciones de <em>Feedback</em> (Capa 5 → Capa 2/3 anterior).</li>
+  </ul>
+  <p><strong>Carga Diferida (Lazy Loading):</strong> Debido a lo costoso que es simular miles de neuronas, <code>my-brain</code> implementa un <code>LazyAreaLoader</code> que descarga de la memoria RAM (hacia la base de datos) las áreas corticales que no están siendo estimuladas actualmente por el Tálamo.</p>
+
+  <div class="demo-container">
+    <div style="font-size: 3rem; margin-bottom: 1rem;" id="stimulus">👁️</div>
+    <div class="hierarchy">
+      <div class="brain-region" id="reg-v1"><div class="region-title">V1</div><div style="font-size:0.8rem">Bordes y contraste</div></div>
+      <div class="arrow" id="arr-1">→</div>
+      <div class="brain-region" id="reg-it"><div class="region-title">IT</div><div style="font-size:0.8rem">Objetos complejos</div></div>
+      <div class="arrow" id="arr-2">→</div>
+      <div class="brain-region" id="reg-pfc"><div class="region-title">PFC</div><div style="font-size:0.8rem">Contexto y Categoría</div></div>
+    </div>
+    <div style="margin-top: 2rem;">
+      <button id="btn-propagate">▶ Iniciar Procesamiento Cortical</button>
+    </div>
+  </div>
+
+  <nav class="module-nav">
+    <a href="43_bio_snn.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="45_bio_talamo.html">Próximo →</a>
+  </nav>
+
+  <script>
+    const btn = document.getElementById('btn-propagate');
+    const v1 = document.getElementById('reg-v1'), it = document.getElementById('reg-it'), pfc = document.getElementById('reg-pfc');
+    const a1 = document.getElementById('arr-1'), a2 = document.getElementById('arr-2');
+
+    btn.addEventListener('click', () => {
+      btn.disabled = true;
+      [v1, it, pfc, a1, a2].forEach(e => e.classList.remove('active'));
+      
+      setTimeout(() => v1.classList.add('active'), 500);
+      setTimeout(() => a1.classList.add('active'), 1200);
+      setTimeout(() => { v1.classList.remove('active'); it.classList.add('active'); }, 1800);
+      setTimeout(() => a2.classList.add('active'), 2500);
+      setTimeout(() => { it.classList.remove('active'); pfc.classList.add('active'); }, 3100);
+      setTimeout(() => { pfc.classList.remove('active'); a1.classList.remove('active'); a2.classList.remove('active'); btn.disabled = false; }, 4500);
+    });
+  </script>
+</body>
+</html>
+

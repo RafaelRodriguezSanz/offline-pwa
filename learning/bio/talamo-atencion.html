@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>IA desde Cero — Tálamo y TRN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500&family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #f5f0eb; --bg-surface: #faf7f4; --bg-raised: #ffffff;
+      --border-subtle: #e8e1d9; --border-default: #d9d0c7; --border-strong: #bfb5ab;
+      --text-primary: #1a1714; --text-secondary: #4a4540; --text-muted: #8c847c;
+      --accent: #9c27b0; --accent-bg: rgba(156,39,176,0.08);
+      --font-serif: 'Crimson Pro', serif; --font-mono: 'Geist Mono', monospace; --font-sans: 'Geist', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-sans); line-height: 1.7; padding: 0 1.5rem 5rem; max-width: 860px; margin: 0 auto; }
+    .topbar { padding:1.25rem 0; font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); border-bottom:1px solid var(--border-subtle); margin-bottom:2.5rem; }
+    .topbar a { color:var(--text-muted); text-decoration:none; }
+    h1 { font-family:var(--font-serif); font-size:2.6rem; font-weight:400; line-height: 1.2; margin-bottom: 0.75rem;}
+    h2 { font-family:var(--font-serif); font-size:1.45rem; font-weight:400; margin: 2rem 0 0.5rem; }
+    p, ul { color:var(--text-secondary); margin-bottom:1rem; }
+    code { font-family: var(--font-mono); font-size: 0.85em; background: rgba(0,0,0,0.05); padding: 0.1em 0.3em; border-radius: 3px; }
+    .module-badge { font-family:var(--font-mono); font-size:0.67rem; padding:0.28em 0.75em; border-radius:999px; border:1px solid var(--accent); color:var(--accent); background:var(--accent-bg); margin-bottom:1rem; display: inline-block;}
+    
+    .demo-container { background:var(--bg-raised); border:1px solid var(--border-default); border-radius:10px; padding:2rem; margin:1.5rem 0; text-align: center; }
+    .channel { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .signal-path { flex: 1; height: 4px; background: var(--border-strong); position: relative; margin: 0 1rem; border-radius: 2px;}
+    .pulse { width: 12px; height: 12px; background: #4caf50; border-radius: 50%; position: absolute; top: -4px; left: 0; opacity: 0; transition: left 0.8s linear;}
+    .pulse.active { left: 100%; opacity: 1; }
+    
+    .gate { padding: 0.5rem 1rem; font-family: var(--font-mono); font-size: 0.8rem; border-radius: 6px; cursor: pointer; user-select: none; border: 2px solid #d32f2f; background: #ffebee; color: #c62828; }
+    .gate.open { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; }
+    
+    .module-nav { display:flex; justify-content:space-between; padding:1.5rem 0; border-top:1px solid var(--border-subtle); margin-top:3rem; }
+    .module-nav a { font-family:var(--font-mono); font-size:0.73rem; color:var(--text-muted); text-decoration:none; }
+
+    /* ── RESPONSIVE (Mobile First) ── */
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 0 1rem 3.5rem; }
+      .topbar { flex-wrap: wrap; gap: 0.25rem; font-size: 0.65rem; }
+      .module-title { font-size: 1.8rem; }
+      .module-meta { gap: 0.75rem; }
+      .inference-panel { grid-template-columns: 1fr; }
+      .module-nav { flex-direction: column; gap: 1rem; text-align: center; }
+      .demo-container { padding: 1rem; }
+      .math-block { padding: 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="topbar">
+    <a href="../../index.html" title="Volver a la App Principal">🏠</a><span class="sep">›</span>
+    <a href="index.html">IA desde Cero</a> › Área 9 › <span style="color:var(--text-secondary)">Módulo 45 · Tálamo</span></nav>
+  <span class="module-badge">● BIO · Módulo 45</span>
+  <h1>Tálamo y Gating Atencional</h1>
+  <p>Casi toda la información sensorial de tu cuerpo pasa primero por el Tálamo. En <code>core/thalamus.py</code>, el proyecto <code>my-brain</code> simula este "router atencional".</p>
+  
+  <h2>LGN y el Núcleo Reticular (TRN)</h2>
+  <p>El Tálamo se compone del <strong>LGN</strong> (200 neuronas de relevo visual) envuelto por una malla inhibitoria llamada <strong>TRN</strong> (60 neuronas). El PFC envía señales Top-Down (de arriba hacia abajo) al TRN para que bloquee o deje pasar la información. Esta es la base biológica del <em>Gating</em> Atencional:</p>
+  <ul>
+    <li><strong>Atención:</strong> El TRN "abre la compuerta" (inhibe la inhibición local), permitiendo que el LGN envíe *bursts* (ráfagas) a V1-L4.</li>
+    <li><strong>Distracción / Ignorar:</strong> El TRN inhibe al LGN, bloqueando el paso del estímulo hacia la corteza.</li>
+  </ul>
+
+  <div class="demo-container">
+    <p style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2rem;">Haz clic en el Filtro TRN para permitir o bloquear el flujo hacia el Neocórtex.</p>
+    
+    <div class="channel">
+      <div style="font-size: 2rem;">👁️</div>
+      <div class="signal-path"><div class="pulse" id="p-vis"></div></div>
+      <div class="gate open" id="g-vis">TRN: ABIERTO</div>
+      <div class="signal-path" id="path-vis-out"><div class="pulse" id="p-vis-out"></div></div>
+      <div style="font-family: var(--font-mono); font-size: 0.8rem; width: 60px;">V1</div>
+    </div>
+
+    <div class="channel">
+      <div style="font-size: 2rem;">👂</div>
+      <div class="signal-path"><div class="pulse" id="p-aud"></div></div>
+      <div class="gate" id="g-aud">TRN: CERRADO</div>
+      <div class="signal-path" id="path-aud-out" style="opacity: 0.3;"><div class="pulse" id="p-aud-out"></div></div>
+      <div style="font-family: var(--font-mono); font-size: 0.8rem; width: 60px;">A1</div>
+    </div>
+  </div>
+
+  <nav class="module-nav">
+    <a href="44_bio_corteza.html">← Anterior</a>
+    <a href="index.html">Índice</a>
+    <a href="46_bio_hipocampo.html">Próximo →</a>
+  </nav>
+
+  <script>
+    function setup(idBase) {
+      const g = document.getElementById('g-' + idBase);
+      const pIn = document.getElementById('p-' + idBase);
+      const pOut = document.getElementById('p-' + idBase + '-out');
+      const pOutPath = document.getElementById('path-' + idBase + '-out');
+      
+      g.addEventListener('click', () => {
+        g.classList.toggle('open');
+        if(g.classList.contains('open')) {
+          g.textContent = 'TRN: ABIERTO';
+          pOutPath.style.opacity = '1';
+        } else {
+          g.textContent = 'TRN: CERRADO';
+          pOutPath.style.opacity = '0.3';
+        }
+      });
+
+      setInterval(() => {
+        // Reset
+        pIn.style.transition = 'none'; pIn.style.left = '0'; pIn.style.opacity = '0';
+        pOut.style.transition = 'none'; pOut.style.left = '0'; pOut.style.opacity = '0';
+        
+        // Fire Input
+        setTimeout(() => {
+          pIn.style.transition = 'left 0.4s linear';
+          pIn.style.opacity = '1';
+          pIn.style.left = '100%';
+        }, 50);
+
+        // Fire Output if Open
+        setTimeout(() => {
+          if(g.classList.contains('open')) {
+            pOut.style.transition = 'left 0.4s linear';
+            pOut.style.opacity = '1';
+            pOut.style.left = '100%';
+          }
+        }, 450);
+      }, 1000);
+    }
+    setup('vis');
+    setup('aud');
+  </script>
+</body>
+</html>
+
