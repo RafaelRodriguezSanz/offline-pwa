@@ -3,7 +3,7 @@
  */
 
 export const DB_NAME    = "appDB";
-export const DB_VERSION = 6;
+export const DB_VERSION = 7;
 
 export function openDB() {
   return new Promise((resolve, reject) => {

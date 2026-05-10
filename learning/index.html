@@ -300,19 +300,32 @@
     .progress-container { width: 100%; height: 3px; background: var(--border-subtle); border-radius: 2px; margin: 0.4rem 0 1.2rem; overflow: hidden; }
     .progress-bar { height: 100%; background: var(--tag-ml); width: 0%; transition: width 0.5s ease; }
     
-    .module-card { position: relative; }
+    .module-item { position: relative; } .module-card { position: relative; padding-bottom: 0.9rem; }
     .card-read-toggle {
-      position: absolute; top: 0.8rem; right: 1.1rem;
-      width: 20px; height: 20px;
-      border: 1.5px solid var(--border-strong); border-radius: 6px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s; z-index: 10; background: var(--bg-raised);
+      position: absolute; bottom: 0.9rem; right: 1.1rem;
+      width: 32px; height: 18px;
+      background: var(--border-strong); border-radius: 10px;
+      cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 20;
     }
-    .card-read-toggle::after { content: '✓'; font-size: 13px; color: white; display: none; font-weight: bold; }
-    .module-card.is-read .card-read-toggle { background: var(--tag-ml); border-color: var(--tag-ml); }
-    .module-card.is-read .card-read-toggle::after { display: block; }
-    .module-card.is-read { background: var(--bg-surface); opacity: 0.8; }
+    .card-read-toggle::after {
+      content: '';
+      position: absolute; top: 3px; left: 3px;
+      width: 12px; height: 12px;
+      background: white; border-radius: 50%;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: block;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .card-read-toggle.active {
+      background: var(--tag-ml);
+    }
+    .card-read-toggle.active::after {
+      transform: translateX(14px);
+    }
+    .module-card.is-read { background: var(--bg-surface); opacity: 0.85; }
     .module-card.is-read .card-title { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--text-faint); }
+    .card-tags { margin-bottom: 1.5rem; }
   </style>
 </head>
 <body>
@@ -353,46 +366,46 @@
       <div class="track-desc">Razonamiento simbólico, lógica formal y búsqueda. La IA antes del aprendizaje automático.</div>
     </div>
     <div class="modules-grid">
-      <a data-module-id="m1" href="01_gofai_sistemas_expertos.html" class="module-card card-gofai"><div class="card-read-toggle" title="Marcar como leído"></div>
+      <div class="module-item"><a data-module-id="m1" href="01_gofai_sistemas_expertos.html" class="module-card card-gofai">
         <div class="card-num">1</div>
         <div class="card-body">
           <div class="card-title">Sistemas Expertos &amp; Motores de Inferencia</div>
           <div class="card-desc">Bases de conocimiento, reglas IF→THEN, forward y backward chaining. Demo: diagnóstico médico paso a paso.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">lógica</span></div>
-      </a>
-      <a data-module-id="m2" href="02_gofai_busqueda.html" class="module-card card-gofai"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m1" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m2" href="02_gofai_busqueda.html" class="module-card card-gofai">
         <div class="card-num">2</div>
         <div class="card-body">
           <div class="card-title">Búsqueda en Grafos: BFS, DFS &amp; A*</div>
           <div class="card-desc">Espacios de estado, heurísticas admisibles, función $f = g + h$. Demo: laberinto con traza visual.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">algoritmos</span></div>
-      </a>
-      <a data-module-id="m3" href="03_gofai_minimax.html" class="module-card card-gofai"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m2" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m3" href="03_gofai_minimax.html" class="module-card card-gofai">
         <div class="card-num">3</div>
         <div class="card-body">
           <div class="card-title">Juegos de Suma Cero: Minimax &amp; Alfa-Beta</div>
           <div class="card-desc">Árboles de juego, turno MAX/MIN, poda de ramas. Demo: Juega Tic-Tac-Toe contra un Minimax perfecto.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
-      </a>
-      <a data-module-id="m4" href="04_gofai_logica.html" class="module-card card-gofai"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m3" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m4" href="04_gofai_logica.html" class="module-card card-gofai">
         <div class="card-num">4</div>
         <div class="card-body">
           <div class="card-title">Lógica de Primer Orden &amp; Resolución</div>
           <div class="card-desc">Predicados, cuantificadores, unificación de Robinson, Prolog. Demo: motor de resolución en browser.</div>
         </div>
         <div class="card-tags"><span class="tag tag-code">código</span><span class="tag tag-math">lógica</span></div>
-      </a>
-      <a data-module-id="m5" href="05_gofai_csp.html" class="module-card card-gofai"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m4" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m5" href="05_gofai_csp.html" class="module-card card-gofai">
         <div class="card-num">5</div>
         <div class="card-body">
           <div class="card-title">Satisfacción de Restricciones (CSP)</div>
           <div class="card-desc">Variables, dominios, arc-consistency (AC-3), backtracking. Demo: N-Reinas y Sudoku interactivo.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
-      </a>
+      </a><div class="card-read-toggle" data-module-id="m5" title="Marcar como leído"></div></div>
     </div>
   </div>
 
@@ -406,70 +419,70 @@
       <div class="track-desc">El giro de "escribir reglas" a "aprender de datos". Probabilidad, optimización y generalización.</div>
     </div>
     <div class="modules-grid">
-      <a data-module-id="m6" href="06_ml_regresion.html" class="module-card card-ml"><div class="card-read-toggle" title="Marcar como leído"></div>
+      <div class="module-item"><a data-module-id="m6" href="06_ml_regresion.html" class="module-card card-ml">
         <div class="card-num">6</div>
         <div class="card-body">
           <div class="card-title">Regresión Lineal &amp; Gradiente Descendente</div>
           <div class="card-desc">MSE, derivadas parciales, learning rate, convergencia. Demo: ajustá la recta en tiempo real.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">cálculo</span></div>
-      </a>
-      <a data-module-id="m7" href="07_ml_kmeans.html" class="module-card card-ml"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m6" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m7" href="07_ml_kmeans.html" class="module-card card-ml">
         <div class="card-num">7</div>
         <div class="card-body">
           <div class="card-title">Aprendizaje No Supervisado: K-Means</div>
           <div class="card-desc">Clustering, centroides, distancia euclidiana, descubrimiento de patrones. Demo: Agrupación interactiva 2D.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
-      </a>
-      <a data-module-id="m8" href="08_ml_pca.html" class="module-card card-ml"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m7" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m8" href="08_ml_pca.html" class="module-card card-ml">
         <div class="card-num">8</div>
         <div class="card-body">
           <div class="card-title">Reducción de Dimensionalidad: PCA &amp; t-SNE</div>
           <div class="card-desc">Varianza máxima, compresión del espacio. Demo: Proyecta una nube 3D a 2D matemáticamente.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">álgebra</span></div>
-      </a>
-      <a data-module-id="m9" href="09_ml_clasificacion.html" class="module-card card-ml"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m8" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m9" href="09_ml_clasificacion.html" class="module-card card-ml">
         <div class="card-num">9</div>
         <div class="card-body">
           <div class="card-title">Clasificación: Logística, SVM &amp; KNN</div>
           <div class="card-desc">Fronteras de decisión, kernel trick, distancias de Minkowski. Demo: dibujá puntos y observá el clasificador.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">álgebra</span></div>
-      </a>
-      <a data-module-id="m10" href="10_ml_naive_bayes.html" class="module-card card-ml"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m9" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m10" href="10_ml_naive_bayes.html" class="module-card card-ml">
         <div class="card-num">10</div>
         <div class="card-body">
           <div class="card-title">Probabilidad: Clasificador Naive Bayes</div>
           <div class="card-desc">Probabilidad condicional y Teorema de Bayes. Demo: Filtro anti-spam interactivo con vocabularios.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">estadística</span></div>
-      </a>
-      <a data-module-id="m11" href="11_ml_arboles.html" class="module-card card-ml"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m10" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m11" href="11_ml_arboles.html" class="module-card card-ml">
         <div class="card-num">11</div>
         <div class="card-body">
           <div class="card-title">Árboles de Decisión &amp; Random Forest</div>
           <div class="card-desc">Entropía, ganancia de información, bagging, feature importance. Demo: árbol que crece en vivo.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
-      </a>
-      <a data-module-id="m12" href="12_ml_boosting.html" class="module-card card-ml"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m11" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m12" href="12_ml_boosting.html" class="module-card card-ml">
         <div class="card-num">12</div>
         <div class="card-body">
           <div class="card-title">Métodos Ensemble: Gradient Boosting &amp; XGBoost</div>
           <div class="card-desc">Árboles débiles sumados en cascada para corregir residuos. Demo: Ajuste secuencial de curva 2D.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
-      </a>
-      <a data-module-id="m13" href="13_ml_bias_variance.html" class="module-card card-ml"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m12" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m13" href="13_ml_bias_variance.html" class="module-card card-ml">
         <div class="card-num">13</div>
         <div class="card-body">
           <div class="card-title">Biasâ€“Variance, Overfitting &amp; Regularización</div>
           <div class="card-desc">Trade-off bias/varianza, L1 (Lasso), L2 (Ridge), cross-validation. Demo: deslizá la complejidad del modelo.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">estadística</span></div>
-      </a>
+      </a><div class="card-read-toggle" data-module-id="m13" title="Marcar como leído"></div></div>
     </div>
   </div>
 
@@ -483,14 +496,14 @@
       <div class="track-desc">Recompensas, castigos y Ecuación de Bellman. Entrenando agentes que toman decisiones.</div>
     </div>
     <div class="modules-grid">
-      <a data-module-id="m14" href="14_rl_qlearning.html" class="module-card" style="border-left-color: #1976d2;"><div class="card-read-toggle" title="Marcar como leído"></div>
+      <div class="module-item"><a data-module-id="m14" href="14_rl_qlearning.html" class="module-card" style="border-left-color: #1976d2;">
         <div class="card-num">14</div>
         <div class="card-body">
           <div class="card-title">Q-Learning &amp; Procesos de Decisión de Markov</div>
           <div class="card-desc">Exploración vs Explotación, Ecuación de Bellman, Tabla Q. Demo: Entrena un agente para resolver un laberinto en vivo.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive" style="color:#1976d2; border-color:rgba(25,118,210,0.2); background:rgba(25,118,210,0.05);">interactivo</span><span class="tag tag-math" style="color:#1976d2; border-color:rgba(25,118,210,0.2); background:rgba(25,118,210,0.05);">algoritmos</span></div>
-      </a>
+      </a><div class="card-read-toggle" data-module-id="m14" title="Marcar como leído"></div></div>
     </div>
   </div>
 
@@ -504,46 +517,46 @@
       <div class="track-desc">De la neurona biológica al backpropagation. El bloque constructivo de todo lo que sigue.</div>
     </div>
     <div class="modules-grid">
-      <a data-module-id="m15" href="15_nn_perceptron.html" class="module-card card-nn"><div class="card-read-toggle" title="Marcar como leído"></div>
+      <div class="module-item"><a data-module-id="m15" href="15_nn_perceptron.html" class="module-card card-nn">
         <div class="card-num">15</div>
         <div class="card-body">
           <div class="card-title">El Perceptrón &amp; Funciones de Activación</div>
           <div class="card-desc">Pesos, bias, step / sigmoid / ReLU / tanh. Demo: perceptrón que aprende AND y OR, visualización de pesos.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
-      </a>
-      <a data-module-id="m16" href="16_nn_mlp.html" class="module-card card-nn"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m15" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m16" href="16_nn_mlp.html" class="module-card card-nn">
         <div class="card-num">16</div>
         <div class="card-body">
           <div class="card-title">MLP &amp; Forward Propagation</div>
           <div class="card-desc">Capas ocultas, transformaciones afines, composición de funciones. Demo: propagá un input capa a capa.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">álgebra lineal</span></div>
-      </a>
-      <a data-module-id="m17" href="17_nn_backprop.html" class="module-card card-nn"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m16" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m17" href="17_nn_backprop.html" class="module-card card-nn">
         <div class="card-num">17</div>
         <div class="card-body">
           <div class="card-title">Backpropagation &amp; Regla de la Cadena</div>
           <div class="card-desc">Grafo computacional, gradientes, chain rule, $\partial L/\partial w$. Demo: flujo de gradientes hacia atrás.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">cálculo</span></div>
-      </a>
-      <a data-module-id="m18" href="18_nn_optimizadores.html" class="module-card card-nn"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m17" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m18" href="18_nn_optimizadores.html" class="module-card card-nn">
         <div class="card-num">18</div>
         <div class="card-body">
           <div class="card-title">Optimizadores: SGD, Momentum &amp; Adam</div>
           <div class="card-desc">Superficies de pérdida, saddle points, momentos de primer y segundo orden. Demo: compará optimizadores en vivo.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">optimización</span></div>
-      </a>
-      <a data-module-id="m19" href="19_nn_saddle.html" class="module-card card-nn"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m18" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m19" href="19_nn_saddle.html" class="module-card card-nn">
         <div class="card-num">19</div>
         <div class="card-body">
           <div class="card-title">Paisajes de Pérdida &amp; Saddle Points</div>
           <div class="card-desc">Mesetas multidimensionales. Demo: Contornos 2D donde SGD se atasca y Adam escapa.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
-      </a>
+      </a><div class="card-read-toggle" data-module-id="m19" title="Marcar como leído"></div></div>
     </div>
   </div>
 
@@ -557,46 +570,46 @@
       <div class="track-desc">CNNs, RNNs, embeddings y atención. Cómo las redes profundas procesan imágenes, texto y secuencias.</div>
     </div>
     <div class="modules-grid">
-      <a data-module-id="m20" href="20_dl_cnn.html" class="module-card card-dl"><div class="card-read-toggle" title="Marcar como leído"></div>
+      <div class="module-item"><a data-module-id="m20" href="20_dl_cnn.html" class="module-card card-dl">
         <div class="card-num">20</div>
         <div class="card-body">
           <div class="card-title">Redes Convolucionales (CNN)</div>
           <div class="card-desc">Convolución discreta, pooling, receptive field, feature maps. Demo: kernel que detecta bordes en una imagen.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
-      </a>
-      <a data-module-id="m21" href="21_dl_rnn_lstm.html" class="module-card card-dl"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m20" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m21" href="21_dl_rnn_lstm.html" class="module-card card-dl">
         <div class="card-num">21</div>
         <div class="card-body">
           <div class="card-title">RNN, LSTM &amp; GRU</div>
           <div class="card-desc">Memoria recurrente, vanishing gradients, puertas de olvido/entrada/salida. Demo: predicción de serie temporal.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">álgebra</span></div>
-      </a>
-      <a data-module-id="m22" href="22_dl_embeddings.html" class="module-card card-dl"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m21" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m22" href="22_dl_embeddings.html" class="module-card card-dl">
         <div class="card-num">22</div>
         <div class="card-body">
           <div class="card-title">Embeddings &amp; Representaciones Vectoriales</div>
           <div class="card-desc">Word2Vec, similitud coseno, espacio latente, analogías. Demo: explorá relaciones semánticas en 2D.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
-      </a>
-      <a data-module-id="m23" href="23_dl_atencion.html" class="module-card card-dl"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m22" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m23" href="23_dl_atencion.html" class="module-card card-dl">
         <div class="card-num">23</div>
         <div class="card-body">
           <div class="card-title">Mecanismo de Atención</div>
           <div class="card-desc">Queries, keys, values, scaled dot-product, softmax. El puente directo al Transformer.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">álgebra</span></div>
-      </a>
-      <a data-module-id="m24" href="24_dl_gans.html" class="module-card card-dl"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m23" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m24" href="24_dl_gans.html" class="module-card card-dl">
         <div class="card-num">24</div>
         <div class="card-body">
           <div class="card-title">Modelado Generativo: Autoencoders &amp; GANs</div>
           <div class="card-desc">Espacio latente, cuellos de botella, decodificación. Demo: Controla un espacio latente de rostros (5x5).</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
-      </a>
+      </a><div class="card-read-toggle" data-module-id="m24" title="Marcar como leído"></div></div>
     </div>
   </div>
 
@@ -610,70 +623,70 @@
       <div class="track-desc">La arquitectura Transformer completa, tokenización, pretraining, RLHF y el estado del arte.</div>
     </div>
     <div class="modules-grid">
-      <a data-module-id="m25" href="25_llm_transformer.html" class="module-card card-llm"><div class="card-read-toggle" title="Marcar como leído"></div>
+      <div class="module-item"><a data-module-id="m25" href="25_llm_transformer.html" class="module-card card-llm">
         <div class="card-num">25</div>
         <div class="card-body">
           <div class="card-title">La Arquitectura Transformer</div>
           <div class="card-desc">Multi-head self-attention, positional encoding, encoder/decoder, layer norm. Demo: flujo de un token.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">álgebra</span></div>
-      </a>
-      <a data-module-id="m26" href="26_llm_tokenizacion.html" class="module-card card-llm"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m25" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m26" href="26_llm_tokenizacion.html" class="module-card card-llm">
         <div class="card-num">26</div>
         <div class="card-body">
           <div class="card-title">Tokenización &amp; Vocabulario</div>
           <div class="card-desc">BPE, WordPiece, SentencePiece, vocabulario de 50K tokens. Demo: tokenizá texto y ve los IDs en tiempo real.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-code">código</span></div>
-      </a>
-      <a data-module-id="m27" href="27_llm_pretraining.html" class="module-card card-llm"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m26" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m27" href="27_llm_pretraining.html" class="module-card card-llm">
         <div class="card-num">27</div>
         <div class="card-body">
           <div class="card-title">Pretraining, Fine-tuning &amp; RLHF</div>
           <div class="card-desc">Modelado de lenguaje causal, instruction tuning, reward model, PPO. El pipeline completo de GPT/Claude.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">probabilidad</span></div>
-      </a>
-      <a data-module-id="m28" href="28_llm_generacion.html" class="module-card card-llm"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m27" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m28" href="28_llm_generacion.html" class="module-card card-llm">
         <div class="card-num">28</div>
         <div class="card-body">
           <div class="card-title">Generación: Temperature, Top-p &amp; Beam Search</div>
           <div class="card-desc">Distribuciones sobre vocabulario, sampling, greedy vs. estocástico. Demo: generá con distintos parámetros.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-math">probabilidad</span></div>
-      </a>
-      <a data-module-id="m29" href="29_llm_escala.html" class="module-card card-llm"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m28" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m29" href="29_llm_escala.html" class="module-card card-llm">
         <div class="card-num">29</div>
         <div class="card-body">
           <div class="card-title">Leyes de Escala &amp; Capacidades Emergentes</div>
           <div class="card-desc">Chinchilla scaling laws, in-context learning, chain-of-thought. Demo: curvas de pérdida interactivas.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">estadística</span></div>
-      </a>
-      <a data-module-id="m30" href="30_llm_arquitecturas.html" class="module-card card-llm"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m29" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m30" href="30_llm_arquitecturas.html" class="module-card card-llm">
         <div class="card-num">30</div>
         <div class="card-body">
           <div class="card-title">Arquitecturas Actuales: GPT, Llama, Claude</div>
           <div class="card-desc">KV-cache, Flash Attention, GQA, MoE, RoPE. Comparativa técnica del estado del arte.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-code">técnico</span></div>
-      </a>
-      <a data-module-id="m31" href="31_llm_rag.html" class="module-card card-llm"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m30" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m31" href="31_llm_rag.html" class="module-card card-llm">
         <div class="card-num">31</div>
         <div class="card-body">
           <div class="card-title">RAG (Retrieval-Augmented Generation)</div>
           <div class="card-desc">Bases de datos vectoriales, similitud semántica, inyección de contexto. Demo: Pipeline RAG en tiempo real.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-visual">visual</span></div>
-      </a>
-      <a data-module-id="m32" href="32_llm_agentes_herramientas.html" class="module-card card-llm"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m31" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m32" href="32_llm_agentes_herramientas.html" class="module-card card-llm">
         <div class="card-num">32</div>
         <div class="card-body">
           <div class="card-title">LLM Agénticos: Tool Use, Planning y Orquestación</div>
           <div class="card-desc">De chatbots a agentes: planificación, uso de herramientas y control de errores con un modelo formal costo-riesgo.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">agentes</span><span class="tag tag-code">tool-use</span></div>
-      </a>
+      </a><div class="card-read-toggle" data-module-id="m32" title="Marcar como leído"></div></div>
 
     </div>
   </div>
@@ -688,46 +701,46 @@
       <div class="track-desc">Optimización inspirada en la selección natural. Poblaciones, mutación, cruce y fitness. Sin gradientes.</div>
     </div>
     <div class="modules-grid">
-      <a data-module-id="m33" href="33_ga_fundamentos.html" class="module-card card-ga"><div class="card-read-toggle" title="Marcar como leído"></div>
+      <div class="module-item"><a data-module-id="m33" href="33_ga_fundamentos.html" class="module-card card-ga">
         <div class="card-num">33</div>
         <div class="card-body">
           <div class="card-title">Fundamentos: Cromosomas, Fitness &amp; Selección</div>
           <div class="card-desc">Representación binaria y real, función de aptitud, ruleta y torneo. Demo: evolución en tiempo real sobre una función.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-bio">evolutivo</span></div>
-      </a>
-      <a data-module-id="m34" href="34_ga_operadores.html" class="module-card card-ga"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m33" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m34" href="34_ga_operadores.html" class="module-card card-ga">
         <div class="card-num">34</div>
         <div class="card-body">
           <div class="card-title">Operadores: Cruce, Mutación &amp; Elitismo</div>
           <div class="card-desc">Single/multi-point crossover, tasa de mutación, elitismo. Demo: observá cómo los genes se mezclan generación a generación.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-bio">evolutivo</span></div>
-      </a>
-      <a data-module-id="m35" href="35_ga_aplicaciones.html" class="module-card card-ga"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m34" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m35" href="35_ga_aplicaciones.html" class="module-card card-ga">
         <div class="card-num">35</div>
         <div class="card-body">
           <div class="card-title">Aplicaciones: TSP, Neuroevolución &amp; NEAT</div>
           <div class="card-desc">Traveling Salesman Problem, evolución de pesos neurales, topología adaptativa. Demo: GA resolviendo el TSP.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-bio">aplicado</span></div>
-      </a>
-      <a data-module-id="m36" href="36_ga_vs_gradiente.html" class="module-card card-ga"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m35" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m36" href="36_ga_vs_gradiente.html" class="module-card card-ga">
         <div class="card-num">36</div>
         <div class="card-body">
           <div class="card-title">GA vs. Gradiente &amp; Espacios No Diferenciables</div>
           <div class="card-desc">Cuándo usar evolución vs. backprop, paisajes de fitness rugosos, black-box optimization.</div>
         </div>
         <div class="card-tags"><span class="tag tag-math">comparativa</span><span class="tag tag-bio">teoría</span></div>
-      </a>
-      <a data-module-id="m37" href="37_ga_neat.html" class="module-card card-ga"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m36" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m37" href="37_ga_neat.html" class="module-card card-ga">
         <div class="card-num">37</div>
         <div class="card-body">
           <div class="card-title">Neuroevolución: Topologías NEAT</div>
           <div class="card-desc">Redes neuronales que crecen nodos y conexiones. Demo: Evolución estructural de una red.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-bio">evolutivo</span></div>
-      </a>
+      </a><div class="card-read-toggle" data-module-id="m37" title="Marcar como leído"></div></div>
     </div>
   </div>
 
@@ -741,46 +754,46 @@
       <div class="track-desc">Qubits, puertas cuánticas, algoritmos cuánticos y su intersección con el machine learning.</div>
     </div>
     <div class="modules-grid">
-      <a data-module-id="m38" href="38_qc_fundamentos.html" class="module-card card-qc"><div class="card-read-toggle" title="Marcar como leído"></div>
+      <div class="module-item"><a data-module-id="m38" href="38_qc_fundamentos.html" class="module-card card-qc">
         <div class="card-num">38</div>
         <div class="card-body">
           <div class="card-title">Qubits, Superposición &amp; Entrelazamiento</div>
           <div class="card-desc">Esfera de Bloch, braket notation $|\psi\rangle$, superposición y entrelazamiento EPR. Demo: qubit interactivo en esfera de Bloch.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-quantum">cuántico</span></div>
-      </a>
-      <a data-module-id="m39" href="39_qc_puertas.html" class="module-card card-qc"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m38" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m39" href="39_qc_puertas.html" class="module-card card-qc">
         <div class="card-num">39</div>
         <div class="card-body">
           <div class="card-title">Puertas Cuánticas &amp; Circuitos</div>
           <div class="card-desc">Hadamard, CNOT, Pauli X/Y/Z, matrices unitarias, reversibilidad. Demo: constructor de circuitos cuánticos.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual">visual</span><span class="tag tag-math">álgebra</span></div>
-      </a>
-      <a data-module-id="m40" href="40_qc_entrelazamiento.html" class="module-card card-qc"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m39" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m40" href="40_qc_entrelazamiento.html" class="module-card card-qc">
         <div class="card-num">40</div>
         <div class="card-body">
           <div class="card-title">Entrelazamiento &amp; Estados de Bell</div>
           <div class="card-desc">Sistemas multi-qubit, puertas CNOT y acción a distancia. Demo: Circuito cuántico de 2 Qubits.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive">interactivo</span><span class="tag tag-quantum">cuántico</span></div>
-      </a>
-      <a data-module-id="m41" href="41_qc_algoritmos.html" class="module-card card-qc"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m40" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m41" href="41_qc_algoritmos.html" class="module-card card-qc">
         <div class="card-num">41</div>
         <div class="card-body">
           <div class="card-title">Algoritmos Cuánticos: Grover &amp; Shor</div>
           <div class="card-desc">Búsqueda cuántica $O(\sqrt{N})$, factorización en tiempo polinomial, QFT. Implicaciones para criptografía.</div>
         </div>
         <div class="card-tags"><span class="tag tag-quantum">cuántico</span><span class="tag tag-math">algoritmos</span></div>
-      </a>
-      <a data-module-id="m42" href="42_qc_qml.html" class="module-card card-qc"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m41" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m42" href="42_qc_qml.html" class="module-card card-qc">
         <div class="card-num">42</div>
         <div class="card-body">
           <div class="card-title">Quantum Machine Learning (QML)</div>
           <div class="card-desc">Variational quantum circuits, quantum kernels, VQE, QAOA. La frontera entre QC y ML clásico.</div>
         </div>
         <div class="card-tags"><span class="tag tag-quantum">cuántico</span><span class="tag tag-math">avanzado</span></div>
-      </a>
+      </a><div class="card-read-toggle" data-module-id="m42" title="Marcar como leído"></div></div>
     </div>
   </div>
 
@@ -794,46 +807,46 @@
       <div class="track-desc">Modelos que replican la arquitectura real del cerebro humano. Redes pulsantes, tálamo e hipocampo.</div>
     </div>
     <div class="modules-grid">
-      <a data-module-id="m43" href="43_bio_snn.html" class="module-card" style="border-left-color: #9c27b0;"><div class="card-read-toggle" title="Marcar como leído"></div>
+      <div class="module-item"><a data-module-id="m43" href="43_bio_snn.html" class="module-card" style="border-left-color: #9c27b0;">
         <div class="card-num">43</div>
         <div class="card-body">
           <div class="card-title">Redes Neuronales Pulsantes (SNN)</div>
           <div class="card-desc">El modelo LIF (Leaky Integrate-and-Fire). Demo: Inyecta corriente a una neurona y observa los "spikes".</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">interactivo</span><span class="tag tag-bio" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">bio</span></div>
-      </a>
-      <a data-module-id="m44" href="44_bio_corteza.html" class="module-card" style="border-left-color: #9c27b0;"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m43" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m44" href="44_bio_corteza.html" class="module-card" style="border-left-color: #9c27b0;">
         <div class="card-num">44</div>
         <div class="card-body">
           <div class="card-title">Jerarquía Cortical y Microcolumnas</div>
           <div class="card-desc">Capas L4, L2/3, L5 y flujo V1→IT→PFC. Demo: Flujo jerárquico visual.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">visual</span><span class="tag tag-bio" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">bio</span></div>
-      </a>
-      <a data-module-id="m45" href="45_bio_talamo.html" class="module-card" style="border-left-color: #9c27b0;"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m44" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m45" href="45_bio_talamo.html" class="module-card" style="border-left-color: #9c27b0;">
         <div class="card-num">45</div>
         <div class="card-body">
           <div class="card-title">Tálamo y Atención Selectiva</div>
           <div class="card-desc">Núcleos LGN y TRN como filtro de información. Demo: Gating atencional de estímulos sensoriales.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">interactivo</span><span class="tag tag-bio" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">bio</span></div>
-      </a>
-      <a data-module-id="m46" href="46_bio_hipocampo.html" class="module-card" style="border-left-color: #9c27b0;"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m45" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m46" href="46_bio_hipocampo.html" class="module-card" style="border-left-color: #9c27b0;">
         <div class="card-num">46</div>
         <div class="card-body">
           <div class="card-title">Hipocampo y Memoria Episódica</div>
           <div class="card-desc">Separación (DG) y Completación (CA3) de patrones. Demo: Recuperación de memoria con claves parciales.</div>
         </div>
         <div class="card-tags"><span class="tag tag-interactive" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">interactivo</span><span class="tag tag-bio" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">bio</span></div>
-      </a>
-      <a data-module-id="m47" href="47_bio_neocortex.html" class="module-card" style="border-left-color: #9c27b0;"><div class="card-read-toggle" title="Marcar como leído"></div>
+      </a><div class="card-read-toggle" data-module-id="m46" title="Marcar como leído"></div></div>
+      <div class="module-item"><a data-module-id="m47" href="47_bio_neocortex.html" class="module-card" style="border-left-color: #9c27b0;">
         <div class="card-num">47</div>
         <div class="card-body">
           <div class="card-title">Neocórtex y Consolidación (Sueño)</div>
           <div class="card-desc">Transferencia de memorias del Hipocampo al Neocórtex a largo plazo (Replay nocturno). Demo: Consolidación offline a base de datos.</div>
         </div>
         <div class="card-tags"><span class="tag tag-visual" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">visual</span><span class="tag tag-bio" style="color:#9c27b0; border-color:rgba(156,39,176,0.2); background:rgba(156,39,176,0.05);">bio</span></div>
-      </a>
+      </a><div class="card-read-toggle" data-module-id="m47" title="Marcar como leído"></div></div>
     </div>
   </div>
 
