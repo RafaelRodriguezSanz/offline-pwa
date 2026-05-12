@@ -11,6 +11,7 @@ import { initSettings } from "./modules/settings/settings.js";
 import { initFitness } from "./modules/fitness/fitness.js";
 import { initTasks }   from "./modules/tasks/tasks.js";
 import { initLearning } from "./modules/learning/learning.js";
+import { initInvestments } from "./modules/investments/investments.js";
 import { runAssistant } from "./modules/assistant/assistant.js";
 
 // Ensure Google Auth is initialized as soon as the script loads
@@ -45,6 +46,7 @@ const templateCache = {
   "settings-app": null,
   "tasks-app":    null,
   "learning-app": null,
+  "investments-app": null,
 };
 
 async function prefetchTemplates() {
@@ -56,6 +58,7 @@ async function prefetchTemplates() {
     "settings-app": "./modules/settings/settings.html",
     "tasks-app":    "./modules/tasks/tasks.html",
     "learning-app": "./modules/learning/learning.html",
+    "investments-app": "./modules/investments/investments.html",
   };
 
   // Fetch all in parallel
@@ -105,8 +108,8 @@ async function navigate(target) {
       case "learning-app":
         await initLearning(appContainer, html);
         break;
-      case "tasks-app":
-        appContainer.innerHTML = '<div class="empty-state"><p>Próximamente: Gestor de Tareas</p></div>';
+      case "investments-app":
+        await initInvestments(appContainer, html);
         break;
       default:
         appContainer.innerHTML = '<div class="error">Sección no encontrada</div>';

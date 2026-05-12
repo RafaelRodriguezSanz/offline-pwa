@@ -1,0 +1,68 @@
+<div class="investments-container">
+  <header class="investments-header">
+    <div class="header-info">
+      <h2>Mi Inversión</h2>
+      <p class="subtitle">Plazo Fijo UI (Saturado)</p>
+    </div>
+    <div class="total-badge">
+      <span class="label">Total Estimado</span>
+      <span class="value" id="inv-total-display">$0.00</span>
+    </div>
+  </header>
+
+  <div class="inv-stats-grid">
+    <div class="inv-card principal">
+      <span class="card-label">Capital Inicial</span>
+      <span class="card-value">$U 2,000,000</span>
+      <div class="card-footer">Interés anual: 0.75%</div>
+    </div>
+    <div class="inv-card earnings">
+      <span class="card-label">Ganancia Acumulada</span>
+      <span class="card-value gain" id="inv-gain-display">$0.00</span>
+      <div class="card-footer" id="inv-days-display">Día 0 de 365</div>
+    </div>
+    <div class="inv-card daily">
+      <span class="card-label">Ganancia Diaria</span>
+      <span class="card-value" id="inv-daily-display">$0.00</span>
+      <div class="card-footer">Estimación lineal</div>
+    </div>
+  </div>
+
+  <div class="inv-chart-container">
+    <div class="chart-header">
+      <h3>Proyección de Crecimiento</h3>
+      <div class="chart-legend">
+        <span class="dot initial"></span> Inicial
+        <span class="dot current"></span> Actual
+      </div>
+    </div>
+    <div class="inv-visual-progress">
+      <div class="progress-track">
+        <div class="progress-fill" id="inv-progress-bar" style="width: 0%"></div>
+      </div>
+      <div class="progress-markers">
+        <span>Inicio</span>
+        <span>Meta (1 Año)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="inv-details-list">
+    <div class="detail-item">
+      <span class="detail-label">Fecha de Inicio</span>
+      <span class="detail-value" id="inv-start-date">--/--/----</span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">Fecha de Vencimiento</span>
+      <span class="detail-value" id="inv-end-date">--/--/----</span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">Interés Total al Vencimiento</span>
+      <span class="detail-value highlight">$15,000</span>
+    </div>
+  </div>
+
+  <div class="inv-actions">
+    <button class="btn-primary" id="btn-update-inv">Sincronizar Datos</button>
+  </div>
+</div>
