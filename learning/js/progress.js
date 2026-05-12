@@ -3,28 +3,9 @@
  * Handles IndexedDB persistence and UI updates for read modules.
  */
 
-const DB_NAME = "appDB";
-const DB_VERSION = 7;
 const STORE_NAME = "learning_progress";
 
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains("learning_progress")) {
-        db.createObjectStore("learning_progress", { keyPath: "id" });
-      }
-      if (!db.objectStoreNames.contains("metadata")) {
-        db.createObjectStore("metadata", { keyPath: "key" });
-      }
-    };
-
-    request.onsuccess = () => resolve(request.result);
-    request.onerror   = () => reject(request.error);
-  });
-}
+import { openDB } from "../../db-base.js";
 
 async function getProgress() {
   try {
